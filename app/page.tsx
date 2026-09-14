@@ -100,6 +100,7 @@ export default function Home() {
   const [binPrefix, setBinPrefix] = useState("");
   const [step, setStep] = useState<Step>("upload");
   const [groups, setGroups] = useState<ItemGroup[]>([]);
+  const originalListingsRef = useRef<Record<string, ListingResult>>({});
   const [orphanIds, setOrphanIds] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
   const [sorting, setSorting] = useState(false);
@@ -623,9 +624,15 @@ export default function Home() {
     setGroups((prev) =>
       prev.map((g) => (g.id === id ? { ...g, ...patch } : g)),
     );
-  const editListing = (groupId: string, patch: Partial<ListingResult>) =>
-    setGroups((prev) =>
-      prev.map((g) =>
+  const editListing = (groupId: string, patch: Partial<ListingResult>) => {
+  setGroups((prev) => {
+    const originalGroup = prev.find((g) => g.id === groupId);
+
+    if (originalGroup?.listing && !originalListingsRef.current[groupId]) {
+      originalListingsRef.current[groupId] = structuredClone(originalGroup.listing);
+    }
+
+    return prev.map((g) =>
         g.id === groupId && g.listing
           ? {
               ...g,
@@ -646,8 +653,9 @@ export default function Home() {
               compsStatus: "stale",
             }
           : g,
-      ),
-    );
+         );
+  });
+};
 
   const postGroup = useCallback(
     async (groupId: string) => {
