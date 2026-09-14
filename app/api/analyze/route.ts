@@ -231,6 +231,11 @@ async function handle(req: NextRequest) {
         // Deterministic title cleanup happens HERE, before the seller reviews —
         // the title on the card is exactly the title that publishes.
         listing.title = optimizeTitle(listing);
+        const descriptionLines = (listing.description ?? "").trim().split(/\r?\n/);
+const firstContentIndex = descriptionLines.findIndex((line) => line.trim().length > 0);
+if (firstContentIndex >= 0) descriptionLines.splice(firstContentIndex, 1);
+const descriptionBody = descriptionLines.join("\n").trim();
+listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}` : listing.title;
         // Same principle for the optional storewide markup: applied pre-review,
         // so the price on the card is exactly the price that publishes.
         listing.suggested_price = applyPriceMarkup(
