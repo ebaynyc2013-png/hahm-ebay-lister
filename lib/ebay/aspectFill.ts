@@ -133,14 +133,43 @@ EBAY WANTS VALUES FOR THESE ASPECTS (exact aspect names for this category):
 ${unfilled.map(aspectPromptLine).join("\n")}
 
 Rules:
-- Fill ONLY aspects supported directly by these photos. Item data is an unverified earlier draft, not independent evidence. Omit everything else — never guess.
+- Your goal is to complete as many applicable eBay item specifics as possible for this exact category while maintaining high factual accuracy.
+- Use reliable evidence from ALL supplied photos. Reliable evidence includes the actual item and its objectively visible characteristics; readable labels, tags, hallmarks, stamps, signatures and maker's marks; visible measurements; and seller-provided information written on a photographed note.
+- A photographed seller note is valid seller-provided evidence. It may provide measurements or facts such as Handmade, Vintage, Antique, material, size, age or other information that cannot necessarily be determined from appearance alone.
+- Examine all photos carefully before filling the aspects. Do not stop after finding enough information for the required fields.
+- Consider REQUIRED, RECOMMENDED and OPTIONAL eBay aspects. Fill every applicable aspect that can be supported by reliable evidence or confidently identified from the actual item.
+- Characteristics that are objectively visible may be identified directly from the item. This includes, when applicable to the category, Color, Shape, Closure, Style, Pattern, Type, design or construction characteristics, visible Features, stone shape, and other characteristics that a knowledgeable seller can reliably identify by examining the item.
+- These rules apply across all product categories, not only jewelry. Use only the aspects supplied by eBay for the item's exact category.
 - Use ONLY the supplied eBay aspect names as keys, spelled exactly as given.
-- For "must be EXACTLY one of" aspects, copy the value verbatim from the list.
-- For "multiple values allowed" aspects you may return a JSON array of values.
-- Never answer with placeholder text like "See photos", "Unknown", or "N/A" — omit the aspect instead.
-- Values must be short (under 65 characters each).
+- When eBay provides allowed values for an aspect, use the exact supplied eBay value whenever one accurately describes the item. Do not invent a different term when an appropriate eBay value is available.
+- For "must be EXACTLY one of" aspects, copy the applicable value verbatim from the supplied list.
+- For aspects that allow multiple values, return a JSON array and include all values that genuinely and usefully apply to the item. Do not select irrelevant values merely to increase the number of filled fields.
+- Information already used in the title, description or another part of the listing should still be included in Item Specifics when it belongs in an eBay aspect.
 
-Never infer fit, size type, vintage, handmade, personalization, season, occasion or manufacture year. Do not fill these without a directly readable label explicitly establishing the value. A legal eBay value is not evidence. Copyright dates are not manufacture dates. Never infer length or chest measurements from cropped tape views.
+- UPC: for this seller's listings, use "Does Not Apply" whenever UPC is an available eBay aspect.
+- Customized: use "No" whenever Customized is an available eBay aspect.
+- Personalize or Personalized: use "No" whenever that aspect is available.
+- Signed: when eBay provides a Signed aspect for the category, use "Yes" when the actual item has a visible brand/designer signature, hallmark, stamp or branded maker's mark on the item itself. The brand does not need to be a luxury brand. If the item itself has no such visible signature, hallmark, stamp or maker's mark, use "No". Do not create a Signed aspect for categories where eBay does not provide one.
+- Handmade: do not infer Handmade merely from appearance. Use seller-provided information from a photographed note, a readable label/tag, or other reliable evidence establishing whether the item is handmade.
+- Vintage and Antique are age-related facts. Do not classify an item as Vintage or Antique merely because its design looks old, retro, Art Deco, Victorian-inspired or vintage-style. Use Vintage or Antique when supported by seller-provided information, readable dating/markings, or other reliable evidence establishing the item's age or period. A vintage-inspired appearance may instead support an appropriate Style or Theme when eBay provides that value.
+- Features: actively evaluate all Features offered by eBay for the category. Select every offered feature that is reliably visible on the item or established by seller-provided information. Visible construction and functionality may be used as evidence for Features.
+- Theme: actively evaluate the Theme values supplied by eBay. Select the theme or themes that genuinely correspond to the item's visible design, motif, imagery, aesthetic or other reliable characteristics. Multiple themes may be selected when eBay allows multiple values and each selected theme genuinely applies. Do not add unrelated themes merely to fill the field.
+- Occasion: actively evaluate the Occasion values supplied by eBay. Select reasonable occasions for which the item is genuinely appropriate. Multiple occasions may be selected when eBay permits multiple values. Do not automatically select every available occasion.
+- Measurements shown on a photographed seller note are valid seller-provided measurements and should be used for the corresponding eBay aspects when applicable.
+
+- Never use placeholder text such as "See photos", "Unknown" or "N/A". Omit an unsupported aspect instead, except for UPC where the seller rule above requires "Does Not Apply".
+- Values must be short and comply with the eBay aspect requirements.
+
+MANDATORY VERIFICATION BEFORE RETURNING THE RESULT:
+- Before returning the final facts, perform a second verification pass over every aspect you intend to fill.
+- Re-check the photos and reliable evidence for every proposed value.
+- Confirm that each value belongs to the correct eBay aspect.
+- Confirm that you correctly read any label, hallmark, stamp, measurement or seller-provided photographed note used as evidence.
+- When eBay supplied allowed values, confirm that the final value exactly matches an allowed eBay value where required.
+- Distinguish facts from guesses. Never turn an unsupported assumption into a factual item specific.
+- After verifying accuracy, perform one final completeness check against the supplied eBay aspect list. Make sure you have not omitted an applicable aspect that the available reliable evidence allows you to fill confidently.
+- The verification pass must improve accuracy without becoming unnecessarily conservative: the goal is a thorough, highly complete set of accurate Item Specifics, not the smallest possible set.
+
 Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"100% CASHMERE","photoIndices":[2]}]}. For a directly visible construction feature use basis visible_feature and an empty quote. Photo indices are 1-based. Label-derived facts require exact quoted text. Omit everything unknown; return {"facts":[]} if necessary`;
 
   try {
