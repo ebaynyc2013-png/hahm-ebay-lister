@@ -97,8 +97,12 @@ async function taxGet(path: string): Promise<any | null> {
       },
     },
   );
-  if (!resp.ok) return null;
-  return resp.json().catch(() => null);
+if (!resp.ok) {
+  const body = await resp.text().catch(() => "");
+  throw new Error(
+    `eBay Taxonomy request failed (${resp.status})${body ? `: ${body.slice(0, 500)}` : ""}`,
+  );
+}  return resp.json().catch(() => null);
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -136,9 +140,9 @@ export async function suggestLeafCategories(
       if (out.length >= limit) break;
     }
     return out;
-  } catch {
-    return [];
-  }
+  } catch (e) {
+  throw e;
+}
 }
 
 export async function suggestLeafCategory(
