@@ -1,5 +1,5 @@
 import { applyListingDefaults } from "@/lib/listing-defaults";
-import { categoryMatches, expectedDepartment } from "@/lib/category-selection";
+import { expectedDepartment } from "@/lib/category-selection";
 import { NextRequest, NextResponse } from "next/server";
 import { guardApiRequest } from "@/lib/api-guard";
 import {
@@ -9,9 +9,9 @@ import {
 } from "@/lib/validation";
 import {
   categoryAspects,
-  suggestLeafCategories,
   acceptedConditionIds,
 } from "@/lib/ebay/taxonomy";
+import { selectBestLeafCategory } from "@/lib/ebay/categorySelect";
 import {
   buildAspects,
   reconcileAspects,
@@ -36,20 +36,19 @@ export async function POST(req: NextRequest) {
           const listing = parseListing(body.listing);
           const images =
             body.enrich === true ? imagesSchema.parse(body.images) : [];
-          const suggestions = listing.category_id
-            ? []
-            : await suggestLeafCategories(
-                `${expectedDepartment(listing)} ${listing.category_hint || ""} ${listing.title}`,
-                10,
-              );
-          const compatible = suggestions.filter((c) =>
-            categoryMatches(c, listing),
-          );
-          const id = listing.category_id || compatible[0]?.id;
-          if (!id)
-            throw new Error(
-              "Could not resolve a category matching this department. Review the department/category and enter the correct leaf category ID.",
-            );
+          const categorySelection = listing.category_id
+  ? null
+  : await selectBestLeafCategory(listing, images);
+
+const suggestions = categorySelection?.suggestions ?? [];
+
+const id =
+  listing.category_id || categorySelection?.selected.id;
+
+if (!id)
+  throw new Error(
+    "Could not determine a verified eBay leaf category for this item.",
+  );
           const token = await accessTokenFromCookie(
             req.cookies.get(EBAY_COOKIE)?.value,
           );
@@ -113,8 +112,10 @@ export async function POST(req: NextRequest) {
             preparation: {
               categoryId: id,
               categoryName:
-                suggestions.find((c) => c.id === id)?.path || `Category ${id}`,
-              suggestions: compatible,
+  categorySelection?.selected.path ||
+  suggestions.find((c) => c.id === id)?.path ||
+  `Category ${id}`,
+suggestions,
               aspects: meta,
               conditions,
               expiresAt,
