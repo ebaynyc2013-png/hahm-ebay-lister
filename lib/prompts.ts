@@ -168,46 +168,68 @@ Do not automatically treat color as high priority. Its value depends on the prod
 Do not automatically treat material, style, size, shape, or any other attribute as high priority. Their value also depends on the product family and the specific item.
 SIZE AND MEASUREMENT PRIORITY
 
-When a supported size or measurement is an important buyer decision or search characteristic for the identified product family, treat it as a required title search block.
+First determine whether size or physical measurement is a meaningful buyer decision or search characteristic for the identified product family and the specific item.
 
-Use only sizes and measurements supported by visible labels, markings, measurement photos, seller-provided information, or other reliable item evidence. Never estimate dimensions from appearance.
+When a supported size or measurement materially affects buyer choice, it is a REQUIRED title search block. The final title must not omit it merely because other descriptive phrases are available.
 
-For apparel with a standard alphabetic marked size, include both the common full size word and its standard abbreviation when supported and useful:
+Use only sizes and measurements supported by visible labels, markings, measurement photos, seller-provided information, or other reliable item evidence. Never estimate measurements from appearance.
+
+For apparel with a standard alphabetic size, include both the common full size word and the standard abbreviation when supported:
+- Extra Small XS
 - Small S
 - Medium M
 - Large L
 - Extra Large XL
 
-Do not sacrifice both forms merely to save title space. If space becomes tight, remove lower-priority descriptive phrases first.
+Treat the full size word and abbreviation as useful buyer-search language. Do not remove both merely to preserve a weaker descriptive phrase.
 
-For numeric apparel or footwear sizes, include the size clearly:
+For numeric apparel, footwear, rings, and other products where a numeric size is an important buyer characteristic, include the size clearly:
 - Size 7
 - Size 10
 - Size 32
 
-When title space is tight, compact forms are allowed:
-- Size 7 → Sz 7
-- Size 10 → Sz 10
+If title space becomes tight, compact size notation is allowed:
+- Size 7 -> Sz 7
+- Size 10 -> Sz 10
 
-For items where physical dimensions materially help buyers identify or choose the item, include supported measurements in a compact buyer-friendly form.
+For products where physical dimensions materially help buyers identify, compare, fit, display, carry, wear, store, or choose the item, include a supported measurement in the title.
 
-When length and width are available, prioritize length × width. Depth may be omitted from the title unless it is especially important to that product.
+When both length and width are available and useful, prioritize length and width. Depth may be omitted unless it is especially important for that specific product.
 
-Use compact measurement formatting when needed:
-- 10 x 7 inches → 10x7in
-- 16 x 20 inches → 16x20in
-- 18 inches → 18in
-- 1 inch → 1in
+Use compact measurement notation when title space is limited:
+- 10 x 7 inches -> 10x7in
+- 16 x 20 inches -> 16x20in
+- 18 inches -> 18in
+- 1 inch -> 1in
+- 5 x 6.5 inches -> 5x6.5in
 
-For necklaces, chains, bracelets, pendants, earrings, rings, bags, cases, accessories, art, home goods, and other product families where size materially affects buyer choice, preserve a useful supported size or measurement in the title.
+Always use the ordinary ASCII letter x for dimensions. Never use the multiplication symbol.
 
-Do not force physical dimensions into a title when measurements are not a meaningful buyer-search or purchase factor for that specific product family.
+When an important supported size or measurement exists, preserve it before LOW-priority decorative or descriptive phrases.
 
-When the title exceeds 80 characters, preserve an important supported size or measurement before LOW-priority decorative or descriptive phrases.
+If the title exceeds 80 characters:
+1. First shorten the size or measurement notation when possible.
+2. Then remove the weakest LOW-priority descriptive phrase.
+3. Then remove the weakest remaining MEDIUM-priority phrase if necessary.
+4. Do not remove an important supported size or measurement merely to preserve a weaker descriptor.
 
-First shorten the measurement or size notation when possible. Then remove the weakest LOW-priority phrase. Do not remove an important size or measurement merely to preserve a weaker descriptor.
+Useful item-type, use-case, or buyer-search synonyms may remain together when buyers plausibly search using those different terms. Do not treat them as duplicates merely because they describe the same physical item.
 
-Multiple accurate item-type or use-case phrases may remain when they represent genuinely different buyer search language. Do not treat useful search synonyms as duplicates merely because they describe the same physical item.
+TITLE CHARACTER STYLE
+
+Write titles as clean buyer-search text using words, numbers, and normal spaces.
+
+Do not use emojis or decorative symbols in titles.
+
+Do not use hyphens, en dashes, em dashes, vertical bars, bullets, or similar punctuation as decorative separators.
+
+Use spaces instead of punctuation between ordinary descriptive words:
+- Silver Tone, not Silver-Tone
+- Hard Shell, not Hard-Shell
+
+Do not use decorative punctuation merely to separate keyword phrases.
+
+Preserve punctuation only when it is genuinely part of an exact official brand name, model name, part number, or other identifier and removing it would make that identifier inaccurate.
 SEARCH PHRASE INTEGRITY
 
 Keep meaningful multi-word buyer-search phrases intact.
