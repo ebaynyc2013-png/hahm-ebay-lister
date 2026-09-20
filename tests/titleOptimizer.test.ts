@@ -17,56 +17,39 @@ describe("optimizeTitle", () => {
     );
   });
 
-  test("appends a missing brand when there's room", () => {
-    const t = optimizeTitle({ ...base, title: "Blue Wool Sweater", brand: "Pendleton" });
-    expect(t).toContain("Pendleton");
-  });
-
-  test("one-letter size appends despite the letter appearing inside words", () => {
+  test("does not append brand, size, color, or other listing fields", () => {
     const t = optimizeTitle({
       ...base,
-      title: "Blue Wool Sweater", // contains "l" inside words
-      category: "womens_sweater",
-      size: "L",
+      title: "Ralph Lauren Cashmere Cardigan Size M",
+      brand: "Ralph Lauren",
+      size: "M",
+      color: ["Black"],
+      material: "Cashmere",
     });
-    expect(t).toBe("Blue Wool Sweater Sz L");
+
+    expect(t).toBe("Ralph Lauren Cashmere Cardigan Size M");
   });
 
-  test("short color hiding inside a longer word still appends", () => {
-    const t = optimizeTitle({ ...base, title: "Titanium Ring", color: ["Tan"] });
-    expect(t).toBe("Titanium Ring Tan");
-  });
-
-  test("empty model title never yields a leading space", () => {
-    expect(optimizeTitle({ ...base, title: "", brand: "Nike" })).toBe("Nike");
-  });
-
-  test("appends size for apparel with the Sz prefix", () => {
+  test("normalizes whitespace without rewriting the title", () => {
     const t = optimizeTitle({
       ...base,
-      title: "Levi's 501 Jeans",
-      category: "mens_jeans",
-      size: "32x34",
+      title: "Apple   iPhone 15 Pro   256GB Unlocked",
     });
-    expect(t).toContain("32x34");
+
+    expect(t).toBe("Apple iPhone 15 Pro 256GB Unlocked");
   });
 
-  test("never exceeds eBay's 80-character cap", () => {
-    const t = optimizeTitle({
-      ...base,
-      title: "Very Detailed Vintage Collectible Item Name That Goes On".repeat(3),
-      brand: "SomeBrandName",
-    });
-    expect(t.length).toBeLessThanOrEqual(EBAY_TITLE_LIMIT);
+  test("accepts a title at the 80-character limit", () => {
+    const title = "A".repeat(EBAY_TITLE_LIMIT);
+
+    expect(optimizeTitle({ ...base, title })).toBe(title);
   });
 
-  test("skips No Brand / duplicate identifiers", () => {
-    const t = optimizeTitle({
-      ...base,
-      title: "Coach Tan Leather Tote",
-      brand: "No Brand",
-      color: ["Tan"],
-    });
-    expect(t).toBe("Coach Tan Leather Tote");
+  test("rejects a title longer than eBay's 80-character limit", () => {
+    const title = "A".repeat(EBAY_TITLE_LIMIT + 1);
+
+    expect(() => optimizeTitle({ ...base, title })).toThrow(
+      "Generated title exceeds eBay's 80-character limit.",
+    );
   });
 });
