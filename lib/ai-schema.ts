@@ -5,7 +5,7 @@ export const AI_LISTING_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    title: string,
+title: { type: "string", maxLength: 80 },
     description: string,
     category: string,
     category_hint: string,
