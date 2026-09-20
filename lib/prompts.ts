@@ -213,8 +213,60 @@ If the title exceeds 80 characters:
 3. Then remove the weakest remaining MEDIUM-priority phrase if necessary.
 4. Do not remove an important supported size or measurement merely to preserve a weaker descriptor.
 
-Useful item-type, use-case, or buyer-search synonyms may remain together when buyers plausibly search using those different terms. Do not treat them as duplicates merely because they describe the same physical item.
+BUYER SEARCH PRIORITY DECISION
 
+First identify the actual product family before assigning search priority.
+
+Do not use one fixed priority order for all products.
+
+For the specific item, identify the complete phrases that a real buyer may use to search for, identify, compare, verify, fit, or distinguish that item.
+
+Evaluate every candidate phrase according to its value for THIS product family and THIS specific item.
+
+Internally assign each candidate phrase one of these levels:
+
+MUST KEEP
+Use this when omitting the phrase could cause the item to be confused with a materially different product, version, fitment, configuration, size, model, application, or identity.
+
+HIGH
+Use this for a strong and plausible buyer-search phrase that materially narrows the search toward this specific item or represents an important independent search path.
+
+MEDIUM
+Use this for useful secondary information that helps describe, compare, or narrow the item but is less important than the strongest identifying or buyer-search phrases.
+
+LOW
+Use this for minor decorative, surface, visual, generic, redundant, or secondary details that add relatively little buyer-search value.
+
+Determine priority from the actual product family. Do not assign permanent priority to any field type.
+
+Brand, color, material, size, measurements, style, closure, construction, model, part number, compatibility, fitment, capacity, year, edition, format, position, side, or any other characteristic may be MUST KEEP, HIGH, MEDIUM, LOW, or irrelevant depending on the specific product.
+
+A phrase that is secondary for one product family may be essential for another.
+
+Give stronger priority to phrases that:
+- identify exactly what the product is
+- identify an exact model, version, part, configuration, edition, or variation
+- distinguish materially different versions of the product
+- establish compatibility, fitment, application, position, side, platform, generation, or other critical product-family-specific information
+- provide an important supported size, capacity, storage value, or measurement
+- represent a distinct and plausible way a buyer may search for the item
+- materially affect whether the item is suitable for the buyer
+
+Give weaker priority to phrases that:
+- mainly describe appearance without materially narrowing buyer search
+- repeat information already represented by a stronger phrase without adding another useful search path
+- are generic or promotional
+- consume title space while contributing little to product identification, comparison, compatibility, fit, or buyer search intent
+
+Do not treat two accurate phrases as redundant merely because they refer to the same physical item if buyers may reasonably search using either phrase.
+
+When several phrases compete for limited title space, preserve the phrases with the greatest buyer-search value for the identified product family and specific item.
+
+If the title exceeds 80 characters, remove the lowest-priority complete phrase first and rebuild the title.
+
+Never remove a stronger buyer-search phrase merely to preserve a weaker descriptive detail.
+
+The priority decision must be made separately for every item. Never carry the priority assumptions from one product family into another.
 TITLE CHARACTER STYLE
 
 Write titles as clean buyer-search text using words, numbers, and normal spaces.
