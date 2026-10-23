@@ -26,6 +26,49 @@ const visible = new Set([
   "shoe shaft style",
   "boot style",
 ]);
+
+// The list above can never keep up: eBay names roughly forty aspects per
+// category and names them differently in each — "Dress Length", "Chain Type",
+// "Pendant Shape", "Sleeve Type", "Silhouette". They ask the same kind of
+// question the list already permits, but under a name it does not hold, so a
+// REQUIRED field like Dress Length goes out empty.
+//
+// Where eBay offers a closed list of values, it has already written down every
+// answer there is — "Short | Knee Length | Midi | Long | Hi-Low | Asymmetric".
+// Choosing among those from a photo is the same act as choosing a neckline,
+// not an invention, so a SELECTION_ONLY aspect is accepted on sight.
+//
+// Three things it must not swallow. Substance: cotton against linen, silver
+// against plate, topaz against citrine — none of it is settled by looking, and
+// it stays with the label or the seller's note. Provenance and age: whether a
+// dress is vintage or where it was made is not written on its appearance, and
+// the fill prompt already forbids inferring those. Lab grading: clarity and
+// cut come off a certificate.
+const notFromAppearance =
+  /\b(material|materials|fabric|metal|purity|stone|gemstone|karat|carat|plated?|plating|vintage|antique|era|year|age|origin|manufacture|manufactured|sourced|country|handmade|signed|customized|customised|personalize|personalise|personalized|wholesale|warranty|certif\w*|authentic\w*|grade|clarity|treatment|creation|cut)\b/i;
+
+// …except where the question is plainly about appearance after all. "Main
+// Stone Color" names a stone but asks for a colour, and a colour is what a
+// photograph is best at.
+const appearanceHead = new Set(["color", "colour", "shape", "pattern"]);
+
+export interface AspectShape {
+  name: string;
+  mode: "FREE_TEXT" | "SELECTION_ONLY";
+  values: string[];
+}
+
+function choosableFromPhoto(aspect?: AspectShape): boolean {
+  // A free-text aspect has no menu to choose from; whatever eBay wants there
+  // is a measurement or a phrase, and guessing it is exactly what these rules
+  // exist to stop.
+  if (!aspect || aspect.mode !== "SELECTION_ONLY" || !aspect.values.length)
+    return false;
+  const name = aspect.name.toLowerCase();
+  const head = name.split(/[^\p{L}]+/u).filter(Boolean).pop() ?? "";
+  if (appearanceHead.has(head)) return true;
+  return !notFromAppearance.test(name);
+}
 export interface PhotoFact {
   name: string;
   value: string;
@@ -33,9 +76,16 @@ export interface PhotoFact {
   basis: "label" | "visible_feature";
   quote: string;
 }
+/**
+ * `aspect` is the eBay aspect this fact is destined for, when it is known.
+ * The first analysis runs before any category is chosen and passes nothing, so
+ * it keeps to the hand-written list above; the fill pass knows the category
+ * and can let eBay's own menus widen what counts.
+ */
 export function acceptedPhotoFact(
   raw: unknown,
   count: number,
+  aspect?: AspectShape,
 ): raw is PhotoFact {
   if (!raw || typeof raw !== "object") return false;
   const s = raw as PhotoFact;
@@ -68,7 +118,10 @@ export function acceptedPhotoFact(
       .split(" | ")
       .every((v) => normalize(s.quote).includes(normalize(v)));
   }
-  return s.basis === "visible_feature" && visible.has(s.name.toLowerCase());
+  return (
+    s.basis === "visible_feature" &&
+    (visible.has(s.name.toLowerCase()) || choosableFromPhoto(aspect))
+  );
 }
 export const PHOTO_FACT_SCHEMA = {
   type: "object",

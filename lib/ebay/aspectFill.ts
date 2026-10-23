@@ -209,10 +209,13 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
     const byLower = new Map(unfilled.map((a) => [a.name.toLowerCase(), a]));
     let added = 0;
     for (const fact of filled.facts ?? []) {
-      if (!acceptedPhotoFact(fact, imageBlocks.length)) continue;
-      const key = fact.name,
-        raw = fact.value;
-      const a = byLower.get(String(key).toLowerCase());
+      // Look the aspect up first: whether a seen-in-the-photo fact is accepted
+      // depends on whether eBay offers a closed list of answers for it.
+      const a = byLower.get(
+        String((fact as { name?: unknown })?.name ?? "").toLowerCase(),
+      );
+      if (!acceptedPhotoFact(fact, imageBlocks.length, a)) continue;
+      const raw = fact.value;
       if (!a || aspects[a.name]) continue;
       const parts = Array.isArray(raw)
         ? raw
