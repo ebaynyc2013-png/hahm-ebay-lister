@@ -1,5 +1,8 @@
 import { applyListingDefaults } from "@/lib/listing-defaults";
-import { expectedDepartment } from "@/lib/category-selection";
+import {
+  expectedDepartment,
+  departmentFromCategoryPath,
+} from "@/lib/category-selection";
 import { NextRequest, NextResponse } from "next/server";
 import { guardApiRequest } from "@/lib/api-guard";
 import {
@@ -49,6 +52,14 @@ if (!id)
   throw new Error(
     "Could not determine a verified eBay leaf category for this item.",
   );
+
+// eBay's path for the chosen leaf, e.g. "… > Women > Women's Shoes > Sandals".
+// Empty when the seller typed a bare category ID, since nothing then looked the
+// category up.
+const categoryPath =
+  categorySelection?.selected.path ||
+  suggestions.find((c) => c.id === id)?.path ||
+  "";
           const token = await accessTokenFromCookie(
             req.cookies.get(EBAY_COOKIE)?.value,
           );
@@ -70,6 +81,20 @@ if (!id)
             throw new Error(
               `This category does not accept Department ${expected}. Choose the correct category.`,
             );
+          // Read the department off eBay's category path rather than the
+          // photos. `expected` being set means the seller (or an earlier pass)
+          // already chose one, and that choice is never overwritten.
+          if (departmentMeta && !expected) {
+            const derived = departmentFromCategoryPath(
+              categoryPath,
+              departmentMeta.values,
+            );
+            if (derived)
+              listing.item_specifics = {
+                ...listing.item_specifics,
+                Department: derived,
+              };
+          }
           applyListingDefaults(listing, meta, ids);
           const aspects = buildAspects(listing, listing.category || "");
           reconcileAspects(aspects, meta, listing, listing.category || "");
@@ -111,10 +136,7 @@ if (!id)
             listing,
             preparation: {
               categoryId: id,
-              categoryName:
-  categorySelection?.selected.path ||
-  suggestions.find((c) => c.id === id)?.path ||
-  `Category ${id}`,
+              categoryName: categoryPath || `Category ${id}`,
 suggestions,
               aspects: meta,
               conditions,

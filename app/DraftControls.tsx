@@ -46,6 +46,16 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
     });
   };
   const specifics = l.item_specifics ?? {};
+  // eBay states per category whether a Department applies and which values it
+  // takes — Women/Men for adult clothing and shoes, Boys/Girls/Baby for kids,
+  // nothing at all for lighters, art or most jewellery. Surfacing it up top
+  // only when eBay actually asks for it keeps a dead "department" control off
+  // the screen for everything else.
+  const departmentMeta = g.preparation?.aspects.find(
+    (a) => a.name === "Department",
+  );
+  const showDepartmentPicker =
+    departmentMeta?.mode === "SELECTION_ONLY" && departmentMeta.values.length > 0;
   const names = [
     ...new Set([
       ...(g.preparation?.aspects ?? [])
@@ -53,7 +63,9 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
         .map((a) => a.name),
       ...Object.keys(specifics),
     ]),
-  ];
+    // Shown by the picker above; a second control for the same value would
+    // only invite the two to look out of step.
+  ].filter((name) => !(showDepartmentPicker && name === "Department"));
   async function prepare() {
     setBusy(true);
     setError("");
@@ -65,7 +77,9 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
       const r = await apiPost("/api/ebay/prepare", {
         listing: l,
         images,
-        enrich: !g.preparation,
+        // Every press re-reads the photos, not just the first. The fill only
+        // touches aspects that are still empty, so edits already made survive.
+        enrich: true,
       });
       const d = await r.json();
       if (!d.ok) throw new Error(d.error);
@@ -131,37 +145,42 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
       className="draft-controls"
     >
       <legend>Review eBay details</legend>
-      <label>
-        Clothing department
-        <select
-          aria-label="Clothing department"
-          value={
-            l.category?.startsWith("womens_")
-              ? "Women"
-              : l.category?.startsWith("mens_")
-                ? "Men"
-                : ""
-          }
-          onChange={(e) => {
-            const family = (l.category || "clothing").replace(
-              /^(womens|mens)_/,
-              "",
-            );
-            edit({
-              category: e.target.value
-                ? (e.target.value === "Women" ? "womens_" : "mens_") + family
-                : "accessory",
-              category_id: "",
-              ebay_condition: "",
-              item_specifics: { ...specifics, Department: e.target.value },
-            });
-          }}
-        >
-          <option value="">Not established / other</option>
-          <option>Women</option>
-          <option>Men</option>
-        </select>
-      </label>
+      {showDepartmentPicker && departmentMeta && (
+        <label>
+          Department{departmentMeta.required ? " *" : ""}
+          <select
+            aria-label="Department"
+            value={specifics.Department ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Every option here is one eBay already allows for the chosen
+              // category, so the category stays put — unlike the old picker,
+              // which cleared it on every change.
+              const family = (l.category || "clothing").replace(
+                /^(womens|mens)_/,
+                "",
+              );
+              edit({
+                // Package profiles and aspect mapping key off this prefix.
+                // Boys, Girls, Baby and the rest have no prefix of their own,
+                // so the family is left exactly as it was.
+                category:
+                  value === "Women"
+                    ? `womens_${family}`
+                    : value === "Men"
+                      ? `mens_${family}`
+                      : l.category,
+                item_specifics: { ...specifics, Department: value },
+              });
+            }}
+          >
+            <option value="">Not established / other</option>
+            {departmentMeta.values.map((v) => (
+              <option key={v}>{v}</option>
+            ))}
+          </select>
+        </label>
+      )}
       {!!g.preparation?.suggestions?.length && (
         <label>
           Suggested category
