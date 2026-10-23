@@ -60,3 +60,45 @@ describe("applyAspectAliases", () => {
     expect(aspects["Upper Material"]).toBeUndefined();
   });
 });
+
+describe("applyAspectAliases — Metal from Material", () => {
+  const jewellery: AspectMeta[] = [free("Metal"), free("Material")];
+
+  it("fills the required Metal from the hallmark reading", () => {
+    // The real case: Material read as "Sterling Silver 925" off the hallmark,
+    // Metal Purity 925 beside it, and Metal — required — left empty.
+    const aspects: Record<string, string[]> = {
+      Material: ["Sterling Silver 925"],
+    };
+    applyAspectAliases(aspects, jewellery);
+    expect(aspects.Metal).toEqual(["Sterling Silver"]);
+  });
+
+  it("drops the purity marking, which eBay files separately", () => {
+    for (const [material, metal] of [
+      ["Sterling Silver 925", "Sterling Silver"],
+      ["925 Sterling Silver", "Sterling Silver"],
+      ["14k Yellow Gold", "Yellow Gold"],
+      ["18 K White Gold", "White Gold"],
+      ["Yellow Gold", "Yellow Gold"],
+    ] as const) {
+      const aspects: Record<string, string[]> = { Material: [material] };
+      applyAspectAliases(aspects, jewellery);
+      expect(aspects.Metal).toEqual([metal]);
+    }
+  });
+
+  it("carries nothing across when only a purity was recorded", () => {
+    // "925" alone names no metal.
+    const aspects: Record<string, string[]> = { Material: ["925"] };
+    applyAspectAliases(aspects, jewellery);
+    expect(aspects.Metal).toBeUndefined();
+  });
+
+  it("still fills Upper Material, purity marking untouched", () => {
+    const shoes: AspectMeta[] = [free("Upper Material"), free("Material")];
+    const aspects: Record<string, string[]> = { Material: ["Satin"] };
+    applyAspectAliases(aspects, shoes);
+    expect(aspects["Upper Material"]).toEqual(["Satin"]);
+  });
+});

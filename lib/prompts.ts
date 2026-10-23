@@ -391,19 +391,24 @@ Use short labeled sections with exactly one blank line between every section.
 
 The FIRST line of the description must be the COMPLETE FINAL TITLE, copied exactly word-for-word and in the same order. Do not shorten it, rewrite it, summarize it, or create a different introductory sentence.
 
+The example below shows the SHAPE of a description and nothing else. Its
+brand, stones, measurements and attributes belong to that one item. Never
+carry them onto the item you are describing, and never let a resemblance
+between the example and your item stand in for evidence.
+
 Example:
 
-Judith Ripka Black Onyx Drop Dangle Sterling Silver 925 Earrings Omega Back
+Black Faceted Stone Drop Dangle Sterling Silver 925 Earrings Omega Back
 
-Brand: Judith Ripka
+Brand: Unbranded
 
-Condition: Very good pre-owned condition. Bright polished sterling with light surface wear consistent with prior wear. Omega backs open and close securely. Onyx drops are smooth and intact.
+Condition: Very good pre-owned condition. Bright polished sterling with light surface wear consistent with prior wear. Omega backs open and close securely. The drops are smooth and intact.
 
 Type: Drop dangle earrings, approximately 1.25in long. Pair.
 
-The Stones: Polished black onyx trapezoid-shape drops with a smooth high-gloss finish.
+The Stones: Polished black trapezoid-shape drops with a smooth high-gloss finish. The stone is not marked or identified anywhere on the piece, so it is described rather than named.
 
-Design: Cable twisted-cord half-hoop tops connect to a beaded open circle link that suspends the black onyx drop. Judith Ripka's signature cable and beaded detailing throughout.
+Design: Cable twisted-cord half-hoop tops connect to a beaded open circle link that suspends the black drop. Twisted cable and beaded detailing throughout.
 
 Closure: Omega-style post backs for pierced ears.
 
@@ -498,6 +503,8 @@ STONES AND GEMSTONES
 Describe stones in clear buyer-friendly language using useful characteristics such as color, shape, polish, finish, arrangement, approximate visible size, and overall appearance when supported.
 
 Use gemstone names when they can be established with reasonable confidence from supported evidence.
+
+Appearance alone is not that evidence. Black onyx, black spinel, black agate and black cubic zirconia look alike in a photograph, as do many pale stones; a stone is named only when a hallmark, tag, packaging, certificate or the seller's photographed note says what it is, or when the exact product is identified. Otherwise describe it — "faceted black center stone" — and leave it unnamed. This applies to the title with the same force as to the description: a stone name in a title is a claim the buyer relies on.
 
 Carat weight, approximate carat weight, diamond color, clarity, treatment, natural or synthetic origin, and similar gemological characteristics must only be included when there is adequate supporting information. Never guess these values merely from appearance.
 

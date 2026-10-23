@@ -193,25 +193,47 @@ export function canonicalizeAspectKeys(
 // Only an unambiguous source is carried: a shoe recorded as "Leather | Rubber"
 // says nothing about which of the two the upper is, and a guess there is the
 // kind the photo rules exist to prevent.
-const ASPECT_ALIASES: Record<string, string[]> = {
-  Material: ["Upper Material"],
-};
+// eBay files the purity separately, in "Metal Purity", so a Metal of
+// "Sterling Silver 925" says 925 twice and matches none of eBay's metal
+// values. Drop the hallmark number and the karat marking from the metal name.
+function withoutPurity(value: string): string {
+  const stripped = value
+    .replace(/\b(?:\d{3}|\d{1,2}\s?kt?|\d{1,2}\s?carat)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  // "925" on its own is a purity, not a metal — nothing survives, so nothing
+  // is carried across.
+  return stripped;
+}
+
+const ASPECT_ALIASES: {
+  source: string;
+  target: string;
+  transform?: (value: string) => string;
+}[] = [
+  { source: "Material", target: "Upper Material" },
+  // Jewellery categories ask for "Metal" and make it REQUIRED, while leaving
+  // plain "Material" optional — so a pair of earrings whose material was read
+  // off the hallmark as "Sterling Silver 925" still shows an empty required
+  // field right beside a Metal Purity of 925.
+  { source: "Material", target: "Metal", transform: withoutPurity },
+];
 
 export function applyAspectAliases(
   aspects: Record<string, string[]>,
   meta: AspectMeta[],
 ): void {
-  for (const [source, targets] of Object.entries(ASPECT_ALIASES)) {
+  for (const { source, target, transform } of ASPECT_ALIASES) {
     const values = aspects[source];
     if (values?.length !== 1) continue;
-    for (const target of targets) {
-      const aspect = meta.find((a) => a.name === target);
-      if (!aspect || aspects[target]?.length) continue;
-      const accepted =
-        aspect.mode === "SELECTION_ONLY"
-          ? matchAllowed(values[0], aspect.values)
-          : values[0];
-      if (accepted) aspects[target] = [accepted];
-    }
+    const aspect = meta.find((a) => a.name === target);
+    if (!aspect || aspects[target]?.length) continue;
+    const value = (transform ? transform(values[0]) : values[0]).trim();
+    if (!value) continue;
+    const accepted =
+      aspect.mode === "SELECTION_ONLY"
+        ? matchAllowed(value, aspect.values)
+        : value;
+    if (accepted) aspects[target] = [accepted];
   }
 }

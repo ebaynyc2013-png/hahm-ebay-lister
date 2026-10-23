@@ -25,6 +25,14 @@ const visible = new Set([
   "toe style",
   "shoe shaft style",
   "boot style",
+  // Counting is not identifying. How many stones are set in a piece is settled
+  // by looking at it, the way a pocket type is, and says nothing about what
+  // they are — "Main Stone" stays out. Where the setting is a pavé of dozens
+  // too small to count, the standing instruction to omit anything unverified
+  // leaves the field empty, which is the right answer there.
+  "number of stones",
+  "number of gemstones",
+  "number of diamonds",
 ]);
 
 // The list above can never keep up: eBay names roughly forty aspects per
