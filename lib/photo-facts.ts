@@ -13,6 +13,18 @@ const visible = new Set([
   "accents",
   "features",
   "pocket type",
+  // Shoe shape, on the same footing as neckline and closure above: what the
+  // shoe is built like, which a photo settles. Substance stays out — "upper
+  // material" and "sole material" are no more readable off a picture than
+  // plain "material" is, and belong to a label or the seller's own note.
+  // "Heel height" stays out too: it is a measurement, and eBay's own aspect
+  // takes inches, which no photo establishes without a ruler beside the shoe.
+  "heel style",
+  "heel type",
+  "toe shape",
+  "toe style",
+  "shoe shaft style",
+  "boot style",
 ]);
 export interface PhotoFact {
   name: string;

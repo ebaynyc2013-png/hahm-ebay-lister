@@ -183,3 +183,35 @@ export function canonicalizeAspectKeys(
     }
   }
 }
+
+// eBay sometimes names an aspect more narrowly than the photo analysis does.
+// A shoe category asks for "Upper Material" and leaves plain "Material"
+// optional, so a sandal whose material was established as Satin still shows an
+// empty REQUIRED field. The substance is already known — only the label eBay
+// files it under differs — so carry it across.
+//
+// Only an unambiguous source is carried: a shoe recorded as "Leather | Rubber"
+// says nothing about which of the two the upper is, and a guess there is the
+// kind the photo rules exist to prevent.
+const ASPECT_ALIASES: Record<string, string[]> = {
+  Material: ["Upper Material"],
+};
+
+export function applyAspectAliases(
+  aspects: Record<string, string[]>,
+  meta: AspectMeta[],
+): void {
+  for (const [source, targets] of Object.entries(ASPECT_ALIASES)) {
+    const values = aspects[source];
+    if (values?.length !== 1) continue;
+    for (const target of targets) {
+      const aspect = meta.find((a) => a.name === target);
+      if (!aspect || aspects[target]?.length) continue;
+      const accepted =
+        aspect.mode === "SELECTION_ONLY"
+          ? matchAllowed(values[0], aspect.values)
+          : values[0];
+      if (accepted) aspects[target] = [accepted];
+    }
+  }
+}

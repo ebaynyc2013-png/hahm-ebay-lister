@@ -20,7 +20,12 @@ import {
   reconcileAspects,
   CONDITION_ID_ENUM,
 } from "@/lib/ebay/publish";
-import { enforceCardinality, sanitizeNumericAspects } from "@/lib/ebay/aspects";
+import {
+  applyAspectAliases,
+  enforceCardinality,
+  sanitizeNumericAspects,
+} from "@/lib/ebay/aspects";
+import { fillShoeSizes } from "@/lib/shoe-sizes";
 import { fillRecommendedAspects } from "@/lib/ebay/aspectFill";
 import { validateAspects } from "@/lib/ebay/draft";
 import { EBAY_COOKIE, accessTokenFromCookie } from "@/lib/ebay/session";
@@ -106,6 +111,8 @@ const categoryPath =
               "draft",
               images,
             );
+          fillShoeSizes(aspects, meta, listing.size);
+          applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
           sanitizeNumericAspects(aspects, meta);
           const conditions = [...ids]
