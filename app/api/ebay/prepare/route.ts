@@ -26,7 +26,7 @@ import {
   sanitizeNumericAspects,
 } from "@/lib/ebay/aspects";
 import { fillShoeSizes } from "@/lib/shoe-sizes";
-import { fillRecommendedAspects } from "@/lib/ebay/aspectFill";
+import { describeFill, fillRecommendedAspects } from "@/lib/ebay/aspectFill";
 import { validateAspects } from "@/lib/ebay/draft";
 import { EBAY_COOKIE, accessTokenFromCookie } from "@/lib/ebay/session";
 import { signReview } from "@/lib/review";
@@ -115,13 +115,19 @@ const categoryPath =
             listing,
             listing.category || "",
           );
+          // Reported back to the screen. This pass is best-effort by design
+          // and says nothing when it fails, which leaves the seller unable to
+          // tell a considered "nothing to add" from a field never looked at.
+          let fill = "not run — photo analysis was switched off for this run";
           if (body.enrich === true) {
-            await fillRecommendedAspects(
-              listing,
-              aspects,
-              meta,
-              "draft",
-              images,
+            fill = describeFill(
+              await fillRecommendedAspects(
+                listing,
+                aspects,
+                meta,
+                "draft",
+                images,
+              ),
             );
             reconcileAspects(aspects, meta, listing, listing.category || "");
           }
@@ -174,6 +180,7 @@ suggestions,
               conditions,
               expiresAt,
               signature: signReview(id, expiresAt),
+              fill,
               issues: validateAspects(aspects, meta),
             },
             usage: currentUsage(),

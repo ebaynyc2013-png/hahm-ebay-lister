@@ -163,6 +163,45 @@ export function canExtend(a: AspectMeta, current?: string[]): boolean {
   );
 }
 
+/**
+ * What this pass actually did, in terms a seller can read.
+ *
+ * It is written to be best-effort: any failure leaves the aspects untouched
+ * and the listing looks perfectly normal. That is right for the listing and
+ * wrong for the seller, who cannot tell "the model considered the field and
+ * had nothing to add" from "the field was never looked at". Four runs in a
+ * row were spent on that question, and neither Vercel's logs on this plan nor
+ * the finished screen could answer it.
+ */
+export interface FillReport {
+  /** The model was asked and answered. False means it never got that far. */
+  ran: boolean;
+  /** Photos actually sent. Zero means every photo-grounded fact is refused. */
+  photos: number;
+  /** Aspects put in front of the model. */
+  offered: number;
+  /** Facts it sent back. */
+  returned: number;
+  /** Facts refused — not one of eBay's words, or no photo to cite. */
+  refused: number;
+  /** Aspects newly filled or extended. */
+  added: number;
+  changed: string[];
+  /** One plain sentence for the screen. */
+  note: string;
+}
+
+export function describeFill(r: FillReport): string {
+  if (!r.ran) return r.note || "did not run";
+  const how = r.photos ? `${r.photos} photos` : "no photos — text only";
+  if (!r.returned) return `ran (${how}), model proposed nothing`;
+  if (!r.added && r.refused === r.returned)
+    return `ran (${how}), all ${r.refused} proposals refused — not eBay's values${r.photos ? "" : ", and with no photos nothing can be cited"}`;
+  if (!r.added)
+    return `ran (${how}), ${r.returned} proposed, nothing new to add`;
+  return `ran (${how}), filled ${r.added}: ${r.changed.join(", ")}${r.refused ? ` (${r.refused} refused)` : ""}`;
+}
+
 export async function fillRecommendedAspects(
   listing: ListingResult,
   aspects: Record<string, string[]>,
@@ -173,7 +212,17 @@ export async function fillRecommendedAspects(
   // body limit), the publish request has no base64 in hand — the vision pass
   // reads the eBay-hosted URLs instead, so photo grounding survives.
   imageUrls: string[] = [],
-): Promise<void> {
+): Promise<FillReport> {
+  const report: FillReport = {
+    ran: false,
+    photos: 0,
+    offered: 0,
+    returned: 0,
+    refused: 0,
+    added: 0,
+    changed: [],
+    note: "",
+  };
   const byKey = new Map(
     Object.entries(aspects).map(([k, v]) => [k.toLowerCase(), v]),
   );
@@ -191,7 +240,11 @@ export async function fillRecommendedAspects(
       `[ebay/publish] aspect-fill sku=${sku}: ${candidates.length - unfilled.length} low-priority aspects skipped (cap ${MAX_ASPECTS_TO_FILL})`,
     );
   }
-  if (unfilled.length === 0) return;
+  report.offered = unfilled.length;
+  if (unfilled.length === 0) {
+    report.note = "nothing to do — every field eBay asks for was already answered";
+    return report;
+  }
 
   // Bound every embedded field — a runaway model output stored in the listing
   // must not turn this prompt into a token bomb.
@@ -321,7 +374,11 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       const a = byLower.get(
         String((fact as { name?: unknown })?.name ?? "").toLowerCase(),
       );
-      if (!acceptedPhotoFact(fact, imageBlocks.length, a)) continue;
+      report.returned++;
+      if (!acceptedPhotoFact(fact, imageBlocks.length, a)) {
+        report.refused++;
+        continue;
+      }
       const raw = fact.value;
       if (!a) continue;
       const existing = aspects[a.name];
@@ -355,8 +412,13 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
         aspects[a.name] = vals.slice(0, 1);
       }
       listing.evidence = { ...listing.evidence, [a.name]: fact.photoIndices };
+      if (!report.changed.includes(a.name)) report.changed.push(a.name);
       added++;
     }
+    report.ran = true;
+    report.photos = imageBlocks.length;
+    report.added = added;
+    report.note = describeFill(report);
     if (added) {
       console.log(
         `[ebay/publish] aspect-fill added ${added} specifics sku=${sku}` +
@@ -366,8 +428,13 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       );
     }
   } catch (e) {
+    const why = (e as Error).message || "unknown error";
+    report.note = /timed out|timeout|deadline|abort/i.test(why)
+      ? `did not finish in time (${why})`
+      : `failed: ${why}`;
     console.warn(
-      `[ebay/publish] aspect-fill skipped sku=${sku}: ${(e as Error).message}`,
+      `[ebay/publish] aspect-fill skipped sku=${sku}: ${why}`,
     );
   }
+  return report;
 }

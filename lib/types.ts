@@ -130,5 +130,11 @@ export interface PreparedCategory {
   conditions: { value: string; label: string }[];
   expiresAt: number;
   signature: string;
+  /**
+   * One sentence on what the photo-analysis pass did. It is best-effort and
+   * silent on failure, so without this the seller cannot tell a considered
+   * "nothing to add" from a field that was never looked at.
+   */
+  fill?: string;
   issues: string[];
 }

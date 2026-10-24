@@ -500,6 +500,14 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
           (recorded calls; bulk sorting separate).
         </p>
       )}
+      {g.preparation?.fill && (
+        <p
+          aria-label="Photo analysis"
+          style={{ fontSize: 13, color: "var(--color-ink-soft)" }}
+        >
+          Photo analysis: {g.preparation.fill}
+        </p>
+      )}
       {draftIssues(g).length > 0 && (
         <ul aria-label="Review issues">
           {draftIssues(g).map((i) => (
