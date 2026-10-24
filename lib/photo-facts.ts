@@ -1,3 +1,5 @@
+import { READ_NOT_JUDGED } from "./ebay/aspects";
+
 // Allow direct label facts and a small set of visible construction attributes.
 // An eBay allowed-value list is never evidence that a value is true.
 const visible = new Set([
@@ -60,6 +62,14 @@ const notFromAppearance =
 // photograph is best at.
 const appearanceHead = new Set(["color", "colour", "shape", "pattern"]);
 
+// eBay's values for a measurement are numbers — "16 in", "18 in" for a
+// necklace, "6.5", "7" for a shoe. A list of those is not a set of choices a
+// photograph can make, however many entries it has.
+function mostlyNumeric(values: string[]): boolean {
+  const numeric = values.filter((v) => /^\s*[\d.]/.test(v)).length;
+  return numeric * 2 > values.length;
+}
+
 export interface AspectShape {
   name: string;
   mode: "FREE_TEXT" | "SELECTION_ONLY";
@@ -67,12 +77,19 @@ export interface AspectShape {
 }
 
 function choosableFromPhoto(aspect?: AspectShape): boolean {
-  // A free-text aspect has no menu to choose from; whatever eBay wants there
-  // is a measurement or a phrase, and guessing it is exactly what these rules
-  // exist to stop.
-  if (!aspect || aspect.mode !== "SELECTION_ONLY" || !aspect.values.length)
-    return false;
+  // What matters is whether eBay supplied the vocabulary, not which flag it
+  // set beside it. eBay's own listing form shows Dress Length as a menu of
+  // Short, Knee Length, Midi and Long while its Taxonomy API returns the field
+  // as FREE_TEXT with those same six values — so a required field went out
+  // empty on every dress. Where the values are there, choosing among them is
+  // choosing, not inventing.
+  if (!aspect || !aspect.values.length) return false;
   const name = aspect.name.toLowerCase();
+  // A brand or a size comes off the label or it does not come at all, however
+  // long the list eBay offers. Matched as a whole name, so "Size Type"
+  // (Regular, Plus, Petites) is untouched by the entry for "size".
+  if (READ_NOT_JUDGED.has(name)) return false;
+  if (mostlyNumeric(aspect.values)) return false;
   const head = name.split(/[^\p{L}]+/u).filter(Boolean).pop() ?? "";
   if (appearanceHead.has(head)) return true;
   return !notFromAppearance.test(name);

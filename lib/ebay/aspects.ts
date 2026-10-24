@@ -127,6 +127,59 @@ export function sanitizeNumericAspects(
 // Match a value against eBay's allowed list, case-insensitively and tolerating
 // singular/plural (so "Unisex Adult" resolves to the valid "Unisex Adults").
 // Returns the canonical allowed value, or null if there's no match.
+// Fields that are read off a label, never judged from an item. eBay offers
+// 4,523 brands and 132 sizes for a dress; those lists are vocabularies to
+// validate against, not menus to pick from, and a value here is kept exactly
+// as it was read.
+export const READ_NOT_JUDGED = new Set([
+  "brand",
+  "size",
+  "model",
+  "mpn",
+  "upc",
+  "ean",
+  "isbn",
+  "manufacturer",
+  "manufacturer part number",
+  "style code",
+  "serial number",
+]);
+
+function words(value: string): string {
+  return (
+    " " +
+    value
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .trim() +
+    " "
+  );
+}
+
+/**
+ * eBay offers a vocabulary for many free-text fields too — seventeen colours
+ * for a dress, six dress lengths. A value outside it is accepted and then
+ * ignored by the filters buyers actually use: a dress recorded as "Light Blue"
+ * never appears under Color: Blue, which is the only blue eBay offers, and the
+ * listing quietly drops out of that search.
+ *
+ * Nothing is lost by snapping to eBay's word, because the shade still stands in
+ * the title and description where people read it. Nothing is dropped either:
+ * where no offered value fits, or more than one does, the value stands exactly
+ * as written — free text means free text.
+ */
+export function snapToVocabulary(value: string, allowed: string[]): string {
+  if (!allowed.length || !value.trim()) return value;
+  const exact = matchAllowed(value, allowed);
+  if (exact) return exact;
+  const haystack = words(value);
+  const hits = allowed.filter((v) => {
+    const needle = words(v);
+    return needle.trim().length > 0 && haystack.includes(needle);
+  });
+  return hits.length === 1 ? hits[0] : value;
+}
+
 export function matchAllowed(value: string, allowed: string[]): string | null {
   const ls = (value || "").trim().toLowerCase();
   if (!ls) return null;

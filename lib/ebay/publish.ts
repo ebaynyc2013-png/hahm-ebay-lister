@@ -28,6 +28,8 @@ import {
   canonicalizeAspectKeys,
   enforceCardinality,
   sanitizeNumericAspects,
+  snapToVocabulary,
+  READ_NOT_JUDGED,
 } from "./aspects";
 import { fillRecommendedAspects } from "./aspectFill";
 import {
@@ -566,6 +568,11 @@ export function reconcileAspects(
         .filter((v): v is string => Boolean(v));
       if (valid.length) aspects[a.name] = valid;
       else delete aspects[a.name];
+    } else if (a.values.length && !READ_NOT_JUDGED.has(a.name.toLowerCase())) {
+      // Free text, but eBay still published a vocabulary for it — and buyers
+      // filter on that vocabulary. Say "Blue" where eBay says "Blue"; keep
+      // anything it has no word for.
+      aspects[a.name] = values.map((v) => snapToVocabulary(v, a.values));
     }
   }
 }
