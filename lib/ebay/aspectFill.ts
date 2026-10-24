@@ -57,7 +57,13 @@ export function prioritizeAspects(unfilled: AspectMeta[]): AspectMeta[] {
   );
 }
 
-export function aspectPromptLine(a: AspectMeta): string {
+export function aspectPromptLine(a: AspectMeta, current?: string[]): string {
+  // An aspect an earlier pass already answered, offered here to be extended.
+  // The earlier pass had not seen eBay's list, so what it chose is a start,
+  // not the answer; say what is there and ask for the complete set back.
+  const already = current?.length
+    ? ` — ALREADY CHOSEN: ${current.join(" | ")}. Those were picked before eBay's list was in view and are kept. Your job here is to ADD: work down the supplied list and return every further value that applies. Return nothing for this aspect only if the list holds nothing more that is true of the item.`
+    : "";
   const tag =
     a.usage === "REQUIRED"
       ? " [required]"
@@ -77,17 +83,17 @@ export function aspectPromptLine(a: AspectMeta): string {
     const values = tooLong
       ? "(large list: return only the exact value visible in the evidence; it will be validated)"
       : a.values.join(" | ");
-    return `- "${a.name}"${tag}${multi} (must be EXACTLY one of: ${values})`;
+    return `- "${a.name}"${tag}${multi} (must be EXACTLY one of: ${values})${already}`;
   }
   // Free text as eBay's API labels it, but with a vocabulary behind it — and
   // that vocabulary is what buyers filter on, so it is as closed in practice
   // as a menu. Said plainly, and in full, rather than as a dozen hints.
   if (isChoiceSet(a) && !tooLong)
-    return `- "${a.name}"${tag}${multi} (must be EXACTLY one of, or omit the aspect: ${a.values.join(" | ")})`;
+    return `- "${a.name}"${tag}${multi} (must be EXACTLY one of, or omit the aspect: ${a.values.join(" | ")})${already}`;
   const hint = a.values.length
     ? ` (common values: ${a.values.slice(0, 12).join(" | ")})`
     : "";
-  return `- "${a.name}"${tag} (free text)${multi}${hint}`;
+  return `- "${a.name}"${tag} (free text)${multi}${hint}${already}`;
 }
 
 /**
@@ -133,6 +139,30 @@ export function allowedValuesFrom(raw: unknown, a: AspectMeta): string[] {
   return vals;
 }
 
+/**
+ * Whether this pass may add to an aspect the first pass already answered.
+ *
+ * It may, for a multi-value aspect whose vocabulary eBay published — and it
+ * is the only pass that can. The first analysis runs before any category is
+ * chosen, so it has never seen eBay's list and answers from its own
+ * knowledge: a dress came back "Casual | Shirt Dress | Western", three real
+ * Style values and two short of the truth, and because the aspect was no
+ * longer empty this pass skipped it entirely. Everything added here still has
+ * to be one of eBay's own words, so extending costs nothing and the field
+ * stops depending on what the first pass happened to think of.
+ *
+ * Single-value aspects are never touched: an answer is already there, and
+ * replacing it would be overruling the pass that read the label.
+ */
+export function canExtend(a: AspectMeta, current?: string[]): boolean {
+  return (
+    a.cardinality === "MULTI" &&
+    isChoiceSet(a) &&
+    (current?.length ?? 0) > 0 &&
+    (current?.length ?? 0) < MAX_MULTI_VALUES
+  );
+}
+
 export async function fillRecommendedAspects(
   listing: ListingResult,
   aspects: Record<string, string[]>,
@@ -144,9 +174,16 @@ export async function fillRecommendedAspects(
   // reads the eBay-hosted URLs instead, so photo grounding survives.
   imageUrls: string[] = [],
 ): Promise<void> {
-  const have = new Set(Object.keys(aspects).map((k) => k.toLowerCase()));
+  const byKey = new Map(
+    Object.entries(aspects).map(([k, v]) => [k.toLowerCase(), v]),
+  );
   const candidates = prioritizeAspects(
-    meta.filter((a) => a.name && !have.has(a.name.toLowerCase())),
+    meta.filter(
+      (a) =>
+        a.name &&
+        (!byKey.has(a.name.toLowerCase()) ||
+          canExtend(a, byKey.get(a.name.toLowerCase()))),
+    ),
   );
   const unfilled = candidates.slice(0, MAX_ASPECTS_TO_FILL);
   if (candidates.length > unfilled.length) {
@@ -195,7 +232,7 @@ ITEM DATA (from earlier photo analysis):
 ${JSON.stringify(itemData, null, 1)}
 
 EBAY WANTS VALUES FOR THESE ASPECTS (exact aspect names for this category):
-${unfilled.map(aspectPromptLine).join("\n")}
+${unfilled.map((a) => aspectPromptLine(a, byKey.get(a.name.toLowerCase()))).join("\n")}
 
 Rules:
 - Your goal is to complete as many applicable eBay item specifics as possible for this exact category while maintaining high factual accuracy.
@@ -286,7 +323,11 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       );
       if (!acceptedPhotoFact(fact, imageBlocks.length, a)) continue;
       const raw = fact.value;
-      if (!a || aspects[a.name]) continue;
+      if (!a) continue;
+      const existing = aspects[a.name];
+      // An aspect already answered is left alone unless it is one this pass
+      // may extend — a multi-value field whose list only this pass has seen.
+      if (existing?.length && !canExtend(a, existing)) continue;
       let vals: string[];
       // Where eBay published the answers — as a menu, or as "free text" with a
       // vocabulary behind it — the answer is one of them or it is nothing.
@@ -301,10 +342,18 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
           : splitAspectValues(raw, a.maxLength);
         if (!vals.length) continue;
       }
-      aspects[a.name] =
-        a.cardinality === "MULTI"
-          ? vals.slice(0, MAX_MULTI_VALUES)
-          : vals.slice(0, 1);
+      if (a.cardinality === "MULTI") {
+        // Union. Nothing an earlier pass established is dropped here — this
+        // pass is asked to add, not to re-judge — and every value on both
+        // sides has already been held to eBay's own vocabulary.
+        const merged = [...(existing ?? [])];
+        for (const v of vals) if (!merged.includes(v)) merged.push(v);
+        const next = merged.slice(0, MAX_MULTI_VALUES);
+        if (next.length === (existing?.length ?? 0)) continue; // nothing gained
+        aspects[a.name] = next;
+      } else {
+        aspects[a.name] = vals.slice(0, 1);
+      }
       listing.evidence = { ...listing.evidence, [a.name]: fact.photoIndices };
       added++;
     }

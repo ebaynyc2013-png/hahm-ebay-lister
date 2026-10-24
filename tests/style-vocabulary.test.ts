@@ -5,7 +5,11 @@ import {
   COLOR_SYNONYMS,
   MAX_MULTI_VALUES,
 } from "@/lib/ebay/aspects";
-import { allowedValuesFrom, aspectPromptLine } from "@/lib/ebay/aspectFill";
+import {
+  allowedValuesFrom,
+  aspectPromptLine,
+  canExtend,
+} from "@/lib/ebay/aspectFill";
 import { reconcileAspects } from "@/lib/ebay/publish";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
 
@@ -326,6 +330,58 @@ describe("eBay's own values, whole, and as many as apply", () => {
     expect(allowedValuesFrom("Navy", aspect("Color", DRESS_COLORS))).toEqual([
       "Blue",
     ]);
+  });
+});
+
+describe("extending what the first pass chose", () => {
+  const style = aspect("Style", DRESS_STYLE, {
+    required: true,
+    usage: "REQUIRED",
+    cardinality: "MULTI",
+  });
+
+  it("tells the vision pass what is already there, and to add to it", () => {
+    // The real case: "Casual | Shirt Dress | Western" came from the first
+    // analysis, which runs before a category is chosen and has never seen
+    // eBay's 63 Style values. Because the aspect was no longer empty, the one
+    // pass that does see that list skipped it, and the answer never improved.
+    const line = aspectPromptLine(style, ["Casual", "Shirt Dress", "Western"]);
+    expect(line).toContain("ALREADY CHOSEN: Casual | Shirt Dress | Western");
+    expect(line).toContain("ADD");
+    expect(line).toContain("Basic");
+    expect(line).toContain("Country");
+  });
+
+  it("says nothing about existing values when there are none", () => {
+    expect(aspectPromptLine(style)).not.toContain("ALREADY CHOSEN");
+  });
+
+  it("reopens a multi-value aspect that has room left", () => {
+    expect(canExtend(style, ["Casual", "Shirt Dress", "Western"])).toBe(true);
+  });
+
+  it("does not reopen a single-value aspect", () => {
+    // Color is answered; replacing it would overrule the pass that read it.
+    expect(canExtend(aspect("Color", DRESS_COLORS), ["Blue"])).toBe(false);
+  });
+
+  it("does not reopen one that is already full", () => {
+    expect(
+      canExtend(style, DRESS_STYLE.slice(0, MAX_MULTI_VALUES)),
+    ).toBe(false);
+  });
+
+  it("leaves an empty aspect to the ordinary path", () => {
+    // Nothing to extend; it is already a candidate as an unfilled aspect.
+    expect(canExtend(style, [])).toBe(false);
+    expect(canExtend(style)).toBe(false);
+  });
+
+  it("does not reopen a field eBay published no list for", () => {
+    // Nothing to work down, so this pass has no advantage over the first.
+    expect(canExtend(aspect("MPN", [], { cardinality: "MULTI" }), ["X1"])).toBe(
+      false,
+    );
   });
 });
 
