@@ -23,6 +23,7 @@ import {
 import {
   applyAspectAliases,
   enforceCardinality,
+  restoreRequiredDrops,
   sanitizeNumericAspects,
 } from "@/lib/ebay/aspects";
 import { fillShoeSizes } from "@/lib/shoe-sizes";
@@ -125,13 +126,8 @@ const categoryPath =
             );
             reconcileAspects(aspects, meta, listing, listing.category || "");
           }
-          // Last resort. The vision pass has had its turn at every aspect the
-          // first pass emptied; where it still found nothing, the seller's
-          // original words go back rather than the listing going out with a
-          // REQUIRED field blank. They filter nothing, which is why they were
-          // taken out, but a buyer reading the listing can still see them.
-          for (const [name, values] of Object.entries(dropped))
-            if (!aspects[name]?.length) aspects[name] = values;
+          // Last resort, and only where eBay insists on an answer.
+          restoreRequiredDrops(aspects, dropped, meta);
           fillShoeSizes(aspects, meta, listing.size);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);

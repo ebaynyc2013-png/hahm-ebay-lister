@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isChoiceSet, toAllowedValue, COLOR_SYNONYMS } from "@/lib/ebay/aspects";
+import {
+  isChoiceSet,
+  restoreRequiredDrops,
+  toAllowedValue,
+  COLOR_SYNONYMS,
+} from "@/lib/ebay/aspects";
 import { aspectPromptLine } from "@/lib/ebay/aspectFill";
 import { reconcileAspects } from "@/lib/ebay/publish";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
@@ -234,6 +239,34 @@ describe("what reconcileAspects hands back", () => {
   it("hands nothing back when everything was placed", () => {
     const aspects: Record<string, string[]> = { Style: ["Bohemian"] };
     expect(reconcile(aspects, [aspect("Style", DRESS_STYLE)])).toEqual({});
+  });
+});
+
+describe("restoring what eBay had no word for", () => {
+  const meta = [
+    aspect("Style", DRESS_STYLE, { required: true }),
+    aspect("Material", ["Cotton", "Linen", "Silk"]),
+  ];
+
+  it("leaves a RECOMMENDED aspect empty rather than putting prose back", () => {
+    // The regression this guards. eBay's Material list for a dress is fibre
+    // content and has no "Denim" — denim is a weave and goes to Fabric Type.
+    // A blanket restore quietly put "Denim" back under Material.
+    const aspects: Record<string, string[]> = {};
+    restoreRequiredDrops(aspects, { Material: ["Denim"] }, meta);
+    expect(aspects.Material).toBeUndefined();
+  });
+
+  it("fills a REQUIRED aspect rather than publishing it blank", () => {
+    const aspects: Record<string, string[]> = {};
+    restoreRequiredDrops(aspects, { Style: ["Puff Sleeve Button Front"] }, meta);
+    expect(aspects.Style).toEqual(["Puff Sleeve Button Front"]);
+  });
+
+  it("never overwrites what the vision pass managed to choose", () => {
+    const aspects: Record<string, string[]> = { Style: ["Casual"] };
+    restoreRequiredDrops(aspects, { Style: ["Puff Sleeve Button Front"] }, meta);
+    expect(aspects.Style).toEqual(["Casual"]);
   });
 });
 
