@@ -451,9 +451,17 @@ function departmentForCategory(catKey: string): string {
 // aspect metadata arrives, enforceCardinality() trims single-value aspects.
 // Placeholder phrases ("See tag in photos") never become aspect values —
 // cleanAspectValue/splitAspectValues drop them at the door.
+// True when eBay publishes a list of values for this aspect — in which case
+// that list, not prose, is what belongs in the field.
+function offersVocabulary(meta: AspectMeta[] | undefined, name: string): boolean {
+  const a = meta?.find((x) => x.name.toLowerCase() === name.toLowerCase());
+  return Boolean(a && a.values.length);
+}
+
 export function buildAspects(
   listing: ListingResult,
   catKey: string,
+  meta?: AspectMeta[],
 ): Record<string, string[]> {
   const aspects: Record<string, string[]> = {};
   const putOne = (k: string, v: string) => {
@@ -471,12 +479,21 @@ export function buildAspects(
   putMany("Material", listing.material);
   putOne("Type", String(listing.item_type || "").trim());
 
+  // The analysis writes key_features as prose for the description — "Puff
+  // sleeve with button cuff tabs", "Curved shirt tail hem". eBay's Features
+  // aspect is a closed vocabulary of about fifty entries (Pockets, Collared,
+  // Belted, Lined), and buyers filter on those. Seeding the aspect with prose
+  // put one matching value and four unfilterable phrases on the listing — and,
+  // worse, marked the aspect filled, so the photo pass never offered eBay's
+  // real list at all. The prose still carries the description; this field
+  // waits for the vocabulary.
   const feats = Array.isArray(listing.key_features) ? listing.key_features : [];
   const cleanFeats = feats
     .map((f) => cleanAspectValue(String(f)))
     .filter(Boolean)
     .slice(0, 5);
-  if (cleanFeats.length) aspects.Features = cleanFeats;
+  if (cleanFeats.length && !offersVocabulary(meta, "Features"))
+    aspects.Features = cleanFeats;
 
   if (departmentForCategory(catKey))
     aspects.Department = [departmentForCategory(catKey)];

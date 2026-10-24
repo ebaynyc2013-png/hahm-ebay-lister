@@ -59,6 +59,7 @@ export const PROFILE_PROMPT_ADDONS: Record<string, string> = {
   clothing: `\n\nPROFILE: CLOTHING / SHOES / ACCESSORIES
 Prioritize garment and fashion resale details. Read every tag and measurement photo.
 For clothing: capture exact brand, printed size, size type, department, fabric/material percentages, care/country tag, style, type, pattern, neckline, sleeve length, fit, closure, rise, inseam, waist, dress/skirt length, lining, hood, and condition flaws.
+The material field is fibre content and comes from the care tag — Cotton, Cotton Blend, Linen, Silk, Wool, Polyester, or the percentages printed there. A weave or construction name is not fibre content: denim, corduroy, chambray, jersey, lace, velvet and tweed describe how the cloth is made, belong in the listing's fabric/construction wording, and must not be put in material. Leave material empty when no tag states the fibre.
 For shoes: capture US/UK/EU size, width, upper/sole material, style, toe shape, heel height, closure, model, and condition of soles/insoles.
 For bags/accessories: capture style/type, exterior/interior material, closure, strap type/drop, hardware color, lining, pockets, dimensions, and flaws.
 Do not fill hard-good fields unless they are actually relevant.`,

@@ -101,7 +101,7 @@ const categoryPath =
               };
           }
           applyListingDefaults(listing, meta, ids);
-          const aspects = buildAspects(listing, listing.category || "");
+          const aspects = buildAspects(listing, listing.category || "", meta);
           reconcileAspects(aspects, meta, listing, listing.category || "");
           if (body.enrich === true)
             await fillRecommendedAspects(

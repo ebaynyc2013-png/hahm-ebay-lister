@@ -55,7 +55,15 @@ const visible = new Set([
 // the fill prompt already forbids inferring those. Lab grading: clarity and
 // cut come off a certificate.
 const notFromAppearance =
-  /\b(material|materials|fabric|metal|purity|stone|gemstone|karat|carat|plated?|plating|vintage|antique|era|year|age|origin|manufacture|manufactured|sourced|country|handmade|signed|customized|customised|personalize|personalise|personalized|wholesale|warranty|certif\w*|authentic\w*|grade|clarity|treatment|creation|cut)\b/i;
+  /\b(material|materials|metal|purity|stone|gemstone|karat|carat|plated?|plating|vintage|antique|era|year|age|origin|manufacture|manufactured|sourced|country|handmade|signed|customized|customised|personalize|personalise|personalized|wholesale|warranty|certif\w*|authentic\w*|grade|clarity|treatment|creation|cut)\b/i;
+
+// "Fabric type" is not among them, though "material" is, and the difference is
+// the whole point: eBay's Material is fibre content — Cotton, Linen, Wool —
+// which is read off a care tag, while its Fabric Type is weave and
+// construction — Denim, Corduroy, Lace, Velvet, Tweed — which is what a
+// photograph shows. A denim dress was filing "Denim" under Material, where
+// eBay has no such value and nobody filters for it, and leaving Fabric Type,
+// where eBay does, empty.
 
 // …except where the question is plainly about appearance after all. "Main
 // Stone Color" names a stone but asks for a colour, and a colour is what a

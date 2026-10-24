@@ -195,10 +195,29 @@ describe("choosing from a vocabulary eBay supplied", () => {
     ).toBe(false);
   });
 
+  it("tells fibre content from weave, as eBay does", () => {
+    // Material is fibre content off a care tag; Fabric Type is weave and
+    // construction, which a photograph shows. A denim dress was filing
+    // "Denim" under Material, where eBay offers no such value.
+    expect(
+      acceptedPhotoFact(
+        seen("Fabric Type", "Denim"),
+        1,
+        field("Fabric Type", ["Denim", "Corduroy", "Lace", "Velvet"]),
+      ),
+    ).toBe(true);
+    expect(
+      acceptedPhotoFact(
+        seen("Material", "Cotton"),
+        1,
+        field("Material", ["Cotton", "Linen", "Silk"]),
+      ),
+    ).toBe(false);
+  });
+
   it("holds the old lines against substance, age and provenance", () => {
     for (const [name, value] of [
       ["Material", "Cotton"],
-      ["Fabric Type", "Denim"],
       ["Metal", "Sterling Silver"],
       ["Main Stone", "Onyx"],
       ["Vintage", "Yes"],

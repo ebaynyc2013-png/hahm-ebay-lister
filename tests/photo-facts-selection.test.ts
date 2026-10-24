@@ -54,10 +54,11 @@ describe("facts seen in a photo, against eBay's own menus", () => {
   });
 
   it("still refuses what a photograph cannot settle", () => {
-    // Substance: cotton against linen, silver against plate.
+    // Substance: cotton against linen, silver against plate. Fabric Type is
+    // not among them — weave and construction are what a photograph shows,
+    // and eBay asks that question separately from fibre content.
     for (const name of [
       "Material",
-      "Fabric Type",
       "Metal",
       "Metal Purity",
       "Base Metal",
