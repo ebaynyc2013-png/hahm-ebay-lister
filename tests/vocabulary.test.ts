@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { snapToVocabulary } from "@/lib/ebay/aspects";
+import { COLOR_SYNONYMS, snapToVocabulary } from "@/lib/ebay/aspects";
 import { acceptedPhotoFact, type AspectShape } from "@/lib/photo-facts";
 
 // eBay's real colour list for Women's Dresses (63861) — seventeen values.
@@ -40,10 +40,66 @@ describe("snapToVocabulary", () => {
 
   it("keeps what eBay has no word for", () => {
     // Free text means free text — nothing is dropped.
-    expect(snapToVocabulary("Navy", COLORS)).toBe("Navy");
-    expect(snapToVocabulary("Burgundy", COLORS)).toBe("Burgundy");
     expect(snapToVocabulary("Blue Green", COLORS)).toBe("Blue Green");
     expect(snapToVocabulary("anything", [])).toBe("anything");
+  });
+});
+
+describe("bare shades", () => {
+  const snap = (v: string) => snapToVocabulary(v, COLORS, COLOR_SYNONYMS);
+
+  it("sends a shade home when it has one obvious home", () => {
+    // "Navy Blue" resolves by the word Blue; a bare "Navy" carries no eBay
+    // colour word at all, and resellers write bare shades constantly.
+    for (const [written, filed] of [
+      ["Navy", "Blue"],
+      ["Burgundy", "Red"],
+      ["Emerald", "Green"],
+      ["Charcoal", "Gray"],
+      ["Cream", "Ivory"],
+      ["Khaki", "Beige"],
+      ["Lavender", "Purple"],
+      ["Chocolate", "Brown"],
+      ["navy", "Blue"],
+    ] as const)
+      expect(snap(written)).toBe(filed);
+  });
+
+  it("prefers eBay's own word when the shade carries one", () => {
+    // Rose is Pink on its own, but "Rose Gold" is gold.
+    expect(snap("Rose Gold")).toBe("Gold");
+    expect(snap("Rose")).toBe("Pink");
+    expect(snap("Navy Blue")).toBe("Blue");
+  });
+
+  it("leaves a shade that belongs to two colours alone", () => {
+    // Teal has a fair claim on Blue and on Green; choosing one would drop the
+    // listing out of the other, so it stays as written.
+    for (const shade of [
+      "Teal",
+      "Turquoise",
+      "Coral",
+      "Rust",
+      "Mustard",
+      "Fuchsia",
+      "Taupe",
+      "Plum",
+    ])
+      expect(snap(shade)).toBe(shade);
+    // Two shades pointing different ways is no answer either.
+    expect(snap("Navy Burgundy")).toBe("Navy Burgundy");
+  });
+
+  it("only files a colour the category actually offers", () => {
+    // A category whose colour list omits Blue gets nothing from "Navy".
+    expect(snapToVocabulary("Navy", ["Red", "Green"], COLOR_SYNONYMS)).toBe(
+      "Navy",
+    );
+  });
+
+  it("leaves other fields' shades alone", () => {
+    // The synonyms are passed only for colour aspects.
+    expect(snapToVocabulary("Navy", COLORS)).toBe("Navy");
   });
 });
 

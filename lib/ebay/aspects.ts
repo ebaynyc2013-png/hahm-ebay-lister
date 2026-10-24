@@ -168,7 +168,11 @@ function words(value: string): string {
  * where no offered value fits, or more than one does, the value stands exactly
  * as written — free text means free text.
  */
-export function snapToVocabulary(value: string, allowed: string[]): string {
+export function snapToVocabulary(
+  value: string,
+  allowed: string[],
+  synonyms?: Record<string, string>,
+): string {
   if (!allowed.length || !value.trim()) return value;
   const exact = matchAllowed(value, allowed);
   if (exact) return exact;
@@ -177,8 +181,82 @@ export function snapToVocabulary(value: string, allowed: string[]): string {
     const needle = words(v);
     return needle.trim().length > 0 && haystack.includes(needle);
   });
-  return hits.length === 1 ? hits[0] : value;
+  if (hits.length === 1) return hits[0];
+  if (hits.length || !synonyms) return value;
+  // Nothing of eBay's vocabulary appears in the words themselves. A shade may
+  // still have one obvious home: "Navy Blue" resolves above because it carries
+  // the word Blue, but a bare "Navy" does not, and resellers write bare shades
+  // constantly.
+  const named = new Set(
+    haystack
+      .trim()
+      .split(" ")
+      .map((w) => synonyms[w])
+      .filter(Boolean),
+  );
+  if (named.size !== 1) return value;
+  const only = [...named][0];
+  return allowed.some((v) => v.toLowerCase() === only.toLowerCase())
+    ? only
+    : value;
 }
+
+/**
+ * Shades a reseller writes that eBay's colour list has no entry for, where the
+ * shade has one obvious home: a buyer filtering Red expects burgundy among the
+ * results, and one filtering Blue expects navy.
+ *
+ * Shades that sit between two of eBay's colours are deliberately absent —
+ * teal, turquoise, aqua, coral, rust, mustard, fuchsia, magenta, plum and
+ * taupe each have a fair claim on two, and choosing one would drop the listing
+ * out of the other. Those stay as written until someone who knows how their
+ * buyers search decides.
+ */
+export const COLOR_SYNONYMS: Record<string, string> = {
+  navy: "Blue",
+  cobalt: "Blue",
+  indigo: "Blue",
+  periwinkle: "Blue",
+  emerald: "Green",
+  olive: "Green",
+  forest: "Green",
+  sage: "Green",
+  mint: "Green",
+  lime: "Green",
+  hunter: "Green",
+  burgundy: "Red",
+  maroon: "Red",
+  wine: "Red",
+  crimson: "Red",
+  scarlet: "Red",
+  cherry: "Red",
+  charcoal: "Gray",
+  slate: "Gray",
+  grey: "Gray",
+  heather: "Gray",
+  cream: "Ivory",
+  eggshell: "Ivory",
+  bone: "Ivory",
+  ecru: "Ivory",
+  tan: "Beige",
+  khaki: "Beige",
+  camel: "Beige",
+  nude: "Beige",
+  sand: "Beige",
+  lavender: "Purple",
+  lilac: "Purple",
+  violet: "Purple",
+  mauve: "Purple",
+  blush: "Pink",
+  rose: "Pink",
+  bronze: "Gold",
+  brass: "Gold",
+  champagne: "Gold",
+  chocolate: "Brown",
+  espresso: "Brown",
+  cognac: "Brown",
+  chestnut: "Brown",
+};
 
 export function matchAllowed(value: string, allowed: string[]): string | null {
   const ls = (value || "").trim().toLowerCase();

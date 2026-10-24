@@ -30,6 +30,7 @@ import {
   sanitizeNumericAspects,
   snapToVocabulary,
   READ_NOT_JUDGED,
+  COLOR_SYNONYMS,
 } from "./aspects";
 import { fillRecommendedAspects } from "./aspectFill";
 import {
@@ -572,7 +573,10 @@ export function reconcileAspects(
       // Free text, but eBay still published a vocabulary for it — and buyers
       // filter on that vocabulary. Say "Blue" where eBay says "Blue"; keep
       // anything it has no word for.
-      aspects[a.name] = values.map((v) => snapToVocabulary(v, a.values));
+      const isColor = /\bcolou?r\b/i.test(a.name);
+      aspects[a.name] = values.map((v) =>
+        snapToVocabulary(v, a.values, isColor ? COLOR_SYNONYMS : undefined),
+      );
     }
   }
 }
