@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isChoiceSet, toAllowedValue, COLOR_SYNONYMS } from "@/lib/ebay/aspects";
+import {
+  isChoiceSet,
+  toAllowedValue,
+  COLOR_SYNONYMS,
+  MAX_MULTI_VALUES,
+} from "@/lib/ebay/aspects";
 import { allowedValuesFrom, aspectPromptLine } from "@/lib/ebay/aspectFill";
 import { reconcileAspects } from "@/lib/ebay/publish";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
@@ -57,6 +62,15 @@ const reconcile = (
   aspects: Record<string, string[]>,
   meta: AspectMeta[],
 ) => reconcileAspects(aspects, meta, listing, "clothing");
+
+it("leaves room for honest values without room to stuff", () => {
+  // eBay allows 30 values on a multi-value aspect. Our own cap sits well
+  // below it on purpose: its search manipulation policy forbids values that
+  // do not describe the item, so the cap is headroom for true answers, not
+  // a target to fill.
+  expect(MAX_MULTI_VALUES).toBeGreaterThanOrEqual(6);
+  expect(MAX_MULTI_VALUES).toBeLessThanOrEqual(12);
+});
 
 it("carries eBay's lists at the length eBay returns them", () => {
   // A truncated copy of a vocabulary makes these tests pass against words

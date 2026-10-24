@@ -68,10 +68,18 @@ export function splitAspectValues(v: unknown, maxLen = MAX_ASPECT_VALUE_LEN): st
   return flat;
 }
 
-// Cap how many values a MULTI aspect carries — enough to keep real data
-// ("Casual, Travel, Workwear") without letting a rambling model response
-// turn one aspect into a paragraph.
-export const MAX_MULTI_VALUES = 5;
+// Cap how many values a MULTI aspect carries. eBay itself allows thirty, so
+// this number is ours, not its: it exists to stop a rambling model response
+// turning one aspect into a paragraph, not to ration honest facts. Five was
+// cutting real ones short — a shirt dress is plausibly four or five Styles,
+// and a garment can carry six or seven true Features (Pockets, Collared,
+// Lined, Belt Loops, Stretch, Lightweight) without a word of padding.
+//
+// Deliberately far below eBay's thirty. Its search manipulation policy is
+// blunt — "Using keywords that are not directly related to the item for sale
+// is not allowed", on pain of the listing being removed — so room to fill a
+// field honestly is the goal, and room to stuff one is not.
+export const MAX_MULTI_VALUES = 8;
 
 // Make every aspect's value count legal for eBay. MULTI aspects keep up to
 // MAX_MULTI_VALUES entries; SINGLE aspects (and aspects eBay doesn't know,
