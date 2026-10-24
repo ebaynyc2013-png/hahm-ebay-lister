@@ -1,4 +1,4 @@
-import { READ_NOT_JUDGED } from "./ebay/aspects";
+import { mostlyNumeric, READ_NOT_JUDGED } from "./ebay/aspects";
 
 // Allow direct label facts and a small set of visible construction attributes.
 // An eBay allowed-value list is never evidence that a value is true.
@@ -69,14 +69,6 @@ const notFromAppearance =
 // Stone Color" names a stone but asks for a colour, and a colour is what a
 // photograph is best at.
 const appearanceHead = new Set(["color", "colour", "shape", "pattern"]);
-
-// eBay's values for a measurement are numbers — "16 in", "18 in" for a
-// necklace, "6.5", "7" for a shoe. A list of those is not a set of choices a
-// photograph can make, however many entries it has.
-function mostlyNumeric(values: string[]): boolean {
-  const numeric = values.filter((v) => /^\s*[\d.]/.test(v)).length;
-  return numeric * 2 > values.length;
-}
 
 export interface AspectShape {
   name: string;

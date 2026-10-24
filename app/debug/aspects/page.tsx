@@ -70,8 +70,10 @@ function Row({ a }: { a: AspectMeta }) {
           color: "var(--color-ink-soft)",
         }}
       >
-        {a.values.length ? a.values.slice(0, 40).join(" · ") : "—"}
-        {a.values.length > 40 ? ` … +${a.values.length - 40}` : ""}
+        {/* Every value, not the first forty. The page exists to be checked
+            against eBay, and a truncated list hid 23 of Style's 63 — among
+            them the ones a dress is actually filed under. */}
+        {a.values.length ? a.values.join(" · ") : "—"}
       </td>
     </tr>
   );

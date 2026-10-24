@@ -102,8 +102,20 @@ const categoryPath =
           }
           applyListingDefaults(listing, meta, ids);
           const aspects = buildAspects(listing, listing.category || "", meta);
-          reconcileAspects(aspects, meta, listing, listing.category || "");
-          if (body.enrich === true)
+          // Twice, and deliberately. The first pass renames the analysis
+          // model's keys to eBay's own and throws out values eBay has no word
+          // for, which is what leaves an aspect empty for the vision pass to
+          // fill from eBay's real list. The second holds whatever that pass
+          // added to the same standard — it ran after the first and would
+          // otherwise reach the listing unchecked. The call is idempotent, so
+          // a value already in eBay's words survives both.
+          const dropped = reconcileAspects(
+            aspects,
+            meta,
+            listing,
+            listing.category || "",
+          );
+          if (body.enrich === true) {
             await fillRecommendedAspects(
               listing,
               aspects,
@@ -111,6 +123,15 @@ const categoryPath =
               "draft",
               images,
             );
+            reconcileAspects(aspects, meta, listing, listing.category || "");
+          }
+          // Last resort. The vision pass has had its turn at every aspect the
+          // first pass emptied; where it still found nothing, the seller's
+          // original words go back rather than the listing going out with a
+          // REQUIRED field blank. They filter nothing, which is why they were
+          // taken out, but a buyer reading the listing can still see them.
+          for (const [name, values] of Object.entries(dropped))
+            if (!aspects[name]?.length) aspects[name] = values;
           fillShoeSizes(aspects, meta, listing.size);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);

@@ -29,6 +29,9 @@ import {
   enforceCardinality,
   sanitizeNumericAspects,
   snapToVocabulary,
+  isChoiceSet,
+  isColorAspect,
+  toAllowedValue,
   READ_NOT_JUDGED,
   COLOR_SYNONYMS,
 } from "./aspects";
@@ -569,12 +572,19 @@ function freeTextDefault(name: string, listing: ListingResult): string {
 }
 
 // Make every REQUIRED aspect present and valid. Mutates `aspects` in place.
+/**
+ * Returns whatever it took out, keyed by eBay's aspect name, so the caller can
+ * put it back if nothing better turns up. A word eBay has no entry for is a
+ * poor item specific — nobody can filter on it — but it still beats an empty
+ * REQUIRED field, and the caller alone knows whether another pass is coming.
+ */
 export function reconcileAspects(
   aspects: Record<string, string[]>,
   meta: AspectMeta[],
   listing: ListingResult,
   catKey: string,
-): void {
+): Record<string, string[]> {
+  const dropped: Record<string, string[]> = {};
   canonicalizeAspectKeys(aspects, meta);
   // Missing facts stay missing. Legal values are not evidence.
   for (const a of meta) {
@@ -584,18 +594,40 @@ export function reconcileAspects(
       const valid = values
         .map((v) => matchAllowed(v, a.values))
         .filter((v): v is string => Boolean(v));
+      // Not recorded as restorable: eBay rejects a SELECTION_ONLY value that
+      // is not on its menu, so putting it back would only fail the publish.
       if (valid.length) aspects[a.name] = valid;
       else delete aspects[a.name];
     } else if (a.values.length && !READ_NOT_JUDGED.has(a.name.toLowerCase())) {
       // Free text, but eBay still published a vocabulary for it — and buyers
-      // filter on that vocabulary. Say "Blue" where eBay says "Blue"; keep
-      // anything it has no word for.
-      const isColor = /\bcolou?r\b/i.test(a.name);
-      aspects[a.name] = values.map((v) =>
-        snapToVocabulary(v, a.values, isColor ? COLOR_SYNONYMS : undefined),
-      );
+      // filter on that vocabulary. Say "Blue" where eBay says "Blue".
+      const synonyms = isColorAspect(a.name) ? COLOR_SYNONYMS : undefined;
+      if (isChoiceSet(a)) {
+        // A closed set of answers, so a value that will not snap is dropped
+        // rather than kept. "Puff Sleeve Button Front" is a true sentence
+        // about a dress and a useless Style, since eBay's Style list for
+        // dresses is mood and era — Casual, Bohemian, Chic, Prairie — while
+        // the cut belongs to Sleeve Type, Silhouette and Closure. Dropping it
+        // leaves the aspect empty for the vision pass that runs next, which
+        // is shown the whole list and can choose from it properly.
+        const valid = values
+          .map((v) => toAllowedValue(v, a.values, synonyms))
+          .filter((v): v is string => Boolean(v));
+        if (valid.length) aspects[a.name] = valid;
+        else {
+          dropped[a.name] = values;
+          delete aspects[a.name];
+        }
+      } else {
+        // A scale rather than a vocabulary: snap where eBay has the word and
+        // keep what it has none for, since "17.5 in" is a real necklace.
+        aspects[a.name] = values.map((v) =>
+          snapToVocabulary(v, a.values, synonyms),
+        );
+      }
     }
   }
+  return dropped;
 }
 
 // ── eBay error parsing (from the script) ─────────────────────────────────────

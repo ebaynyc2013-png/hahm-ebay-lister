@@ -145,6 +145,56 @@ export const READ_NOT_JUDGED = new Set([
   "serial number",
 ]);
 
+// eBay's values for a measurement are numbers — "16 in", "18 in" for a
+// necklace, "6.5", "7" for a shoe, "1.2 mm" for a stone. A list of those is a
+// scale, not a set of choices, and a reading off a tape measure that eBay
+// happens not to list ("17.5 in") is still the right answer.
+export function mostlyNumeric(values: string[]): boolean {
+  const numeric = values.filter((v) => /^\s*[\d.]/.test(v)).length;
+  return numeric * 2 > values.length;
+}
+
+/**
+ * Whether eBay published a closed set of answers for this aspect — the exact
+ * words buyers filter on. Where it did, a value outside the set is worthless
+ * even when it is true: "Puff Sleeve Button Front" describes a dress
+ * perfectly and matches no Style filter on eBay, whose Style list for dresses
+ * is Casual, Bohemian, Chic, Prairie — mood and era, not cut.
+ *
+ * Two kinds of list are not choice sets. Identifiers and sizes are read off a
+ * label, and eBay's catalogue is not the limit of what exists — a brand it has
+ * never heard of is still the brand on the tag. Measurements are a scale
+ * rather than a vocabulary.
+ */
+export function isChoiceSet(a: { name: string; values: string[] }): boolean {
+  if (!a.values.length) return false;
+  if (READ_NOT_JUDGED.has(a.name.toLowerCase())) return false;
+  return !mostlyNumeric(a.values);
+}
+
+/**
+ * eBay's own word for a value, or null when eBay has no word for it.
+ *
+ * Tries the value as written, then lets `snapToVocabulary` reduce a shade or a
+ * qualified phrase ("Light Blue" → "Blue"), and insists the result is really
+ * in the list — snapping returns the input unchanged when it cannot place it.
+ */
+export function toAllowedValue(
+  value: string,
+  allowed: string[],
+  synonyms?: Record<string, string>,
+): string | null {
+  return (
+    matchAllowed(value, allowed) ??
+    matchAllowed(snapToVocabulary(value, allowed, synonyms), allowed)
+  );
+}
+
+/** eBay spells colour "Color"; its shade synonyms apply only to those fields. */
+export function isColorAspect(name: string): boolean {
+  return /\bcolou?r\b/i.test(name);
+}
+
 function words(value: string): string {
   return (
     " " +
