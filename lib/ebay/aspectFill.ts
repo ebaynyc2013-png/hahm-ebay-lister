@@ -64,9 +64,13 @@ export function aspectPromptLine(a: AspectMeta): string {
       : a.usage === "RECOMMENDED"
         ? " [recommended]"
         : "";
+  // Not "return an array": the output schema declares value as a string, so
+  // an array is not something the model is able to send. Asked for one, it
+  // sent a single value instead, and every MULTI aspect — Features, Style,
+  // Theme, Occasion, Season, Accents — quietly went out with one word.
   const multi =
     a.cardinality === "MULTI"
-      ? " (multiple values allowed — return an array)"
+      ? ` (up to ${MAX_MULTI_VALUES} values — put every one that applies in the single value string, separated by " | ")`
       : "";
   const tooLong = a.values.length > MAX_ALLOWED_VALUES_SHOWN;
   if (a.mode === "SELECTION_ONLY" && a.values.length) {
@@ -84,6 +88,49 @@ export function aspectPromptLine(a: AspectMeta): string {
     ? ` (common values: ${a.values.slice(0, 12).join(" | ")})`
     : "";
   return `- "${a.name}"${tag} (free text)${multi}${hint}`;
+}
+
+/**
+ * eBay's own values for a model-provided answer, and nothing else.
+ *
+ * Each answer is tried WHOLE before it is taken apart, because eBay's
+ * vocabularies are full of values that contain the very characters a split
+ * runs on: "Dangle/Drop" for earrings, "Hook & Eye" for a dress closure,
+ * "Trapeze & Swing" for a dress style, "Animals & Insects" and "Letters,
+ * Numbers & Words" for a theme. Split first and each becomes two words eBay
+ * has never heard of, and the aspect goes out empty.
+ *
+ * Splitting still happens after that, because a multi-value aspect arrives as
+ * one string — the model cannot return an array through the output schema, so
+ * it is asked for "Collared | Pockets" instead.
+ */
+export function allowedValuesFrom(raw: unknown, a: AspectMeta): string[] {
+  const synonyms = isColorAspect(a.name) ? COLOR_SYNONYMS : undefined;
+  const answers = (Array.isArray(raw) ? raw : [raw]).map((v) =>
+    String(v ?? "").trim(),
+  );
+  const vals: string[] = [];
+  const keep = (v: string | null) => {
+    if (v && !vals.includes(v)) vals.push(v);
+  };
+  for (const answer of answers) {
+    const whole = cleanAspectValue(answer, a.maxLength);
+    const asWhole = whole ? toAllowedValue(whole, a.values, synonyms) : null;
+    if (asWhole) {
+      keep(asWhole);
+      continue;
+    }
+    for (const part of splitAspectValues(answer, a.maxLength))
+      keep(toAllowedValue(part, a.values, synonyms));
+  }
+  // The model may have taken a compound value apart for us — ["Hook", "Eye"].
+  // Put it back together before giving up.
+  if (!vals.length && answers.length > 1)
+    for (const sep of ["/", " & ", " / ", ", ", " and "]) {
+      const joined = toAllowedValue(answers.join(sep), a.values, synonyms);
+      if (joined) return [joined];
+    }
+  return vals;
 }
 
 export async function fillRecommendedAspects(
@@ -161,7 +208,7 @@ Rules:
 - Use ONLY the supplied eBay aspect names as keys, spelled exactly as given.
 - When eBay provides allowed values for an aspect, use the exact supplied eBay value whenever one accurately describes the item. Do not invent a different term when an appropriate eBay value is available.
 - For "must be EXACTLY one of" aspects, copy the applicable value verbatim from the supplied list. A value you write yourself will be discarded, even when it is a true description of the item: these words are the words buyers filter and search on, and a word eBay does not publish matches nothing. Where no supplied value honestly fits, omit the aspect.
-- For aspects that allow multiple values, return a JSON array and include all values that genuinely and usefully apply to the item. Do not select irrelevant values merely to increase the number of filled fields.
+- For aspects that allow multiple values, fill them generously. Write every supplied value that honestly describes the item into one value string separated by " | ", up to ${MAX_MULTI_VALUES} of them — not only the single best one. Each is a separate filter a buyer may be browsing under, and a value you leave out is a buyer who never sees the item. A denim shirt dress is Casual and Western and Classic at once, and listing one of the three hides it from the other two. The bar is honesty, not caution: include a value when a buyer who searched for it would be satisfied to find this item, and leave out only what is plainly untrue of it.
 - Information already used in the title, description or another part of the listing should still be included in Item Specifics when it belongs in an eBay aspect.
 
 - UPC: for this seller's listings, use "Does Not Apply" whenever UPC is an available eBay aspect.
@@ -170,9 +217,9 @@ Rules:
 - Signed: when eBay provides a Signed aspect for the category, use "Yes" when the actual item has a visible brand/designer signature, hallmark, stamp or branded maker's mark on the item itself. The brand does not need to be a luxury brand. If the item itself has no such visible signature, hallmark, stamp or maker's mark, use "No". Do not create a Signed aspect for categories where eBay does not provide one.
 - Handmade: do not infer Handmade merely from appearance. Use seller-provided information from a photographed note, a readable label/tag, or other reliable evidence establishing whether the item is handmade.
 - Vintage and Antique are age-related facts. Do not classify an item as Vintage or Antique merely because its design looks old, retro, Art Deco, Victorian-inspired or vintage-style. Use Vintage or Antique when supported by seller-provided information, readable dating/markings, or other reliable evidence establishing the item's age or period. A vintage-inspired appearance may instead support an appropriate Style or Theme when eBay provides that value.
-- Style: what eBay means by Style changes completely from one category to the next, and the list supplied above for this category is its definition — read that list before answering. In clothing, Style is aesthetic, era and mood: Casual, Basic, Chic, Modern, Bohemian, Beach, Cocktail, Formal, Clubwear, Gothic, Nautical, Peasant, Prairie, Pin-Up, Flapper, 50s, 70s. It is never the cut — sleeves belong to Sleeve Type, overall shape to Silhouette, the neck to Neckline, the fastening to Closure and the hem to Dress Length, so a phrase like "puff sleeve button front" is not a Style and belongs in none of them. In jewellery, Style is the form of the piece: Stud, Hoop, Huggie, Dangle/Drop, Chandelier, Climber, Cuff, Tassel for earrings; Choker, Collar, Lariat, Y-Drop, Pendant, Station, Layered, Bib, Locket, Tennis, Charm for necklaces. Style is usually required and usually accepts several values — select every supplied value that genuinely applies, and do not pad it with ones that do not.
-- Features: actively evaluate all Features offered by eBay for the category. Select every offered feature that is reliably visible on the item or established by seller-provided information. Visible construction and functionality may be used as evidence for Features.
-- Theme: actively evaluate the Theme values supplied by eBay. Select the theme or themes that genuinely correspond to the item's visible design, motif, imagery, aesthetic or other reliable characteristics. Multiple themes may be selected when eBay allows multiple values and each selected theme genuinely applies. Do not add unrelated themes merely to fill the field.
+- Style: what eBay means by Style changes completely from one category to the next, and the list supplied above for this category is its definition — read that list before answering. In clothing, Style is aesthetic, era and mood: Casual, Basic, Chic, Modern, Bohemian, Beach, Cocktail, Formal, Clubwear, Gothic, Nautical, Peasant, Prairie, Pin-Up, Flapper, 50s, 70s. It is never the cut — sleeves belong to Sleeve Type, overall shape to Silhouette, the neck to Neckline, the fastening to Closure and the hem to Dress Length, so a phrase like "puff sleeve button front" is not a Style and belongs in none of them. In jewellery, Style is the form of the piece: Stud, Hoop, Huggie, Dangle/Drop, Chandelier, Climber, Cuff, Tassel for earrings; Choker, Collar, Lariat, Y-Drop, Pendant, Station, Layered, Bib, Locket, Tennis, Charm for necklaces. Style is usually required and usually accepts several values, and it is one of the fields buyers browse most — so give it several. A blue denim shirt dress is Casual, Shirt Dress and Western together, and naming only one of the three hides it from buyers browsing the other two. List every supplied value that honestly describes the item.
+- Features: actively evaluate all Features offered by eBay for the category and select every one that is reliably visible on the item or established by seller-provided information — this field is a list, not a single answer, and a dress with pockets and a collar is Pockets AND Collared, never one of the two. Visible construction and functionality may be used as evidence for Features. Work down eBay's whole list before answering rather than stopping at the first value that fits.
+- Theme: actively evaluate the Theme values supplied by eBay against the item's design, motif, imagery and overall aesthetic, and select every one that honestly fits — eBay's Theme list mixes pictorial motifs (Butterfly, Skull, Flower, Horse) with aesthetics (Classic, Retro, Preppy, Grunge, Hippie, Bohemian, Western), and a garment with no print can still carry an aesthetic. Several themes are normal and wanted. Leave Theme empty only when nothing on the list fits; what must not happen is a motif that is not there — no Flower on a plain dress.
 - Occasion: when eBay supplies an Occasion aspect for the category, fill it. Nearly every garment has at least one occasion it is genuinely worn for, and Casual is the honest answer for ordinary daywear — jeans, tees, sweatshirts, denim and jersey dresses — not a filler. Evening fabrics, beading and sequins are Party/Cocktail or Formal; tailoring, blazers and sheath dresses are Business or Workwear. Select every occasion that genuinely applies where eBay permits multiple values, and do not select every available one. Leave it empty only when the item is not clothing or nothing about it suggests any occasion.
 - Material and Fabric Type are different questions and eBay asks both. Material is fibre content — Cotton, Linen, Silk, Wool, Polyester — and comes from a care tag, a label or the seller's note, never from the look of the cloth. Fabric Type is weave and construction — Denim, Corduroy, Lace, Velvet, Tweed, Jersey, Knit — which a photograph shows plainly. Put denim under Fabric Type, not Material. Where telling one fabric from another depends on fibre content rather than construction, such as rayon against viscose or microfibre, leave Fabric Type to the care tag.
 - Season: when eBay supplies a Season aspect, it asks when the garment is worn, which follows from its weight, coverage and fabric and not from taste. Sleeveless and short-sleeve garments in linen, light cotton, chambray, lightweight denim or jersey are Summer. Heavy wool, thick knits, fleece, and quilted or lined outerwear are Winter. Long-sleeve garments in mid-weight fabric, light jackets and transitional layers are Spring and Fall. Choose the season the garment is actually made for; add a second season only when it suits that one just as well. Leave Season empty for a garment worn year round, or where nothing about it points to a season.
@@ -238,43 +285,19 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       if (!acceptedPhotoFact(fact, imageBlocks.length, a)) continue;
       const raw = fact.value;
       if (!a || aspects[a.name]) continue;
-      const parts = Array.isArray(raw)
-        ? raw
-            .map((v) => cleanAspectValue(String(v ?? ""), a.maxLength))
-            .filter(Boolean)
-        : splitAspectValues(raw, a.maxLength);
-      if (!parts.length) continue;
       let vals: string[];
-      if (a.mode === "SELECTION_ONLY") {
-        vals = [];
-        for (const p of parts) {
-          const canonical = matchAllowed(p, a.values);
-          if (canonical && !vals.includes(canonical)) vals.push(canonical);
-        }
-        // Splitting may have broken a compound allowed value apart — rejoin.
-        if (!vals.length && parts.length > 1) {
-          for (const sep of [" & ", " / ", ", ", " and "]) {
-            const joined = matchAllowed(parts.join(sep), a.values);
-            if (joined) {
-              vals = [joined];
-              break;
-            }
-          }
-        }
-        if (!vals.length) continue; // invalid selection — safer to leave empty
-      } else if (isChoiceSet(a)) {
-        // eBay called it free text and published the answers anyway. Hold it
-        // to them exactly as a menu is held: a word eBay does not know is a
-        // word no buyer can filter on, however true it is of the item.
-        const synonyms = isColorAspect(a.name) ? COLOR_SYNONYMS : undefined;
-        vals = [];
-        for (const p of parts) {
-          const canonical = toAllowedValue(p, a.values, synonyms);
-          if (canonical && !vals.includes(canonical)) vals.push(canonical);
-        }
+      // Where eBay published the answers — as a menu, or as "free text" with a
+      // vocabulary behind it — the answer is one of them or it is nothing.
+      if (a.mode === "SELECTION_ONLY" || isChoiceSet(a)) {
+        vals = allowedValuesFrom(raw, a);
         if (!vals.length) continue; // not eBay's word — leave the aspect empty
       } else {
-        vals = parts;
+        vals = Array.isArray(raw)
+          ? raw
+              .map((v) => cleanAspectValue(String(v ?? ""), a.maxLength))
+              .filter(Boolean)
+          : splitAspectValues(raw, a.maxLength);
+        if (!vals.length) continue;
       }
       aspects[a.name] =
         a.cardinality === "MULTI"

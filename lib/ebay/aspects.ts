@@ -190,27 +190,6 @@ export function toAllowedValue(
   );
 }
 
-/**
- * Put back what `reconcileAspects` took out, but only where eBay insists on an
- * answer. The whole justification for restoring a word eBay has no entry for —
- * it filters nothing — is that an empty REQUIRED field is worse still. Nothing
- * justifies it anywhere else, where empty is simply the better answer.
- *
- * Material is why this is narrow. eBay's Material list for a dress is fibre
- * content and holds no "Denim": denim is a weave, and belongs to Fabric Type.
- * Material is RECOMMENDED, so a blanket restore would quietly put "Denim" back
- * under Material and undo that.
- */
-export function restoreRequiredDrops(
-  aspects: Record<string, string[]>,
-  dropped: Record<string, string[]>,
-  meta: { name: string; required: boolean }[],
-): void {
-  const required = new Set(meta.filter((a) => a.required).map((a) => a.name));
-  for (const [name, values] of Object.entries(dropped))
-    if (required.has(name) && !aspects[name]?.length) aspects[name] = values;
-}
-
 /** eBay spells colour "Color"; its shade synonyms apply only to those fields. */
 export function isColorAspect(name: string): boolean {
   return /\bcolou?r\b/i.test(name);

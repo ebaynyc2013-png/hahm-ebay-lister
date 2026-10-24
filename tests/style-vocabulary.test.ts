@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  isChoiceSet,
-  restoreRequiredDrops,
-  toAllowedValue,
-  COLOR_SYNONYMS,
-} from "@/lib/ebay/aspects";
-import { aspectPromptLine } from "@/lib/ebay/aspectFill";
+import { isChoiceSet, toAllowedValue, COLOR_SYNONYMS } from "@/lib/ebay/aspects";
+import { allowedValuesFrom, aspectPromptLine } from "@/lib/ebay/aspectFill";
 import { reconcileAspects } from "@/lib/ebay/publish";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
 
@@ -13,13 +8,20 @@ import type { AspectMeta } from "@/lib/ebay/taxonomy";
 // this file is that they disagree with each other: Style means era and mood in
 // a dress and the shape of the piece in jewellery, so nothing about it can be
 // hard-coded — the category's own list has to be read and obeyed.
+// All 63, as eBay returns them for Women's Dresses (63861). The full list
+// matters here: the first forty stop at Prairie, and Shirt Dress, Western and
+// Trapeze & Swing — the ones these tests turn on — are all past it.
 const DRESS_STYLE = [
   "40s", "50s", "60s", "70s", "Anarkali", "Anime", "Art Deco", "Athleisure",
   "Athletic", "Basic", "Beach", "Blouson", "Bohemian", "Casual", "Chic",
   "Clubwear", "Cocktail", "Country", "Fairy", "Flapper", "Formal", "Gothic",
   "Gypsy", "Hawaiian", "Highstreet", "Jacket Dress", "Kaftan", "Lagenlook",
   "Lolita", "Maxi", "Mermaid", "Mini", "Modern", "Nautical", "Novelty",
-  "Office Lady", "Peasant", "Pencil Dress", "Pin-Up", "Prairie",
+  "Office Lady", "Peasant", "Pencil Dress", "Pin-Up", "Prairie", "Preppy",
+  "Princess", "Prom", "Punk", "Resort", "Retro", "Rockabilly", "Safari",
+  "Sailor", "Sheath", "Shirt Dress", "Slip Dress", "Streetwear", "Sundress",
+  "Sweater Dress", "Tank Dress", "Traditional", "Trapeze & Swing",
+  "T-Shirt Dress", "Victorian", "Vintage", "Western", "Wrap Dress",
 ];
 const EARRING_STYLE = [
   "Beaded", "Chandelier", "Climber", "Cuff", "Dangle/Drop", "Hoop", "Huggie",
@@ -55,6 +57,15 @@ const reconcile = (
   aspects: Record<string, string[]>,
   meta: AspectMeta[],
 ) => reconcileAspects(aspects, meta, listing, "clothing");
+
+it("carries eBay's lists at the length eBay returns them", () => {
+  // A truncated copy of a vocabulary makes these tests pass against words
+  // that are not really there, which is exactly the bug being fixed.
+  expect(DRESS_STYLE).toHaveLength(63);
+  expect(EARRING_STYLE).toHaveLength(10);
+  expect(NECKLACE_STYLE).toHaveLength(15);
+  expect(DRESS_COLORS).toHaveLength(17);
+});
 
 describe("isChoiceSet", () => {
   it("counts a published vocabulary as the set of answers", () => {
@@ -242,31 +253,65 @@ describe("what reconcileAspects hands back", () => {
   });
 });
 
-describe("restoring what eBay had no word for", () => {
-  const meta = [
-    aspect("Style", DRESS_STYLE, { required: true }),
-    aspect("Material", ["Cotton", "Linen", "Silk"]),
-  ];
+describe("eBay's own values, whole, and as many as apply", () => {
+  const multi = (name: string, values: string[]) =>
+    aspect(name, values, { cardinality: "MULTI" });
 
-  it("leaves a RECOMMENDED aspect empty rather than putting prose back", () => {
-    // The regression this guards. eBay's Material list for a dress is fibre
-    // content and has no "Denim" — denim is a weave and goes to Fabric Type.
-    // A blanket restore quietly put "Denim" back under Material.
-    const aspects: Record<string, string[]> = {};
-    restoreRequiredDrops(aspects, { Material: ["Denim"] }, meta);
-    expect(aspects.Material).toBeUndefined();
+  it("keeps a compound value in one piece", () => {
+    // The split runs on "/" and "&", and eBay's own vocabularies are full of
+    // both. Split first and "Dangle/Drop" becomes two words eBay never heard.
+    for (const [name, value, values] of [
+      ["Style", "Dangle/Drop", EARRING_STYLE],
+      ["Closure", "Hook & Eye", ["Button", "Hook & Eye", "Zip"]],
+      ["Style", "Trapeze & Swing", DRESS_STYLE],
+      ["Theme", "Animals & Insects", ["Animals & Insects", "Art", "Beach"]],
+      ["Pattern", "Argyle/Diamond", ["Argyle/Diamond", "Floral", "Solid"]],
+    ] as const)
+      expect(allowedValuesFrom(value, multi(name, [...values]))).toEqual([
+        value,
+      ]);
   });
 
-  it("fills a REQUIRED aspect rather than publishing it blank", () => {
-    const aspects: Record<string, string[]> = {};
-    restoreRequiredDrops(aspects, { Style: ["Puff Sleeve Button Front"] }, meta);
-    expect(aspects.Style).toEqual(["Puff Sleeve Button Front"]);
+  it("puts a compound value back together when the model split it", () => {
+    expect(
+      allowedValuesFrom(["Hook", "Eye"], multi("Closure", ["Hook & Eye"])),
+    ).toEqual(["Hook & Eye"]);
   });
 
-  it("never overwrites what the vision pass managed to choose", () => {
-    const aspects: Record<string, string[]> = { Style: ["Casual"] };
-    restoreRequiredDrops(aspects, { Style: ["Puff Sleeve Button Front"] }, meta);
-    expect(aspects.Style).toEqual(["Casual"]);
+  it("takes every value out of the one string the schema allows", () => {
+    // The model cannot return an array through the output schema, so it is
+    // asked for "Collared | Pockets" and every MULTI aspect was going out
+    // with a single word.
+    expect(
+      allowedValuesFrom(
+        "Collared | Pockets | Lined",
+        multi("Features", ["Collared", "Pockets", "Lined", "Sheer"]),
+      ),
+    ).toEqual(["Collared", "Pockets", "Lined"]);
+    expect(
+      allowedValuesFrom("Casual | Shirt Dress | Western", multi("Style", DRESS_STYLE)),
+    ).toEqual(["Casual", "Shirt Dress", "Western"]);
+  });
+
+  it("keeps the values eBay knows and drops the rest", () => {
+    expect(
+      allowedValuesFrom(
+        "Pockets | Puff Sleeve Button Front",
+        multi("Features", ["Collared", "Pockets"]),
+      ),
+    ).toEqual(["Pockets"]);
+  });
+
+  it("gives nothing back when eBay knows none of it", () => {
+    expect(
+      allowedValuesFrom("Puff Sleeve Button Front", multi("Style", DRESS_STYLE)),
+    ).toEqual([]);
+  });
+
+  it("still sends a shade home on a colour aspect", () => {
+    expect(allowedValuesFrom("Navy", aspect("Color", DRESS_COLORS))).toEqual([
+      "Blue",
+    ]);
   });
 });
 

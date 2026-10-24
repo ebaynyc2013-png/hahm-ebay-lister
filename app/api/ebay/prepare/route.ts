@@ -23,7 +23,6 @@ import {
 import {
   applyAspectAliases,
   enforceCardinality,
-  restoreRequiredDrops,
   sanitizeNumericAspects,
 } from "@/lib/ebay/aspects";
 import { fillShoeSizes } from "@/lib/shoe-sizes";
@@ -126,8 +125,17 @@ const categoryPath =
             );
             reconcileAspects(aspects, meta, listing, listing.category || "");
           }
-          // Last resort, and only where eBay insists on an answer.
-          restoreRequiredDrops(aspects, dropped, meta);
+          // Nothing is put back. A word eBay has no entry for filters nothing
+          // and searches nothing, so an empty aspect is the honest result —
+          // and it is not silent: validateAspects below reports a missing
+          // REQUIRED aspect as "Enter <name>" in the preparation issues, where
+          // the seller can supply eBay's own word before publishing.
+          if (Object.keys(dropped).length)
+            console.log(
+              `[ebay/prepare] left empty, no eBay value: ${Object.entries(dropped)
+                .map(([k, v]) => `${k}=${v.join("/")}`)
+                .join(", ")}`,
+            );
           fillShoeSizes(aspects, meta, listing.size);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
