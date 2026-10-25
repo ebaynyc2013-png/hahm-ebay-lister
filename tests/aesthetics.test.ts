@@ -43,6 +43,33 @@ describe("the aesthetics catalogue", () => {
     ])
       expect(names).toContain(expected);
   });
+
+  it("carries the nine that were researched rather than dropped", () => {
+    // The guide named these without saying what they look like. Each was
+    // looked up separately, so each is recognisable now.
+    const names = AESTHETICS.map((a) => a.name);
+    for (const expected of [
+      "Clean Girl",
+      "Coastal Cowgirl",
+      "Fishermancore",
+      "Scandinavian Minimalism",
+      "Cyberpunk",
+      "Harajuku",
+      "Grunge",
+      "Emo",
+      "Scene",
+    ])
+      expect(names).toContain(expected);
+  });
+
+  it("leaves only what could not be sourced in the no-cues list", () => {
+    // Y3K is gone, judged a slip for Y2K, which is covered twice already.
+    expect(AESTHETICS_WITHOUT_CUES).toEqual(["Campcore"]);
+    const names = AESTHETICS.map((a) => a.name);
+    expect(names).toContain("Y2K Vintage");
+    expect(names).toContain("Y2K Style");
+    expect(names).not.toContain("Y3K");
+  });
 });
 
 describe("words that must not reach a title", () => {

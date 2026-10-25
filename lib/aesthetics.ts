@@ -87,6 +87,16 @@ export const AESTHETICS: Aesthetic[] = [
   { name: "Western", cues: "cowboy boots, denim shirts, pearl snaps, fringe, suede, bolo ties, concho belts, cowboy hats, turquoise" },
   { name: "Y2K Vintage", cues: "genuine late-90s and early-2000s pieces: baby tees, velour tracksuits, baguette bags, rhinestones, butterflies, low-rise jeans, trucker hats" },
   { name: "Y2K Style", cues: "the look without the age: baby tees, pleated mini skirts, micro shorts, halter tops, lace camisoles, chunky trainers" },
+  // Named in the guide without cues; researched separately and now recognisable.
+  { name: "Clean Girl", cues: "very few colours, polished but unfussy; white, black, grey, light neutrals; slicked centre-parted bun, glossy skin, gold hoops" },
+  { name: "Coastal Cowgirl", cues: "western meets beach: cowboy boots and hats, denim and chambray shirts, denim shorts, floaty sundresses, florals, flannel, linen; earth tones, denim blue, bright accents; horses and shells" },
+  { name: "Fishermancore", cues: "cream Aran and chunky knits, Breton boat-neck stripes, yellow raincoats, tactical vests with big pockets, waterproof boots, deck shoes, sailor caps, bucket hats; sardine and tinned-fish motifs" },
+  { name: "Scandinavian Minimalism", cues: "oversized menswear-cut suits, leather trousers, straight jeans, plain tees and white shirts, cashmere knits, flowing midi skirts, blazers; linen, wool, cashmere, suede; monochrome with one bold accessory; baggy silhouette, flat shoes" },
+  { name: "Cyberpunk", cues: "futuristic gothic: trench coats, boots, shiny black surfaces" },
+  { name: "Harajuku", cues: "Japanese street maximalism: graphic tops, wide trousers, mesh layered over basics, faux fur, puffer or leather statement jackets, accessories piled on; any palette from pastel to neon to black, patterns mixed (substyles: Decora, Fairy Kei, Gyaru, Visual Kei)" },
+  { name: "Grunge", cues: "loose androgynous silhouette, worn denim, plaid flannel, distressed raw edges, knit beanie, heavy combat boots" },
+  { name: "Emo", cues: "black with bright accents, band tees, skinny low-rise jeans, oversized hoodies, striped arm warmers and tights, Converse or Vans, studded and checked belts, rubber bracelets" },
+  { name: "Scene", cues: "black with neon, bright printed skinny jeans, band tees, white and studded belts, tutus, arm warmers, fingerless gloves, high-top Converse; stripes, plaid, checkerboard, skulls, hearts, cartoon characters" },
 ];
 
 /**
@@ -96,16 +106,14 @@ export const AESTHETICS: Aesthetic[] = [
  * the seller writes it on her note herself.
  */
 export const AESTHETICS_WITHOUT_CUES = [
-  "Clean Girl",
-  "Coastal Cowgirl",
-  "Fishermancore",
-  "Scandinavian Minimalism",
-  "Cyberpunk",
-  "Y3K",
-  "Harajuku",
-  "Grunge",
-  "Emo",
-  "Scene",
+  // Campcore alone is left here. Nine of the guide's undescribed names were
+  // researched and moved up into the catalogue above; for this one no source
+  // describing it could be found, and a name with no cues is nothing to
+  // recognise.
+  //
+  // Y3K was dropped rather than researched: the seller judges it a slip for
+  // Y2K, which the catalogue already covers twice — once for genuine
+  // period pieces and once for the look without the age.
   "Campcore",
 ];
 
