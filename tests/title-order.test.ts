@@ -51,10 +51,18 @@ describe("the title rules in the prompt", () => {
   it("carries the trimming order", () => {
     const block = prompt.slice(prompt.indexOf("WHEN THE TITLE IS OVER 80"));
     const at = (s: string) => block.indexOf(s);
-    expect(at("1. the second variant")).toBeLessThan(at('2. the word "Size"'));
+    expect(at("1. a word that appears twice")).toBeLessThan(at('2. the word "Size"'));
     expect(at('2. the word "Size"')).toBeLessThan(at("3. the construction detail"));
     expect(at("3. the construction detail")).toBeLessThan(at("4. the aesthetic tail"));
     expect(at("4. the aesthetic tail")).toBeLessThan(at("5. the full size word"));
+  });
+
+  it("trims a repeated word first, never the second variant itself", () => {
+    // "Denim Jacket Jeans Jacket" loses the second Jacket, not "Jeans Jacket".
+    const block = prompt.slice(prompt.indexOf("WHEN THE TITLE IS OVER 80"));
+    expect(block).toContain('"Denim Jacket Jeans Jacket" becomes "Denim Jacket Jeans"');
+    expect(block).toContain("The second variant of the item word is NOT removed");
+    expect(block).not.toContain("1. the second variant");
   });
 
   it("asks for both shoe sizes and never for gender or condition", () => {

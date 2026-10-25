@@ -131,12 +131,12 @@ NEVER IN THE TITLE:
 - "Barbie" or "Gypsy". Both are allowed in item specifics and never in the title: Barbie is a trademark and Gypsy a slur, and listings carrying either are taken down. An aesthetic name that merely contains a word, such as "Barbiecore", is fine.
 
 WHEN THE TITLE IS OVER 80 CHARACTERS, remove in this order, one step at a time, and stop as soon as it fits:
-1. the second variant of the item word (slot 9)
+1. a word that appears twice — remove the repeat and keep the first: "Denim Jacket Jeans Jacket" becomes "Denim Jacket Jeans", and a second "Silver" goes while the first stays. The second variant of the item word is NOT removed for being a variant; only a repeated word is.
 2. the word "Size" itself — keep the size value
 3. the construction detail words (slot 8)
 4. the aesthetic tail (slot 11)
 5. the full size word, keeping the abbreviation ("L Large" becomes "L")
-Never remove the brand, the item word, the size value, the vintage and era from the note, or "Damaged" / "For Parts" / "New With Tags".
+Never remove the brand, the item word, the size value, the second variant of the item word, the vintage and era from the note, or "Damaged" / "For Parts" / "New With Tags".
 
 Use only sizes and measurements supported by visible labels, markings, measurement photos or the seller's note. Never estimate measurements from appearance. Write dimensions with the ordinary ASCII letter x, never the multiplication symbol.
 
