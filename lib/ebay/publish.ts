@@ -1019,6 +1019,21 @@ export interface PublishInput {
   // eBay-hosted photo URLs from /api/ebay/upload-photos. The preferred flow:
   // photos ship in small batches beforehand, so the publish body stays tiny.
   imageUrls?: string[];
+  // Start the listing SCHEDULE_DELAY_HOURS from now instead of at once.
+  scheduled?: boolean;
+}
+
+/**
+ * How far ahead a delayed listing starts. eBay has no API for Seller Hub
+ * drafts — its developer support says so outright — but the Inventory API
+ * takes a future listingStartDate on the offer, and the listing can be revised
+ * on eBay's site until then, which is where eBay's own suggested item
+ * specifics appear. A day is room to do that without the item sitting idle.
+ */
+export const SCHEDULE_DELAY_HOURS = 24;
+
+export function scheduledStart(now = Date.now()): string {
+  return new Date(now + SCHEDULE_DELAY_HOURS * 3600_000).toISOString();
 }
 
 // Only accept photo URLs that eBay Picture Services itself minted — anything
@@ -1053,6 +1068,8 @@ export interface PublishResult {
   // retrieved, so the listing published with generic specifics). Surfaced in
   // the UI so degraded listings stop failing silently.
   warnings?: string[];
+  // Set when the listing was posted with a delayed start: when it goes live.
+  scheduledFor?: string;
 }
 
 // EBAY_STRICT_QUALITY=1 turns quality warnings into publish failures: better a
@@ -1236,10 +1253,13 @@ export async function publishListing(
         }
       : {}),
   };
+  const startAt = input.scheduled === true ? scheduledStart() : undefined;
   const offerBody = {
     sku,
     marketplaceId: EBAY_MARKETPLACE_ID,
     format: "FIXED_PRICE",
+    // Absent for an ordinary post, so a retry without scheduling clears it.
+    ...(startAt ? { listingStartDate: startAt } : {}),
     listingDescription: listing.description,
     pricingSummary: {
       price: { value: price.toFixed(2), currency: EBAY_CURRENCY },
@@ -1343,7 +1363,13 @@ export async function publishListing(
     );
   } catch (error) {
     const live = await findPublishedOffer(accessToken, sku);
-    if (live) return { success: true, sku, ...live };
+    if (live)
+      return {
+        success: true,
+        sku,
+        ...live,
+        ...(startAt ? { scheduledFor: startAt } : {}),
+      };
     throw error;
   }
   if (published.ok && published.json?.listingId)
@@ -1352,9 +1378,16 @@ export async function publishListing(
       sku,
       offerId,
       listingId: String(published.json.listingId),
+      ...(startAt ? { scheduledFor: startAt } : {}),
     };
   const live = await findPublishedOffer(accessToken, sku);
-  if (live) return { success: true, sku, ...live };
+  if (live)
+    return {
+      success: true,
+      sku,
+      ...live,
+      ...(startAt ? { scheduledFor: startAt } : {}),
+    };
   return {
     success: false,
     sku,

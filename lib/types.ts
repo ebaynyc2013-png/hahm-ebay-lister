@@ -130,6 +130,15 @@ export interface ItemGroup {
   postError?: string;
   // Non-fatal quality warnings from the last publish (e.g. schema unavailable)
   postWarnings?: string[];
+  /**
+   * Post with the listing's start delayed, instead of live at once. eBay offers
+   * no way to create a Seller Hub draft through its API, and its own suggested
+   * item specifics only appear on Revise — so a delayed start is the window in
+   * which the seller can open it on eBay and accept them before it goes live.
+   */
+  scheduleStart?: boolean;
+  /** When a delayed listing goes live (ISO time), as eBay was told. */
+  scheduledFor?: string;
 }
 
 export interface PreparedCategory {

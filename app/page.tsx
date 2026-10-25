@@ -757,6 +757,7 @@ export default function Home() {
           error?: string;
           alreadyListed?: boolean;
           warnings?: string[];
+          scheduledFor?: string;
         } | null = null;
         let hadTransientRetry = false;
         for (let attempt = 0; ; attempt++) {
@@ -767,6 +768,7 @@ export default function Home() {
             shipping: group.shipping,
             review: group.preparation,
             expectedPhotoCount: group.photoIds.length,
+            scheduled: group.scheduleStart === true,
           });
           // Wait out rate limits / transient platform errors instead of dying
           // mid-batch with "try again later".
@@ -799,6 +801,7 @@ export default function Home() {
                   ...g,
                   postStatus: "posted",
                   listingId: data!.listingId,
+                  scheduledFor: data!.scheduledFor,
                   postWarnings: allWarnings.length ? allWarnings : undefined,
                 }
               : g,

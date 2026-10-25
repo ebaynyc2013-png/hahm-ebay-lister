@@ -341,7 +341,11 @@ export function ListingCard({
           {group.postStatus === "posted" ? (
             <>
               <p className="post-result ok">
-                ✅ Posted to eBay
+                {group.scheduledFor
+                  ? `✅ Scheduled on eBay — goes live ${new Date(
+                      group.scheduledFor,
+                    ).toLocaleString()}. Open it on eBay and use Revise to accept eBay's suggested item specifics before then.`
+                  : "✅ Posted to eBay"}
                 {group.listingId ? (
                   <>
                     {" "}
@@ -378,10 +382,25 @@ export function ListingCard({
                     <span className="spinner" aria-hidden="true" /> Posting to
                     eBay…
                   </>
+                ) : group.scheduleStart ? (
+                  "🕒 Schedule on eBay (starts in 24 h)"
                 ) : (
                   "🚀 Post this to eBay"
                 )}
               </button>
+              <label className="post-hint">
+                <input
+                  type="checkbox"
+                  checked={group.scheduleStart === true}
+                  disabled={group.postStatus === "posting"}
+                  onChange={(e) =>
+                    onGroupEdit(group.id, { scheduleStart: e.target.checked })
+                  }
+                />{" "}
+                Delay start by 24 hours — time to open it on eBay, press Revise
+                and accept eBay&apos;s suggested item specifics before it goes
+                live
+              </label>
               {group.postStatus === "error" && group.postError && (
                 <p className="post-result err">⚠️ {group.postError}</p>
               )}
