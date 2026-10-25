@@ -193,6 +193,27 @@ suggestions,
               expiresAt,
               signature: signReview(id, expiresAt),
               fill,
+              ...(categorySelection
+                ? {
+                    categoryChoices: {
+                      aiPick: categorySelection.selected.id,
+                      options: [
+                        {
+                          id: categorySelection.selected.id,
+                          path: categorySelection.selected.path,
+                          warning: "",
+                        },
+                        ...categorySelection.alternatives.map((a) => ({
+                          id: a.id,
+                          path: a.path,
+                          warning: a.warning,
+                        })),
+                      ],
+                      reason: categorySelection.reason,
+                      confidence: categorySelection.confidence,
+                    },
+                  }
+                : {}),
               issues: validateAspects(aspects, meta),
             },
             usage: currentUsage(),

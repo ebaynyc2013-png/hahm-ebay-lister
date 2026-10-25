@@ -367,3 +367,102 @@ test("defaults the seller policies and allows review without package measurement
     "heavy",
   );
 });
+
+test("shows the AI's category with alternates; tapping one refills that category's fields", async ({
+  page,
+}) => {
+  const sent: any[] = [];
+  await setup(page);
+  const paths: Record<string, string> = {
+    "551": "Art > Paintings",
+    "554": "Art > Mixed Media Art & Collage Art",
+  };
+  await page.route("**/api/ebay/prepare", (r) => {
+    const l = r.request().postDataJSON().listing;
+    sent.push(l);
+    const searched = !l.category_id;
+    const id = l.category_id || "551";
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          ...l,
+          category_id: id,
+          category_path: paths[id],
+          ebay_condition: "",
+          // What this category's fill would add on top.
+          item_specifics: {
+            ...l.item_specifics,
+            Type: id === "551" ? "Painting" : "Collage",
+          },
+        },
+        preparation: {
+          categoryId: id,
+          categoryName: paths[id],
+          aspects: [],
+          conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
+          expiresAt: Date.now() + 3600000,
+          signature: "test",
+          issues: [],
+          // Only the Prepare that searched carries the AI's choice.
+          ...(searched
+            ? {
+                categoryChoices: {
+                  aiPick: "551",
+                  options: [
+                    { id: "551", path: paths["551"], warning: "" },
+                    {
+                      id: "554",
+                      path: paths["554"],
+                      warning:
+                        "Type offers only Assemblage, Collage, Mosaic — none is a painting",
+                    },
+                  ],
+                  reason: "A resin painting on canvas.",
+                  confidence: "high",
+                },
+              }
+            : {}),
+        },
+      },
+    });
+  });
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+    { name: "back.png", mimeType: "image/png", buffer: png },
+  ]);
+  await expect(page.locator(".thumb")).toHaveCount(2);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await page.getByRole("button", { name: /Write.*listing/i }).click();
+
+  const group = page.getByRole("radiogroup", { name: "Category" });
+  await expect(group).toBeVisible();
+  const radios = group.getByRole("radio");
+  await expect(radios).toHaveCount(2);
+  await expect(radios.nth(0)).toBeChecked();
+  await expect(group).toContainText("Art > Paintings (551)");
+  await expect(group).toContainText("AI’s choice");
+  await expect(group).toContainText("none is a painting");
+  await expect(group).toContainText("A resin painting on canvas.");
+  await page.screenshot({ path: "test-results/category-choices.png", fullPage: true });
+
+  // Tap the alternate: the fields are filled again for it, from the first draft.
+  await group.getByText("Art > Mixed Media Art & Collage Art").click();
+  await expect.poll(() => sent.length).toBe(2);
+  expect(sent[1].category_id).toBe("554");
+  expect(sent[1].category_path).toBe(paths["554"]);
+  expect(sent[1].item_specifics).toEqual({ Brand: "Canon", Model: "R5" });
+  await expect(radios.nth(1)).toBeChecked();
+  await expect(page.getByLabel("Category ID", { exact: true })).toHaveValue("554");
+
+  // A later Prepare keeps the choices on the card.
+  await page.getByRole("button", { name: "Prepare category and specifics" }).click();
+  await expect.poll(() => sent.length).toBe(3);
+  await expect(radios).toHaveCount(2);
+
+  // And back again.
+  await group.getByText("Art > Paintings").click();
+  await expect.poll(() => sent.length).toBe(4);
+  expect(sent[3].category_id).toBe("551");
+  await expect(radios.nth(0)).toBeChecked();
+});

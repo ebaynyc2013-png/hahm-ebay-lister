@@ -7,6 +7,7 @@ import {
 import { toImageBlock, type WireImage } from "@/lib/images";
 import { remainingTime } from "@/lib/network";
 import type { ListingResult } from "@/lib/types";
+import { isChoiceSet } from "./aspects";
 import {
   categoryAspects,
   suggestLeafCategories,
@@ -19,10 +20,23 @@ const MAX_CATEGORY_IMAGES = 24;
 const RESULTS_PER_QUERY = 6;
 const MAX_CANDIDATES = 8;
 const MAX_ASPECTS_SHOWN = 24;
+// A required aspect's whole word list is shown when it is this short — long
+// enough for Type, Department or Format, short of Brand or Size lists.
+const MAX_REQUIRED_VALUES_SHOWN = 40;
+const REQUIRED_VALUES_SAMPLE = 12;
+export const MAX_ALTERNATIVES = 3;
+
+/** A category the seller can switch to, with the AI's caution if it has one. */
+export interface CategoryAlternative extends CategorySuggestion {
+  /** Empty, or why a required field of this category may not fit the item. */
+  warning: string;
+}
 
 export interface CategorySelection {
   selected: CategorySuggestion;
   suggestions: CategorySuggestion[];
+  /** 0–3 other candidates that could hold the item, best first. */
+  alternatives: CategoryAlternative[];
   confidence: "high" | "medium" | "low";
   reason: string;
 }
@@ -78,24 +92,62 @@ function rankSuggestions(
     .map((entry) => entry.suggestion);
 }
 
-function summarizeAspects(meta: AspectMeta[]): string[] {
-  const priority = { REQUIRED: 0, RECOMMENDED: 1, OPTIONAL: 2 } as const;
-
-  return [...meta]
-    .sort(
-      (a, b) =>
-        (priority[a.usage] ?? 2) - (priority[b.usage] ?? 2),
-    )
-    .slice(0, MAX_ASPECTS_SHOWN)
-    .map((aspect) => {
-      const tag =
-        aspect.usage === "REQUIRED"
-          ? " [required]"
-          : aspect.usage === "RECOMMENDED"
-            ? " [recommended]"
-            : "";
-      return `${aspect.name}${tag}`;
+/**
+ * What the category model sees of one candidate's item specifics.
+ *
+ * Required aspects come WITH eBay's words when eBay gives a short list: the
+ * seller fills fields with eBay's words only, so a category whose required
+ * list has no word for the item cannot be filled honestly. A painting once
+ * went to Mixed Media & Collage (554), whose required Type offers only
+ * Assemblage, Collage and Mosaic, because the model saw the field's name and
+ * not its words.
+ */
+export function describeAspects(meta: AspectMeta[]): {
+  required: string[];
+  recommended: string[];
+} {
+  const required = meta
+    .filter((a) => a.required || a.usage === "REQUIRED")
+    .map((a) => {
+      // Brand, Size, numbers: read off the item, not chosen from words.
+      if (!isChoiceSet(a)) return a.name;
+      if (a.values.length <= MAX_REQUIRED_VALUES_SHOWN)
+        return `${a.name} — only one of: ${a.values.join(" | ")}`;
+      return `${a.name} — one of ${a.values.length} eBay values, e.g. ${a.values
+        .slice(0, REQUIRED_VALUES_SAMPLE)
+        .join(" | ")} …`;
     });
+  const recommended = meta
+    .filter((a) => !(a.required || a.usage === "REQUIRED"))
+    .filter((a) => a.usage === "RECOMMENDED")
+    .slice(0, MAX_ASPECTS_SHOWN)
+    .map((a) => a.name);
+  return { required, recommended };
+}
+
+/**
+ * The model's alternates, made safe: only real candidates from eBay's list,
+ * never the chosen category, no repeats, at most three, best first.
+ */
+export function cleanAlternatives(
+  raw: unknown,
+  suggestions: CategorySuggestion[],
+  selectedId: string,
+): CategoryAlternative[] {
+  const out: CategoryAlternative[] = [];
+  const seen = new Set([selectedId]);
+  for (const item of Array.isArray(raw) ? raw : []) {
+    const id = clean((item as { categoryId?: unknown })?.categoryId, 20);
+    const found = suggestions.find((s) => s.id === id);
+    if (!found || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      ...found,
+      warning: clean((item as { warning?: unknown })?.warning, 200),
+    });
+    if (out.length >= MAX_ALTERNATIVES) break;
+  }
+  return out;
 }
 
 export async function selectBestLeafCategory(
@@ -136,7 +188,7 @@ export async function selectBestLeafCategory(
       number: index + 1,
       id: suggestion.id,
       path: suggestion.path,
-      aspectNames: summarizeAspects(aspects),
+      ...describeAspects(aspects),
     }),
   );
 
@@ -180,7 +232,8 @@ Your job:
 - NEVER invent a category or category ID.
 - Prefer the narrowest accurate category that genuinely matches the physical item.
 - Use the entire category path, not merely the final category name.
-- Use the supplied eBay aspect names as a sanity check. The aspects should make sense for this kind of item.
+- Use the supplied eBay aspects as a check. The aspects should make sense for this kind of item.
+- REQUIRED aspects that come with eBay's words ("only one of: …") must be filled with one of THOSE words — the seller uses eBay's words only, never her own. If a candidate's required list has no word that truthfully describes this item, that category is WRONG for it: do not choose it. Example: a painting does not belong in a category whose required Type offers only Assemblage, Collage and Mosaic when another candidate is a paintings category.
 - Do not choose a category merely because one keyword in the title happens to match.
 - Distinguish fundamentally different product families correctly: jewelry, watches, clothing, shoes, bags, auto parts, electronics, art, collectibles, home goods, media, and other categories.
 - For jewelry, distinguish item type carefully: necklace, pendant, earrings, ring, bracelet, brooch, charm, etc.
@@ -188,7 +241,10 @@ Your job:
 - Re-check the photos before making the final selection.
 - If two categories are close, choose the one whose category path AND item-specific aspect schema best fit the actual item.
 
-Return the chosen category ID, confidence, and a short reason.`;
+Then name the ALTERNATIVES the seller might reasonably pick instead: 1 to ${MAX_ALTERNATIVES} OTHER candidates from the list, best first, each one a category this very item could genuinely be listed in. Never repeat the chosen category. Never list a category for a different kind of item (no guitars, coasters or earrings for a painting) — if fewer candidates genuinely fit, list fewer.
+For each alternative give a warning: an empty string, unless one of that category's REQUIRED aspects with eBay's words has no word that fits this item — then say which aspect and why in a few plain words (e.g. "Type offers only Assemblage, Collage, Mosaic — none is a painting").
+
+Return: reason (one or two plain sentences: why the chosen category fits best), the chosen category ID, the alternatives, and your confidence.`;
 
   try {
     const client = getClient();
@@ -198,27 +254,43 @@ Return the chosen category ID, confidence, and a short reason.`;
       client,
       {
         model: CATEGORY_MODEL,
-        max_tokens: 500,
+        max_tokens: 900,
         output_config: {
           format: {
             type: "json_schema",
             schema: {
               type: "object",
               additionalProperties: false,
+              // Written in this order: the reasoning comes before the pick.
               properties: {
+                reason: {
+                  type: "string",
+                },
                 categoryId: {
                   type: "string",
                   enum: suggestions.map((s) => s.id),
+                },
+                alternatives: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      categoryId: {
+                        type: "string",
+                        enum: suggestions.map((s) => s.id),
+                      },
+                      warning: { type: "string" },
+                    },
+                    required: ["categoryId", "warning"],
+                  },
                 },
                 confidence: {
                   type: "string",
                   enum: ["high", "medium", "low"],
                 },
-                reason: {
-                  type: "string",
-                },
               },
-              required: ["categoryId", "confidence", "reason"],
+              required: ["reason", "categoryId", "alternatives", "confidence"],
             },
           },
         },
@@ -247,6 +319,7 @@ Return the chosen category ID, confidence, and a short reason.`;
 
     const result = parseModelJson<{
       categoryId: string;
+      alternatives?: unknown;
       confidence: "high" | "medium" | "low";
       reason: string;
     }>(text);
@@ -264,8 +337,13 @@ Return the chosen category ID, confidence, and a short reason.`;
     return {
       selected,
       suggestions,
+      alternatives: cleanAlternatives(
+        result.alternatives,
+        suggestions,
+        selected.id,
+      ),
       confidence: result.confidence,
-      reason: result.reason,
+      reason: clean(result.reason, 400),
     };
   } catch (e) {
     const fatal = anthropicAuthError(e);

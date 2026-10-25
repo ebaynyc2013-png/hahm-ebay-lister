@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import type { ItemGroup, Photo } from "@/lib/types";
+import type { CategoryOption, ItemGroup, Photo } from "@/lib/types";
 import type { AccountOptions } from "@/lib/ebay/publish";
 import { applyShippingDefaults } from "@/lib/shipping-defaults";
 import { requestText } from "@/lib/text-dialog";
@@ -13,6 +13,7 @@ interface Props {
 }
 export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
   const [busy, setBusy] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [options, setOptions] = useState<AccountOptions>();
   const [error, setError] = useState("");
   const latest = useRef(g);
@@ -66,7 +67,38 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
     // Shown by the picker above; a second control for the same value would
     // only invite the two to look out of step.
   ].filter((name) => !(showDepartmentPicker && name === "Department"));
-  async function prepare() {
+  // The AI's category pick and its alternates. They come only from the
+  // Prepare that searched for the category, so they are carried forward here.
+  const choices = g.preparation?.categoryChoices;
+  /**
+   * Switch to another category and fill its fields at once. The fields start
+   * again from what the listing was first written with, so the new category is
+   * filled as if it had been the first choice — not from words the old
+   * category put there.
+   */
+  function switchCategory(o: CategoryOption) {
+    if (busy || o.id === l.category_id) return;
+    const restart = { ...(g.analysisSpecifics ?? l.item_specifics ?? {}) };
+    const next: typeof l = {
+      ...l,
+      category_id: o.id,
+      category_path: o.path,
+      ebay_condition: "",
+      item_specifics: restart,
+      evidence: { ...(g.analysisEvidence ?? {}) },
+    };
+    for (const [key, field] of [
+      ["Brand", "brand"],
+      ["Size", "size"],
+      ["Material", "material"],
+      ["Type", "item_type"],
+    ] as const)
+      if (key in restart) next[field] = restart[key];
+    onGroupEdit(g.id, { listing: next, compsStatus: "stale", comps: undefined });
+    setSwitching(true);
+    void prepare(next).finally(() => setSwitching(false));
+  }
+  async function prepare(listing: typeof l = l) {
     setBusy(true);
     setError("");
     try {
@@ -75,7 +107,7 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
         .filter((p): p is Photo => Boolean(p) && p!.analysisSelected !== false)
         .map((p) => ({ mediaType: p.mediaType, data: p.data }));
       const r = await apiPost("/api/ebay/prepare", {
-        listing: l,
+        listing,
         images,
         // Every press re-reads the photos, not just the first. The fill only
         // touches aspects that are still empty, so edits already made survive.
@@ -83,13 +115,18 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
       });
       const d = await r.json();
       if (!d.ok) throw new Error(d.error);
-      if (latest.current.listing !== l)
+      if (latest.current.listing !== listing)
         throw new Error(
           "The draft changed while preparing. Prepare it again to keep your edits.",
         );
       onGroupEdit(g.id, {
         listing: d.listing,
-        preparation: d.preparation,
+        preparation: {
+          ...d.preparation,
+          categoryChoices:
+            d.preparation?.categoryChoices ??
+            latest.current.preparation?.categoryChoices,
+        },
         preparationError: undefined,
         usage: [...(g.usage ?? []), ...(d.usage ?? [])],
         comps: undefined,
@@ -145,6 +182,49 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
       className="draft-controls"
     >
       <legend>Review eBay details</legend>
+      {choices && choices.options.length > 0 && (
+        <div className="category-choices" role="radiogroup" aria-label="Category">
+          <p className="category-choices-title">
+            Category — tap another one to switch; its fields are filled again
+          </p>
+          {choices.options.map((o) => {
+            const current = o.id === l.category_id;
+            return (
+              <label
+                key={o.id}
+                className={`category-option${current ? " current" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name={`category-${g.id}`}
+                  checked={current}
+                  onChange={() => switchCategory(o)}
+                />
+                <span className="category-option-text">
+                  <span>
+                    {o.path} <span className="category-id">({o.id})</span>
+                    {o.id === choices.aiPick && (
+                      <span className="category-ai-tag">AI&rsquo;s choice</span>
+                    )}
+                  </span>
+                  {o.warning && (
+                    <span className="category-warning">⚠️ {o.warning}</span>
+                  )}
+                </span>
+              </label>
+            );
+          })}
+          {choices.reason && (
+            <p className="category-reason">
+              Why the AI chose it ({choices.confidence} confidence):{" "}
+              {choices.reason}
+            </p>
+          )}
+          {switching && (
+            <p className="category-reason">Filling the fields for this category…</p>
+          )}
+        </div>
+      )}
       {showDepartmentPicker && departmentMeta && (
         <label>
           Department{departmentMeta.required ? " *" : ""}
@@ -181,32 +261,6 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
           </select>
         </label>
       )}
-      {!!g.preparation?.suggestions?.length && (
-        <label>
-          Suggested category
-          <select
-            value={l.category_id || ""}
-            onChange={(e) =>
-              edit({
-                category_id: e.target.value,
-                // The suggestion carries eBay's path; keep it, since the
-                // Department is read off it on the next Prepare.
-                category_path:
-                  g.preparation?.suggestions?.find(
-                    (c) => c.id === e.target.value,
-                  )?.path ?? "",
-                ebay_condition: "",
-              })
-            }
-          >
-            {g.preparation.suggestions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.path}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
       <label>
         Category ID{" "}
         <input
@@ -223,7 +277,7 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
           }
         />
       </label>
-      <button type="button" onClick={prepare}>
+      <button type="button" onClick={() => void prepare()}>
         {busy ? "Working…" : "Prepare category and specifics"}
       </button>
       {g.preparation && <p>{g.preparation.categoryName}</p>}

@@ -402,6 +402,8 @@ export default function Home() {
                 status: "idle" as const,
                 listing: undefined,
                 analysisPhotoIds: undefined,
+                analysisSpecifics: undefined,
+                analysisEvidence: undefined,
                 preparation: undefined,
                 comps: undefined,
                 imageUrls: undefined,
@@ -505,6 +507,9 @@ export default function Home() {
                   ...g,
                   status: "writing",
                   listing: data.listing,
+                  // Kept so a later switch of category starts from these.
+                  analysisSpecifics: { ...(data.listing?.item_specifics ?? {}) },
+                  analysisEvidence: { ...(data.listing?.evidence ?? {}) },
                   evidencePhotoIds: [
                     ...(group.analysisPhotoIds ?? group.photoIds),
                   ],

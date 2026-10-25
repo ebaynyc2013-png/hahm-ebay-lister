@@ -113,6 +113,14 @@ export interface ItemGroup {
   status: ItemStatus;
   error?: string;
   analysisPhotoIds?: string[];
+  /**
+   * The item specifics (and their photo citations) exactly as the listing was
+   * first written, before any category shaped them. Switching to another
+   * category starts again from these, so the new category is filled as if it
+   * had been chosen in the first place.
+   */
+  analysisSpecifics?: Record<string, string>;
+  analysisEvidence?: Record<string, number[]>;
   preparation?: PreparedCategory;
   preparationError?: string;
   usage?: AiUsage[];
@@ -141,8 +149,30 @@ export interface ItemGroup {
   scheduledFor?: string;
 }
 
+/** One category the seller can pick on the card. */
+export interface CategoryOption {
+  id: string;
+  path: string;
+  /** Empty, or the AI's caution: a required field may have no word for the item. */
+  warning?: string;
+}
+
+/**
+ * The AI's category choice, kept on the card: its pick first, then 0–3
+ * alternates, best first. It is produced only when the app searches for the
+ * category itself (right after a listing is written), so the card carries it
+ * forward through every later Prepare instead of losing it.
+ */
+export interface CategoryChoices {
+  aiPick: string;
+  options: CategoryOption[];
+  reason: string;
+  confidence: "high" | "medium" | "low";
+}
+
 export interface PreparedCategory {
   suggestions?: import("./ebay/taxonomy").CategorySuggestion[];
+  categoryChoices?: CategoryChoices;
   categoryId: string;
   categoryName: string;
   aspects: AspectMeta[];
