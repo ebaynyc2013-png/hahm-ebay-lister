@@ -20,6 +20,7 @@ title: z.string().trim().min(1).max(80),
   category: text.optional(),
   category_hint: text.optional(),
   category_id: z.string().regex(/^\d*$/).max(20).optional(),
+  category_path: z.string().max(400).optional(),
   ebay_condition: text.optional(),
   evidence: z
     .record(

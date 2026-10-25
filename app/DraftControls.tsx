@@ -187,7 +187,16 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
           <select
             value={l.category_id || ""}
             onChange={(e) =>
-              edit({ category_id: e.target.value, ebay_condition: "" })
+              edit({
+                category_id: e.target.value,
+                // The suggestion carries eBay's path; keep it, since the
+                // Department is read off it on the next Prepare.
+                category_path:
+                  g.preparation?.suggestions?.find(
+                    (c) => c.id === e.target.value,
+                  )?.path ?? "",
+                ebay_condition: "",
+              })
             }
           >
             {g.preparation.suggestions.map((c) => (
@@ -204,7 +213,13 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
           aria-label="Category ID"
           value={l.category_id ?? ""}
           onChange={(e) =>
-            edit({ category_id: e.target.value, ebay_condition: "" })
+            // A hand-typed ID makes any kept path stale — it belonged to the
+            // old category — so it is cleared rather than trusted.
+            edit({
+              category_id: e.target.value,
+              category_path: "",
+              ebay_condition: "",
+            })
           }
         />
       </label>

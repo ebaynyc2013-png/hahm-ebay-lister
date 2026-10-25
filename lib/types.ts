@@ -9,6 +9,14 @@ export interface ListingResult {
   category?: string;
   category_hint?: string;
   category_id?: string;
+  /**
+   * eBay's path for category_id ("… > Women > Women's Shoes > Heels"), kept
+   * beside it. Department is read off this path, and it is only known when
+   * the app searches for the category itself — so without it, a second
+   * Prepare or a category picked from the suggestions loses the Department.
+   * Cleared whenever the ID is typed by hand, since it would then be stale.
+   */
+  category_path?: string;
   ebay_condition?: string;
   evidence?: Record<string, number[]>;
   brand?: string;

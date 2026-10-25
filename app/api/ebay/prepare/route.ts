@@ -1,5 +1,6 @@
 import { applyListingDefaults } from "@/lib/listing-defaults";
 import {
+  applyDefaultDepartment,
   expectedDepartment,
   departmentFromCategoryPath,
 } from "@/lib/category-selection";
@@ -59,11 +60,15 @@ if (!id)
   );
 
 // eBay's path for the chosen leaf, e.g. "… > Women > Women's Shoes > Sandals".
-// Empty when the seller typed a bare category ID, since nothing then looked the
-// category up.
+// Found by this run's own category search when there was one; otherwise the
+// path kept beside the ID from an earlier Prepare or from the suggestion the
+// seller picked. Without that last source a second Prepare lost the
+// Department every time, because nothing looked the category up again. Empty
+// only when the ID was typed by hand.
 const categoryPath =
   categorySelection?.selected.path ||
   suggestions.find((c) => c.id === id)?.path ||
+  listing.category_path ||
   "";
           const token = await accessTokenFromCookie(
             req.cookies.get(EBAY_COOKIE)?.value,
@@ -142,6 +147,10 @@ const categoryPath =
                 .map(([k, v]) => `${k}=${v.join("/")}`)
                 .join(", ")}`,
             );
+          // Path, then photos, then the seller's note have all had their turn
+          // at Department by now. Her rule for whatever is still undecided:
+          // Women, where eBay offers it in this category.
+          applyDefaultDepartment(aspects, meta);
           fillShoeSizes(aspects, meta, listing.size);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
@@ -162,6 +171,9 @@ const categoryPath =
             if (c) c.label = "Pre-owned Good (3000)";
           }
           listing.category_id = id;
+          // Kept with the ID so the next Prepare can still read Department
+          // off it without searching for the category again.
+          listing.category_path = categoryPath;
           listing.item_specifics = Object.fromEntries(
             Object.entries(aspects).map(([k, v]) => [k, v.join(" | ")]),
           );
