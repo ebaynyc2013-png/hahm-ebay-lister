@@ -1030,6 +1030,32 @@ export interface PublishInput {
  * on eBay's site until then, which is where eBay's own suggested item
  * specifics appear. A day is room to do that without the item sitting idle.
  */
+/**
+ * The description as eBay should show it: one paragraph per section.
+ *
+ * The listing is written as plain text with a blank line between sections —
+ * "Brand: …", "Condition: …", "Type: …". eBay renders the description as a
+ * web page, where plain line breaks mean nothing, so a published listing
+ * showed every section run together in a single block. Blank lines become
+ * paragraphs, single line breaks become <br>, and the text itself is escaped
+ * so a brand like "Charles & Keith" survives intact.
+ *
+ * Only the offer's listingDescription is converted. The inventory item keeps
+ * the plain text, which is what the SKU check compares on a retry.
+ */
+export function descriptionToHtml(text: string): string {
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .trim()
+    .split(/\n[ \t]*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${esc(p).replace(/[ \t]*\n[ \t]*/g, "<br>")}</p>`)
+    .join("\n");
+}
+
 export const SCHEDULE_DELAY_HOURS = 24;
 
 export function scheduledStart(now = Date.now()): string {
@@ -1260,7 +1286,9 @@ export async function publishListing(
     format: "FIXED_PRICE",
     // Absent for an ordinary post, so a retry without scheduling clears it.
     ...(startAt ? { listingStartDate: startAt } : {}),
-    listingDescription: listing.description,
+    // As HTML: eBay renders the description as a web page, where plain line
+    // breaks collapse and every section ran together into one paragraph.
+    listingDescription: descriptionToHtml(listing.description),
     pricingSummary: {
       price: { value: price.toFixed(2), currency: EBAY_CURRENCY },
     },
