@@ -117,17 +117,17 @@ WORD ORDER, first to last:
 6. The item word — always present and specific: "Shirt Dress", "Necklace", "Ring", "Heels", "Blazer".
 7. Size or measurement, when the label, a measurement photo or the note supports it:
    - apparel letter sizes as abbreviation then full word: "L Large", "XS Extra Small", "M Medium"
-   - shoes: BOTH the US and the EU size when known: "6.5 EU 37"
+   - shoes: BOTH the US and the EU size, US first: "6.5 EU 37". Write the size exactly as you read it — "EU 37" from a European insole, "US 6.5" from an American one. Never convert it yourself: the program adds the other size from eBay's official chart.
    - rings and numeric apparel: "Size 8", "Size 32"
    - necklaces and other items where length or dimensions decide the purchase: "18in", "10x7in"
 8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip").
 9. A second variant of the item word, when buyers search both phrasings ("Jean Dress", "Evening Shoes", "Cocktail Dress").
-10. "Damaged" or "For Parts" — only when the seller's note or the item itself says so.
+10. "Damaged", "For Parts" or "New With Tags" — only when the seller's note or the item itself says so (attached original tags count for New With Tags).
 11. Aesthetic tail, last — one or two of the aesthetics you returned in "aesthetics" ("Western", "Preppy", "Office Siren").
 
 NEVER IN THE TITLE:
 - Gender words — "Women's", "Womens", "Woman", "Ladies", "Men's", "Mens" — for women's and men's items alike. The seller never spends title space on them.
-- Condition wording such as "Excellent Condition", "Great Condition", "EUC", "Pre-owned". The only exceptions are "Damaged" and "For Parts", placed as above.
+- Condition wording such as "Excellent Condition", "Great Condition", "EUC", "Pre-owned". The only exceptions are "Damaged", "For Parts" and "New With Tags", placed as above.
 - "Barbie" or "Gypsy". Both are allowed in item specifics and never in the title: Barbie is a trademark and Gypsy a slur, and listings carrying either are taken down. An aesthetic name that merely contains a word, such as "Barbiecore", is fine.
 
 WHEN THE TITLE IS OVER 80 CHARACTERS, remove in this order, one step at a time, and stop as soon as it fits:
@@ -136,7 +136,7 @@ WHEN THE TITLE IS OVER 80 CHARACTERS, remove in this order, one step at a time, 
 3. the construction detail words (slot 8)
 4. the aesthetic tail (slot 11)
 5. the full size word, keeping the abbreviation ("L Large" becomes "L")
-Never remove the brand, the item word, the size value, the vintage and era from the note, or "Damaged" / "For Parts".
+Never remove the brand, the item word, the size value, the vintage and era from the note, or "Damaged" / "For Parts" / "New With Tags".
 
 Use only sizes and measurements supported by visible labels, markings, measurement photos or the seller's note. Never estimate measurements from appearance. Write dimensions with the ordinary ASCII letter x, never the multiplication symbol.
 

@@ -40,7 +40,7 @@ describe("the title rules in the prompt", () => {
       "7. Size or measurement",
       "8. Construction details",
       "9. A second variant",
-      '10. "Damaged" or "For Parts"',
+      '10. "Damaged", "For Parts" or "New With Tags"',
       "11. Aesthetic tail",
     ];
     for (const s of steps) expect(at(s), s).toBeGreaterThan(-1);
