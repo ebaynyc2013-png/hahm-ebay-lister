@@ -264,13 +264,23 @@ export function snapToVocabulary(
  * shade has one obvious home: a buyer filtering Red expects burgundy among the
  * results, and one filtering Blue expects navy.
  *
- * Shades that sit between two of eBay's colours are deliberately absent —
- * teal, turquoise, aqua, coral, rust, mustard, fuchsia, magenta, plum and
- * taupe each have a fair claim on two, and choosing one would drop the listing
- * out of the other. Those stay as written until someone who knows how their
- * buyers search decides.
+ * Nine shades that sit between two of eBay's colours were held back until the
+ * seller, who knows how her buyers search, decided where each belongs. She
+ * did: turquoise, teal and aqua are Blue; coral and fuchsia are Pink; rust is
+ * Orange; mustard is Yellow; taupe is Beige; plum is Purple. Magenta was not
+ * among them and stays as written.
  */
 export const COLOR_SYNONYMS: Record<string, string> = {
+  // The seller's own decisions on the in-between shades.
+  turquoise: "Blue",
+  teal: "Blue",
+  aqua: "Blue",
+  coral: "Pink",
+  fuchsia: "Pink",
+  rust: "Orange",
+  mustard: "Yellow",
+  taupe: "Beige",
+  plum: "Purple",
   navy: "Blue",
   cobalt: "Blue",
   indigo: "Blue",

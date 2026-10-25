@@ -21,6 +21,8 @@ const NEVER_IN_TITLE: RegExp[] = [
   new RegExp(`\\bwomen${Q}?s\\b`, "gi"),
   new RegExp(`\\bwoman${Q}?s?\\b`, "gi"),
   new RegExp(`\\bladies${Q}?(?=\\s|$)`, "gi"),
+  // Men's too: the seller writes no gender in a title, women's or men's.
+  new RegExp(`\\bmen${Q}?s\\b`, "gi"),
   /\b(?:excellent|great|good|very good|gently used|like new|mint)\s+condition\b/gi,
   /\b(?:euc|guc|vguc|nwot)\b/gi,
   /\bpre[\s-]?owned\b/gi,

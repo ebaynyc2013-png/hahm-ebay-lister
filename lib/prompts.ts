@@ -126,7 +126,7 @@ WORD ORDER, first to last:
 11. Aesthetic tail, last — one or two of the aesthetics you returned in "aesthetics" ("Western", "Preppy", "Office Siren").
 
 NEVER IN THE TITLE:
-- "Women's", "Womens", "Woman", "Ladies" — the seller never spends title space on them.
+- Gender words — "Women's", "Womens", "Woman", "Ladies", "Men's", "Mens" — for women's and men's items alike. The seller never spends title space on them.
 - Condition wording such as "Excellent Condition", "Great Condition", "EUC", "Pre-owned". The only exceptions are "Damaged" and "For Parts", placed as above.
 - "Barbie" or "Gypsy". Both are allowed in item specifics and never in the title: Barbie is a trademark and Gypsy a slur, and listings carrying either are taken down. An aesthetic name that merely contains a word, such as "Barbiecore", is fine.
 

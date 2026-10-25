@@ -72,20 +72,26 @@ describe("bare shades", () => {
     expect(snap("Navy Blue")).toBe("Blue");
   });
 
-  it("leaves a shade that belongs to two colours alone", () => {
-    // Teal has a fair claim on Blue and on Green; choosing one would drop the
-    // listing out of the other, so it stays as written.
-    for (const shade of [
-      "Teal",
-      "Turquoise",
-      "Coral",
-      "Rust",
-      "Mustard",
-      "Fuchsia",
-      "Taupe",
-      "Plum",
-    ])
-      expect(snap(shade)).toBe(shade);
+  it("files the in-between shades where the seller decided", () => {
+    // These sit between two of eBay's colours and were held back until she
+    // chose. Turquoise→Blue and Coral→Pink are her own examples.
+    for (const [written, filed] of [
+      ["Turquoise", "Blue"],
+      ["Teal", "Blue"],
+      ["Aqua", "Blue"],
+      ["Coral", "Pink"],
+      ["Fuchsia", "Pink"],
+      ["Rust", "Orange"],
+      ["Mustard", "Yellow"],
+      ["Taupe", "Beige"],
+      ["Plum", "Purple"],
+    ] as const)
+      expect(snap(written)).toBe(filed);
+  });
+
+  it("still leaves an undecided or contradictory shade alone", () => {
+    // Magenta was not among her decisions.
+    expect(snap("Magenta")).toBe("Magenta");
     // Two shades pointing different ways is no answer either.
     expect(snap("Navy Burgundy")).toBe("Navy Burgundy");
   });

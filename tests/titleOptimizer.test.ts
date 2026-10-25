@@ -99,3 +99,28 @@ describe("optimizeTitle", () => {
     );
   });
 });
+
+describe("men's items", () => {
+  test("drop Men's from the title too", () => {
+    expect(
+      optimizeTitle({ ...base, title: "Ralph Lauren Men's Navy Oxford Shirt L Large" }),
+    ).toBe("Ralph Lauren Navy Oxford Shirt L Large");
+  });
+
+  test("keep a brand that carries the word", () => {
+    expect(
+      optimizeTitle({
+        ...base,
+        brand: "Men's Wearhouse",
+        title: "Men's Wearhouse Black Suit Jacket 42R",
+      }),
+    ).toBe("Men's Wearhouse Black Suit Jacket 42R");
+  });
+
+  test("leave words that merely contain men alone", () => {
+    // \b keeps "men" inside "Women" and "Menswear" alone.
+    expect(optimizeTitle({ ...base, title: "Menswear Inspired Gray Blazer M Medium" })).toBe(
+      "Menswear Inspired Gray Blazer M Medium",
+    );
+  });
+});

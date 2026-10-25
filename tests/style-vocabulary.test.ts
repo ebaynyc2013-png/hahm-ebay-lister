@@ -213,11 +213,17 @@ describe("what dropping must not swallow", () => {
   });
 
   it("drops a colour eBay has no word for at all", () => {
-    // Teal sits between Blue and Green; neither is the answer, and a word
-    // eBay does not publish filters nothing.
-    const aspects: Record<string, string[]> = { Color: ["Teal"] };
+    // Magenta is not among the seller's decided shades, and a word eBay does
+    // not publish filters nothing.
+    const aspects: Record<string, string[]> = { Color: ["Magenta"] };
     reconcile(aspects, [aspect("Color", DRESS_COLORS)]);
     expect(aspects.Color).toBeUndefined();
+  });
+
+  it("files Teal as Blue, as the seller decided", () => {
+    const aspects: Record<string, string[]> = { Color: ["Teal"] };
+    reconcile(aspects, [aspect("Color", DRESS_COLORS)]);
+    expect(aspects.Color).toEqual(["Blue"]);
   });
 
   it("is idempotent, since prepare now runs it twice", () => {
@@ -240,7 +246,7 @@ describe("what reconcileAspects hands back", () => {
     // publishing a REQUIRED field empty.
     const aspects: Record<string, string[]> = {
       Style: ["Puff Sleeve Button Front"],
-      Color: ["Teal"],
+      Color: ["Magenta"],
     };
     const dropped = reconcile(aspects, [
       aspect("Style", DRESS_STYLE),
@@ -248,7 +254,7 @@ describe("what reconcileAspects hands back", () => {
     ]);
     expect(dropped).toEqual({
       Style: ["Puff Sleeve Button Front"],
-      Color: ["Teal"],
+      Color: ["Magenta"],
     });
   });
 
@@ -391,6 +397,7 @@ describe("toAllowedValue", () => {
     expect(toAllowedValue("Puff Sleeve Button Front", DRESS_STYLE)).toBeNull();
     expect(toAllowedValue("Light Blue", DRESS_COLORS)).toBe("Blue");
     expect(toAllowedValue("Navy", DRESS_COLORS, COLOR_SYNONYMS)).toBe("Blue");
-    expect(toAllowedValue("Teal", DRESS_COLORS, COLOR_SYNONYMS)).toBeNull();
+    expect(toAllowedValue("Teal", DRESS_COLORS, COLOR_SYNONYMS)).toBe("Blue");
+    expect(toAllowedValue("Magenta", DRESS_COLORS, COLOR_SYNONYMS)).toBeNull();
   });
 });
