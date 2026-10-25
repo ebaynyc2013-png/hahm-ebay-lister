@@ -30,6 +30,9 @@ title: { type: "string", maxLength: 80 },
     search_terms: strings,
     seo_keywords: strings,
     key_features: strings,
+    // Named style aesthetics the item genuinely shows — the words buyers
+    // browse by. Empty is a normal answer for a plain item.
+    aesthetics: strings,
     specifics: {
       type: "array",
       items: PHOTO_FACT_SCHEMA,
@@ -52,6 +55,7 @@ title: { type: "string", maxLength: 80 },
     "search_terms",
     "seo_keywords",
     "key_features",
+    "aesthetics",
     "specifics",
   ],
 };

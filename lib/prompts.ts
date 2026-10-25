@@ -1,6 +1,8 @@
 // Listing-analysis prompts ported verbatim from ebay_lister_v2_robust.py so the
 // web app writes listings exactly the way the original script did.
 
+import { aestheticsPromptBlock } from "./aesthetics";
+
 export const ITEM_PROFILES = [
   "auto",
   "clothing",
@@ -595,10 +597,30 @@ photoIndices are 1-based source photo numbers.
 Omit any specific that does not have adequate supporting evidence.
 
 The final listing should be clean, specific, professional, buyer-friendly, and structured exactly like a high-quality experienced eBay jewelry seller listing.`;
+
+// The aesthetics catalogue is appended rather than written inline: it is data
+// that changes as fashion does, and the prompt should not have to be rewritten
+// when a new core appears.
+const AESTHETICS_SECTION = `
+
+STYLE AESTHETICS
+
+Buyers browse by aesthetic — "bohemian blue dress", "office siren blazer", "gorpcore fleece" — and an item whose listing never names its aesthetic is invisible to every one of those searches.
+
+Return in "aesthetics" every aesthetic below whose cues the item genuinely shows. Judge by the cues, not by the name: the cues are what a photograph can settle.
+
+Rules:
+- Name an aesthetic only when the item really shows its cues. A trending word on an item that does not fit brings the wrong buyer, loses the sale, and risks the listing.
+- Several may apply at once. Two or three is normal; return them all.
+- Return an empty list when nothing fits. A plain item with no aesthetic is an ordinary outcome, not a failure.
+- These are aesthetics, not condition, not size and not occasion.
+
+${aestheticsPromptBlock()}`;
+
 export function buildProfiledAnalysisPrompt(profile: string): string {
   const normalized = normalizeItemProfile(profile);
   const addon = PROFILE_PROMPT_ADDONS[normalized] ?? "";
-  return ANALYSIS_PROMPT + addon;
+  return ANALYSIS_PROMPT + AESTHETICS_SECTION + addon;
 }
 
 // ── Sorting prompts (ported from sort_photos in the Python script) ──────────

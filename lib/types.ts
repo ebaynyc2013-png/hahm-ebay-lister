@@ -24,6 +24,8 @@ export interface ListingResult {
   search_terms?: string[];
   seo_keywords?: string[];
   key_features?: string[];
+  /** Named style aesthetics the item shows — what buyers browse by. */
+  aesthetics?: string[];
   item_specifics?: Record<string, string>;
   item_profile?: string;
 }
