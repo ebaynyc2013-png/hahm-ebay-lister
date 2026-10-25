@@ -102,174 +102,48 @@ Do not apply a product-family-specific rule to an unrelated product family.
 
 TITLE
 
-Create a strong eBay search-optimized title for the actual item.
-
 The title must NEVER exceed 80 characters.
 
-Do not use one fixed title formula for all products.
+Write the title LAST. In the JSON you return, "title" comes after brand, item_type, color, size, material, condition, aesthetics, specifics and search_terms. Settle those first; then build the title out of them and out of the seller's photographed note. The title must never contradict them. If item_type is a dress, the title calls it a dress: word order changes meaning, and "Shirt Dress" is a dress while "Dress Shirt" is a man's formal shirt.
 
-Before writing the title, first determine the product family from the item evidence, identifiers, photos, and category context.
+These rules hold for every product family — clothing, shoes, jewelry, bags, phones, home goods, art, anything. Fill only the slots this item actually has and skip the rest; never invent a slot's content to complete the pattern.
 
-Then identify the complete buyer-search phrases that are genuinely useful for finding this specific item.
+WORD ORDER, first to last:
+1. Vintage and era — ONLY when the seller wrote them on her photographed note. The two always travel together and always stand first, before the brand: "Vintage 90s", "Vintage 60s", "Vintage Y2K". Use whatever era she wrote. Never infer age from appearance.
+2. Brand — complete and unbroken, exactly as on the label: "DKNY Jeans", never "DKNY Blue Denim Jeans".
+3. Color — immediately after the brand.
+4. What tells this piece apart from similar ones — whatever identifies this kind of thing. Jewelry: the stone color and stone ("Blue Topaz", "White Pearl"), then any second stone ("Diamonds"). Clothing and shoes: material and construction ("Denim", "Satin Crystal Strappy Slingback"). Electronics: model, storage, capacity.
+5. Collection or line name, when known — after the stone or material, not straight after the brand ("David Yurman Blue Topaz Chatelaine Necklace").
+6. The item word — always present and specific: "Shirt Dress", "Necklace", "Ring", "Heels", "Blazer".
+7. Size or measurement, when the label, a measurement photo or the note supports it:
+   - apparel letter sizes as abbreviation then full word: "L Large", "XS Extra Small", "M Medium"
+   - shoes: BOTH the US and the EU size when known: "6.5 EU 37"
+   - rings and numeric apparel: "Size 8", "Size 32"
+   - necklaces and other items where length or dimensions decide the purchase: "18in", "10x7in"
+8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip").
+9. A second variant of the item word, when buyers search both phrasings ("Jean Dress", "Evening Shoes", "Cocktail Dress").
+10. "Damaged" or "For Parts" — only when the seller's note or the item itself says so.
+11. Aesthetic tail, last — one or two of the aesthetics you returned in "aesthetics" ("Western", "Preppy", "Office Siren").
 
-Think in complete search phrases, not isolated words.
+NEVER IN THE TITLE:
+- "Women's", "Womens", "Woman", "Ladies" — the seller never spends title space on them.
+- Condition wording such as "Excellent Condition", "Great Condition", "EUC", "Pre-owned". The only exceptions are "Damaged" and "For Parts", placed as above.
+- "Barbie" or "Gypsy". Both are allowed in item specifics and never in the title: Barbie is a trademark and Gypsy a slur, and listings carrying either are taken down. An aesthetic name that merely contains a word, such as "Barbiecore", is fine.
 
-A search phrase may represent any product-relevant concept such as:
-- brand or maker
-- exact item type
-- model, series, collection, or product line
-- product identifier
-- part number, model number, MPN, OEM number, UPC, ISBN, or similar identifier
-- size, capacity, storage, dimensions, or other important specification
-- material
-- color when commercially relevant
-- style, fit, shape, construction, or design when buyers are likely to search for it
-- compatibility, application, position, side, generation, version, platform, format, or other product-family-specific information
-- another supported characteristic that meaningfully helps a buyer find or distinguish the item
+WHEN THE TITLE IS OVER 80 CHARACTERS, remove in this order, one step at a time, and stop as soon as it fits:
+1. the second variant of the item word (slot 9)
+2. the word "Size" itself — keep the size value
+3. the construction detail words (slot 8)
+4. the aesthetic tail (slot 11)
+5. the full size word, keeping the abbreviation ("L Large" becomes "L")
+Never remove the brand, the item word, the size value, the vintage and era from the note, or "Damaged" / "For Parts".
 
-Do not assume that any one attribute, such as color, size, material, gender, style, or brand, always belongs in the same title position or always deserves title space.
+Use only sizes and measurements supported by visible labels, markings, measurement photos or the seller's note. Never estimate measurements from appearance. Write dimensions with the ordinary ASCII letter x, never the multiplication symbol.
 
-Do not include an attribute merely because it exists as an item specific.
+Treat 80 characters as a maximum, not a target. Do not add weak words to fill space, and never solve an over-length title by cutting off the end.
 
-BUYER SEARCH VALUE
+Do not invent unsupported product information, identifiers, specifications, compatibility, model names, materials, age, authenticity, condition facts or other attributes.
 
-Before composing the final title, internally rank each complete search phrase by its buyer-search value for THIS product family and THIS specific item.
-
-Use these priority levels:
-
-MUST KEEP
-A phrase that is essential to correctly identify the item or distinguish it from materially different products.
-
-HIGH
-A phrase that a buyer looking for this specific type of item is reasonably likely to search.
-
-MEDIUM
-A phrase that usefully narrows the item but is less important than the strongest identifying or search terms.
-
-LOW
-A secondary descriptive detail that may be accurate but adds relatively little search value.
-
-Judge buyer-search value from the perspective of a real buyer looking for this exact type of product.
-
-Give higher priority to information that:
-- identifies exactly what the item is
-- distinguishes one version, model, configuration, fitment, size, material, style, or variation from another
-- represents a recognized product name, model, identifier, or common buyer search phrase
-- materially narrows the search toward this actual item
-
-Give lower priority to information that:
-- is merely decorative or descriptive
-- is generic
-- repeats information already expressed by a stronger phrase
-- is unlikely to help distinguish the item in search
-- consumes title space without materially improving discoverability
-
-Do not automatically treat department or gender terms such as "Women's" or "Men's" as high-value title phrases. Use them only when they meaningfully improve buyer search relevance for the specific item.
-
-Do not automatically treat color as high priority. Its value depends on the product family and the specific item.
-
-Do not automatically treat material, style, size, shape, or any other attribute as high priority. Their value also depends on the product family and the specific item.
-SIZE AND MEASUREMENT PRIORITY
-
-First determine whether size or physical measurement is a meaningful buyer decision or search characteristic for the identified product family and the specific item.
-
-When a supported size or measurement materially affects buyer choice, it is a REQUIRED title search block. The final title must not omit it merely because other descriptive phrases are available.
-
-Use only sizes and measurements supported by visible labels, markings, measurement photos, seller-provided information, or other reliable item evidence. Never estimate measurements from appearance.
-
-For apparel with a standard alphabetic size, include both the common full size word and the standard abbreviation when supported:
-- Extra Small XS
-- Small S
-- Medium M
-- Large L
-- Extra Large XL
-
-Treat the full size word and abbreviation as useful buyer-search language. Do not remove both merely to preserve a weaker descriptive phrase.
-
-For numeric apparel, footwear, rings, and other products where a numeric size is an important buyer characteristic, include the size clearly:
-- Size 7
-- Size 10
-- Size 32
-
-If title space becomes tight, compact size notation is allowed:
-- Size 7 -> Sz 7
-- Size 10 -> Sz 10
-
-For products where physical dimensions materially help buyers identify, compare, fit, display, carry, wear, store, or choose the item, include a supported measurement in the title.
-
-When both length and width are available and useful, prioritize length and width. Depth may be omitted unless it is especially important for that specific product.
-
-Use compact measurement notation when title space is limited:
-- 10 x 7 inches -> 10x7in
-- 16 x 20 inches -> 16x20in
-- 18 inches -> 18in
-- 1 inch -> 1in
-- 5 x 6.5 inches -> 5x6.5in
-
-Always use the ordinary ASCII letter x for dimensions. Never use the multiplication symbol.
-
-When an important supported size or measurement exists, preserve it before LOW-priority decorative or descriptive phrases.
-
-If the title exceeds 80 characters:
-1. First shorten the size or measurement notation when possible.
-2. Then remove the weakest LOW-priority descriptive phrase.
-3. Then remove the weakest remaining MEDIUM-priority phrase if necessary.
-4. Do not remove an important supported size or measurement merely to preserve a weaker descriptor.
-
-BUYER SEARCH PRIORITY DECISION
-
-First identify the actual product family before assigning search priority.
-
-Do not use one fixed priority order for all products.
-
-For the specific item, identify the complete phrases that a real buyer may use to search for, identify, compare, verify, fit, or distinguish that item.
-
-Evaluate every candidate phrase according to its value for THIS product family and THIS specific item.
-
-Internally assign each candidate phrase one of these levels:
-
-MUST KEEP
-Use this when omitting the phrase could cause the item to be confused with a materially different product, version, fitment, configuration, size, model, application, or identity.
-
-HIGH
-Use this for a strong and plausible buyer-search phrase that materially narrows the search toward this specific item or represents an important independent search path.
-
-MEDIUM
-Use this for useful secondary information that helps describe, compare, or narrow the item but is less important than the strongest identifying or buyer-search phrases.
-
-LOW
-Use this for minor decorative, surface, visual, generic, redundant, or secondary details that add relatively little buyer-search value.
-
-Determine priority from the actual product family. Do not assign permanent priority to any field type.
-
-Brand, color, material, size, measurements, style, closure, construction, model, part number, compatibility, fitment, capacity, year, edition, format, position, side, or any other characteristic may be MUST KEEP, HIGH, MEDIUM, LOW, or irrelevant depending on the specific product.
-
-A phrase that is secondary for one product family may be essential for another.
-
-Give stronger priority to phrases that:
-- identify exactly what the product is
-- identify an exact model, version, part, configuration, edition, or variation
-- distinguish materially different versions of the product
-- establish compatibility, fitment, application, position, side, platform, generation, or other critical product-family-specific information
-- provide an important supported size, capacity, storage value, or measurement
-- represent a distinct and plausible way a buyer may search for the item
-- materially affect whether the item is suitable for the buyer
-
-Give weaker priority to phrases that:
-- mainly describe appearance without materially narrowing buyer search
-- repeat information already represented by a stronger phrase without adding another useful search path
-- are generic or promotional
-- consume title space while contributing little to product identification, comparison, compatibility, fit, or buyer search intent
-
-Do not treat two accurate phrases as redundant merely because they refer to the same physical item if buyers may reasonably search using either phrase.
-
-When several phrases compete for limited title space, preserve the phrases with the greatest buyer-search value for the identified product family and specific item.
-
-If the title exceeds 80 characters, remove the lowest-priority complete phrase first and rebuild the title.
-
-Never remove a stronger buyer-search phrase merely to preserve a weaker descriptive detail.
-
-The priority decision must be made separately for every item. Never carry the priority assumptions from one product family into another.
 TITLE CHARACTER STYLE
 
 Write titles as clean buyer-search text using words, numbers, and normal spaces.
@@ -303,44 +177,6 @@ Examples of phrase integrity include:
 - a complete part or model identifier
 - a complete color + material, color + stone, model + version, or similar phrase when those words naturally function together
 
-TITLE CONSTRUCTION
-
-After ranking the phrases, build the final title from the strongest retained buyer-search phrases.
-
-Search value determines WHAT stays.
-
-Natural buyer language determines WHERE it goes.
-
-Do not mechanically arrange attributes according to one universal field order.
-
-Keep closely related words together when they form a natural search phrase.
-
-The final title should read naturally while preserving the strongest buyer-search information.
-
-80-CHARACTER RULE
-
-Treat 80 characters as a maximum, not a target that must always be filled.
-
-If all strong buyer-search information fits in fewer than 80 characters, do not add weak words merely to make the title longer.
-
-If the proposed title exceeds 80 characters:
-
-1. Remove the lowest-value complete phrase.
-2. Rebuild the title.
-3. If it is still too long, remove the next-lowest-value complete phrase.
-4. Continue until the full title is 80 characters or fewer.
-
-Never solve an over-length title by simply cutting off the end.
-
-Never remove part of a stronger phrase in order to preserve a weaker phrase.
-
-Never keep a LOW-value descriptor at the expense of a HIGH or MUST KEEP buyer-search phrase.
-
-Avoid filler, promotional wording, repeated concepts, unnecessary punctuation, keyword stuffing, and weak descriptive adjectives.
-
-Do not invent unsupported product information, identifiers, specifications, compatibility, model names, materials, age, authenticity, condition facts, or other attributes.
-
-The final title must be complete, natural, search-focused, accurate, and 80 characters or fewer.
 
 ITEM SPECIFICS
 

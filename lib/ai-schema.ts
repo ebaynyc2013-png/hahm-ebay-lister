@@ -1,12 +1,17 @@
 import { PHOTO_FACT_SCHEMA } from "./photo-facts";
 const string = { type: "string" };
 const strings = { type: "array", items: string };
+
+// The model writes these fields in exactly this order and cannot look ahead.
+// The title used to come first — before the model had even said what the item
+// was — and a denim shirt dress came back titled "Dress Shirt" while its own
+// item_type, a line further down, said Dress. Facts now come first; the title
+// is built last, out of them; the description, which opens with the title
+// word for word, comes after it.
 export const AI_LISTING_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-title: { type: "string", maxLength: 80 },
-    description: string,
     category: string,
     category_hint: string,
     brand: string,
@@ -26,9 +31,6 @@ title: { type: "string", maxLength: 80 },
     },
     condition_notes: string,
     measurements: { type: "string", enum: [""] },
-    suggested_price: { type: "number" },
-    search_terms: strings,
-    seo_keywords: strings,
     key_features: strings,
     // Named style aesthetics the item genuinely shows — the words buyers
     // browse by. Empty is a normal answer for a plain item.
@@ -37,10 +39,13 @@ title: { type: "string", maxLength: 80 },
       type: "array",
       items: PHOTO_FACT_SCHEMA,
     },
+    search_terms: strings,
+    seo_keywords: strings,
+    suggested_price: { type: "number" },
+    title: { type: "string", maxLength: 80 },
+    description: string,
   },
   required: [
-    "title",
-    "description",
     "category",
     "category_hint",
     "brand",
@@ -51,11 +56,26 @@ title: { type: "string", maxLength: 80 },
     "condition",
     "condition_notes",
     "measurements",
-    "suggested_price",
-    "search_terms",
-    "seo_keywords",
     "key_features",
     "aesthetics",
     "specifics",
+    "search_terms",
+    "seo_keywords",
+    "suggested_price",
+    "title",
+    "description",
   ],
 };
+
+/** Fields that must be settled before the title is written. */
+export const FACTS_BEFORE_TITLE = [
+  "brand",
+  "item_type",
+  "color",
+  "size",
+  "material",
+  "condition",
+  "aesthetics",
+  "specifics",
+  "search_terms",
+] as const;

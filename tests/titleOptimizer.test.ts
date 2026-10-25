@@ -5,7 +5,7 @@ import type { ListingResult } from "@/lib/types";
 const base: ListingResult = { title: "", description: "" };
 
 describe("optimizeTitle", () => {
-  test("NEVER removes words — repeated names are legitimate", () => {
+  test("never removes ordinary words — repeated names are legitimate", () => {
     expect(optimizeTitle({ ...base, title: "BOSS Hugo Boss Wool Blazer" })).toBe(
       "BOSS Hugo Boss Wool Blazer"
     );
@@ -43,6 +43,52 @@ describe("optimizeTitle", () => {
     const title = "A".repeat(EBAY_TITLE_LIMIT);
 
     expect(optimizeTitle({ ...base, title })).toBe(title);
+  });
+
+  test("removes only the seller's never-in-the-title words", () => {
+    expect(
+      optimizeTitle({
+        ...base,
+        title: "DKNY Jeans Women's Blue Denim Shirt Dress L Large",
+      }),
+    ).toBe("DKNY Jeans Blue Denim Shirt Dress L Large");
+    expect(
+      optimizeTitle({
+        ...base,
+        title: "Vintage 90s Gap Pink Blazer Small Excellent Condition",
+      }),
+    ).toBe("Vintage 90s Gap Pink Blazer Small");
+    expect(
+      optimizeTitle({ ...base, title: "Floral Gypsy Maxi Dress M Medium Boho" }),
+    ).toBe("Floral Maxi Dress M Medium Boho");
+  });
+
+  test("keeps Damaged and For Parts, which the seller wants", () => {
+    expect(
+      optimizeTitle({
+        ...base,
+        title: "Coach Black Leather Tote Bag Damaged",
+      }),
+    ).toBe("Coach Black Leather Tote Bag Damaged");
+    expect(
+      optimizeTitle({ ...base, title: "Apple iPhone 11 64GB Black For Parts" }),
+    ).toBe("Apple iPhone 11 64GB Black For Parts");
+  });
+
+  test("never breaks a brand that contains a banned word", () => {
+    expect(
+      optimizeTitle({
+        ...base,
+        brand: "Woman Within",
+        title: "Woman Within Navy Knit Cardigan 2X",
+      }),
+    ).toBe("Woman Within Navy Knit Cardigan 2X");
+  });
+
+  test("leaves a word that merely contains a banned one", () => {
+    expect(
+      optimizeTitle({ ...base, title: "Pink Barbiecore Mini Skirt XS" }),
+    ).toBe("Pink Barbiecore Mini Skirt XS");
   });
 
   test("rejects a title longer than eBay's 80-character limit", () => {
