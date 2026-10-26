@@ -67,6 +67,8 @@ describe("the title rules in the prompt", () => {
 
   it("asks for both shoe sizes and never for gender or condition", () => {
     expect(prompt).toContain("6.5 EU 37");
+    // Room for the size the program adds, or it is left out.
+    expect(prompt).toContain("keep a shoe title to 71 characters or fewer");
     expect(prompt).toContain('"Women\'s", "Womens", "Woman", "Ladies"');
     expect(prompt).toContain('"Barbie" or "Gypsy"');
   });

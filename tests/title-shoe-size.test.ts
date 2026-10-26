@@ -41,6 +41,26 @@ describe("shoe titles carry both sizes, from eBay's chart", () => {
     );
   });
 
+  it("reads a width letter as a US size and keeps the letter", () => {
+    // The real Michael Kors pumps: the insole says 7M.
+    const mk = "MICHAEL Michael Kors Black Suede Studded Buckle Pointed Pumps 7M Heels";
+    const pumps = { ...heels, item_type: "Pumps" };
+    expect(shoeSizesInTitle(mk, pumps)).toBe(
+      "MICHAEL Michael Kors Black Suede Studded Buckle Pointed Pumps 7M EU 37.5 Heels",
+    );
+    expect(shoeSizesInTitle(`${RED} Size 8.5W`, heels)).toBe(`${RED} Size 8.5W EU 39`);
+    expect(shoeSizesInTitle(`${RED} 9 N`, heels)).toBe(`${RED} 9N EU 39.5`);
+  });
+
+  it("leaves a sized pair with a width letter alone, and corrects only the number", () => {
+    expect(shoeSizesInTitle(`${RED} 7M EU 37.5`, heels)).toBe(`${RED} 7M EU 37.5`);
+    expect(shoeSizesInTitle(`${RED} 7M EU 37`, heels)).toBe(`${RED} 6.5M EU 37`);
+  });
+
+  it("does not mistake metres or a lower-case m for a width", () => {
+    expect(shoeSizesInTitle(`${RED} 7m`, heels)).toBe(`${RED} 7m`);
+  });
+
   it("never guesses a bare small number, which could be US or UK", () => {
     expect(shoeSizesInTitle(`${RED} Size 7`, heels)).toBe(`${RED} Size 7`);
   });

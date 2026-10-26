@@ -33,6 +33,11 @@ export function shoeDepartment(l: ListingResult): ShoeDepartment {
 }
 
 const NUM = String.raw`\d{1,2}(?:\.5)?`;
+// American width letters stamped right after the size — 7M, 8.5W, 9 N, 10.5D.
+// They exist only in the US system, so "7M" is a US 7, Medium width. The
+// letter stays as it was written: a wide or narrow fit is what some buyers
+// search for.
+const WIDTH = String.raw`(?:M|W|N|B|C|D|E|EE|EEE|2E|3E|4E|WW|XW|AA|AAA)`;
 
 /**
  * Put both sizes in a shoe title, US first, in the form the seller uses:
@@ -51,17 +56,27 @@ export function shoeSizesInTitle(
   const euFor = (us: string) => findShoeSizeRow(us, dept, "us")?.eu[0];
 
   let out = title;
-  const pair = new RegExp(String.raw`\b(${NUM})\s+EU\s+(${NUM})\b`, "i");
+  const pair = new RegExp(
+    String.raw`\b(${NUM})(${WIDTH})?\s+EU\s+(${NUM})\b`,
+    "i",
+  );
   const euOnly = new RegExp(String.raw`(^|\s)EU\s+(${NUM})\b`, "i");
   const euAfter = new RegExp(String.raw`\b(${NUM})\s+EU\b(?!\s+\d)`, "i");
   const usOnly = new RegExp(String.raw`\bUS\s+(${NUM})\b(?!\s+EU)`, "i");
   const sizeEu = new RegExp(String.raw`\bSize\s+(${NUM})\b(?!\s+EU)`, "i");
+  // Upper case only: "7m" on its own is more likely metres than a width.
+  const usWidth = new RegExp(String.raw`\b(${NUM})\s?(${WIDTH})\b(?!\s+EU)`);
 
   let m: RegExpMatchArray | null;
   if ((m = out.match(pair))) {
     // "7 EU 37" → "6.5 EU 37": the chart decides the US half.
-    const us = usFor(m[2]);
-    if (us && us !== m[1]) out = out.replace(pair, `${us} EU ${m[2]}`);
+    const us = usFor(m[3]);
+    if (us && us !== m[1])
+      out = out.replace(pair, `${us}${m[2] ?? ""} EU ${m[3]}`);
+  } else if ((m = out.match(usWidth))) {
+    // "7M" → "7M EU 37.5"
+    const eu = euFor(m[1]);
+    if (eu) out = out.replace(usWidth, `${m[1]}${m[2]} EU ${eu}`);
   } else if ((m = out.match(euOnly))) {
     const us = usFor(m[2]);
     if (us) out = out.replace(euOnly, `${m[1]}${us} EU ${m[2]}`);

@@ -112,20 +112,37 @@ export function acceptedPhotoFact(
   count: number,
   aspect?: AspectShape,
 ): raw is PhotoFact {
-  if (!raw || typeof raw !== "object") return false;
+  return photoFactProblem(raw, count, aspect) === null;
+}
+
+/**
+ * Why a proposed fact is refused, in a few plain words — or null when it is
+ * accepted. Shown to the seller in the photo-analysis line, so a refusal says
+ * what was missing rather than vanishing into a count.
+ */
+export function photoFactProblem(
+  raw: unknown,
+  count: number,
+  aspect?: AspectShape,
+): string | null {
+  if (!raw || typeof raw !== "object") return "unreadable answer";
   const s = raw as PhotoFact;
   if (
     typeof s.name !== "string" ||
     typeof s.value !== "string" ||
     !s.value.trim() ||
-    s.value.length > 500 ||
+    s.value.length > 500
+  )
+    return "unreadable answer";
+  if (
     !Array.isArray(s.photoIndices) ||
     !s.photoIndices.length ||
     !s.photoIndices.every((i) => Number.isInteger(i) && i > 0 && i <= count)
   )
-    return false;
+    return "no photo cited";
   if (s.basis === "label") {
-    if (typeof s.quote !== "string" || !s.quote.trim()) return false;
+    if (typeof s.quote !== "string" || !s.quote.trim())
+      return "label not quoted";
     const normalize = (v: string) =>
       " " +
       v
@@ -138,15 +155,17 @@ export function acceptedPhotoFact(
       /year.*manufact|manufact.*year/i.test(s.name) &&
       !/manufactured|made in \d{4}/i.test(s.quote)
     )
-      return false;
+      return "the label shows no year";
     return s.value
       .split(" | ")
-      .every((v) => normalize(s.quote).includes(normalize(v)));
+      .every((v) => normalize(s.quote).includes(normalize(v)))
+      ? null
+      : "not what the label says";
   }
-  return (
-    s.basis === "visible_feature" &&
-    (visible.has(s.name.toLowerCase()) || choosableFromPhoto(aspect))
-  );
+  if (s.basis !== "visible_feature") return "no reason given";
+  return visible.has(s.name.toLowerCase()) || choosableFromPhoto(aspect)
+    ? null
+    : "needs a label or your note, not just a look";
 }
 export const PHOTO_FACT_SCHEMA = {
   type: "object",

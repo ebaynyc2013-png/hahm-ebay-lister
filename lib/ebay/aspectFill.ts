@@ -1,4 +1,8 @@
-import { acceptedPhotoFact, PHOTO_FACT_SCHEMA } from "@/lib/photo-facts";
+import {
+  PHOTO_FACT_SCHEMA,
+  photoFactProblem,
+  type PhotoFact,
+} from "@/lib/photo-facts";
 import { remainingTime } from "@/lib/network";
 import { measuredMessage } from "@/lib/ai-usage";
 // Category-aware, photo-grounded item-specifics fill.
@@ -110,12 +114,18 @@ export function aspectPromptLine(a: AspectMeta, current?: string[]): string {
  * one string — the model cannot return an array through the output schema, so
  * it is asked for "Collared | Pockets" instead.
  */
-export function allowedValuesFrom(raw: unknown, a: AspectMeta): string[] {
+export function allowedValuesFrom(
+  raw: unknown,
+  a: AspectMeta,
+  /** Filled with every word that was not eBay's, so it can be shown. */
+  dropped?: string[],
+): string[] {
   const synonyms = isColorAspect(a.name) ? COLOR_SYNONYMS : undefined;
   const answers = (Array.isArray(raw) ? raw : [raw]).map((v) =>
     String(v ?? "").trim(),
   );
   const vals: string[] = [];
+  const missed: string[] = [];
   const keep = (v: string | null) => {
     if (v && !vals.includes(v)) vals.push(v);
   };
@@ -124,10 +134,19 @@ export function allowedValuesFrom(raw: unknown, a: AspectMeta): string[] {
     const asWhole = whole ? toAllowedValue(whole, a.values, synonyms) : null;
     if (asWhole) {
       keep(asWhole);
+      // "Buckle | Pointed Toe" can match whole, as Buckle; the piece that
+      // is not eBay's still gets named, rather than vanishing unreported.
+      if (answer.includes(" | "))
+        for (const piece of answer.split(" | ").map((x) => x.trim()))
+          if (piece && !toAllowedValue(piece, a.values, synonyms))
+            missed.push(piece);
       continue;
     }
-    for (const part of splitAspectValues(answer, a.maxLength))
-      keep(toAllowedValue(part, a.values, synonyms));
+    for (const part of splitAspectValues(answer, a.maxLength)) {
+      const found = toAllowedValue(part, a.values, synonyms);
+      if (found) keep(found);
+      else missed.push(part);
+    }
   }
   // The model may have taken a compound value apart for us — ["Hook", "Eye"].
   // Put it back together before giving up.
@@ -136,6 +155,7 @@ export function allowedValuesFrom(raw: unknown, a: AspectMeta): string[] {
       const joined = toAllowedValue(answers.join(sep), a.values, synonyms);
       if (joined) return [joined];
     }
+  dropped?.push(...missed);
   return vals;
 }
 
@@ -173,6 +193,25 @@ export function canExtend(a: AspectMeta, current?: string[]): boolean {
  * row were spent on that question, and neither Vercel's logs on this plan nor
  * the finished screen could answer it.
  */
+export interface RefusedWord {
+  aspect: string;
+  value: string;
+  why: string;
+}
+
+// The line on screen stays readable; the rest is counted.
+const MAX_REFUSED_SHOWN = 15;
+
+export function describeRefused(words: RefusedWord[]): string {
+  if (!words.length) return "";
+  const shown = words
+    .slice(0, MAX_REFUSED_SHOWN)
+    .map((w) => `${w.aspect} "${w.value.slice(0, 60)}" — ${w.why}`)
+    .join("; ");
+  const more = words.length - MAX_REFUSED_SHOWN;
+  return `Refused: ${shown}${more > 0 ? `; and ${more} more` : ""}.`;
+}
+
 export interface FillReport {
   /** The model was asked and answered. False means it never got that far. */
   ran: boolean;
@@ -184,6 +223,11 @@ export interface FillReport {
   returned: number;
   /** Facts refused — not one of eBay's words, or no photo to cite. */
   refused: number;
+  /**
+   * Each word the model offered that did not go in, and why. A bare count
+   * ("11 refused") said something was wrong without saying what.
+   */
+  refusedWords: RefusedWord[];
   /** Aspects newly filled or extended. */
   added: number;
   changed: string[];
@@ -194,12 +238,14 @@ export interface FillReport {
 export function describeFill(r: FillReport): string {
   if (!r.ran) return r.note || "did not run";
   const how = r.photos ? `${r.photos} photos` : "no photos — text only";
+  const refused = describeRefused(r.refusedWords ?? []);
+  const why = refused ? `. ${refused}` : "";
   if (!r.returned) return `ran (${how}), model proposed nothing`;
   if (!r.added && r.refused === r.returned)
-    return `ran (${how}), all ${r.refused} proposals refused — not eBay's values${r.photos ? "" : ", and with no photos nothing can be cited"}`;
+    return `ran (${how}), all ${r.refused} proposals refused${r.photos ? "" : " — with no photos nothing can be cited"}${why}`;
   if (!r.added)
-    return `ran (${how}), ${r.returned} proposed, nothing new to add`;
-  return `ran (${how}), filled ${r.added}: ${r.changed.join(", ")}${r.refused ? ` (${r.refused} refused)` : ""}`;
+    return `ran (${how}), ${r.returned} proposed, nothing new to add${why}`;
+  return `ran (${how}), filled ${r.added}: ${r.changed.join(", ")}${r.refused ? ` (${r.refused} refused)` : ""}${why}`;
 }
 
 export async function fillRecommendedAspects(
@@ -219,6 +265,7 @@ export async function fillRecommendedAspects(
     offered: 0,
     returned: 0,
     refused: 0,
+    refusedWords: [],
     added: 0,
     changed: [],
     note: "",
@@ -376,12 +423,28 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
         String((fact as { name?: unknown })?.name ?? "").toLowerCase(),
       );
       report.returned++;
-      if (!acceptedPhotoFact(fact, imageBlocks.length, a)) {
+      const said = fact as Partial<PhotoFact>;
+      const refuse = (why: string, value = String(said?.value ?? "")) =>
+        report.refusedWords.push({
+          aspect: a?.name ?? String(said?.name ?? "?"),
+          value,
+          why,
+        });
+      // A field this category does not have is refused for that reason
+      // first; judging its evidence would only blame the photo.
+      if (!a) {
         report.refused++;
+        refuse("not a field eBay asks for here");
         continue;
       }
-      const raw = fact.value;
-      if (!a) continue;
+      const problem = photoFactProblem(fact, imageBlocks.length, a);
+      if (problem) {
+        report.refused++;
+        refuse(problem);
+        continue;
+      }
+      const accepted = fact as PhotoFact;
+      const raw = accepted.value;
       const existing = aspects[a.name];
       // An aspect already answered is left alone unless it is one this pass
       // may extend — a multi-value field whose list only this pass has seen.
@@ -390,8 +453,16 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       // Where eBay published the answers — as a menu, or as "free text" with a
       // vocabulary behind it — the answer is one of them or it is nothing.
       if (a.mode === "SELECTION_ONLY" || isChoiceSet(a)) {
-        vals = allowedValuesFrom(raw, a);
-        if (!vals.length) continue; // not eBay's word — leave the aspect empty
+        const missed: string[] = [];
+        vals = allowedValuesFrom(raw, a, missed);
+        if (!vals.length) {
+          // Not eBay's word — the aspect stays empty.
+          report.refused++;
+          refuse("not an eBay word");
+          continue;
+        }
+        // Some of a multi-value answer was eBay's, some was not.
+        for (const word of missed) refuse("not an eBay word", word);
       } else {
         vals = Array.isArray(raw)
           ? raw
@@ -412,7 +483,7 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       } else {
         aspects[a.name] = vals.slice(0, 1);
       }
-      listing.evidence = { ...listing.evidence, [a.name]: fact.photoIndices };
+      listing.evidence = { ...listing.evidence, [a.name]: accepted.photoIndices };
       if (!report.changed.includes(a.name)) report.changed.push(a.name);
       added++;
     }

@@ -12,6 +12,7 @@ const report = (over: Partial<FillReport> = {}): FillReport => ({
   offered: 12,
   returned: 0,
   refused: 0,
+  refusedWords: [],
   added: 0,
   changed: [],
   note: "",
@@ -66,5 +67,36 @@ describe("describeFill", () => {
         report({ ran: false, offered: 0, note: "nothing to do — every field eBay asks for was already answered" }),
       ),
     ).toContain("already answered");
+  });
+
+  it("says which words were refused and why", () => {
+    // "11 refused" told the seller something was wrong, not what.
+    const line = describeFill(
+      report({
+        returned: 4,
+        refused: 2,
+        added: 1,
+        changed: ["Features"],
+        refusedWords: [
+          { aspect: "Features", value: "Pointed Toe", why: "not an eBay word" },
+          { aspect: "Upper Material", value: "Suede", why: "needs a label or your note, not just a look" },
+        ],
+      }),
+    );
+    expect(line).toBe(
+      'ran (3 photos), filled 1: Features (2 refused). Refused: Features "Pointed Toe" — not an eBay word; Upper Material "Suede" — needs a label or your note, not just a look.',
+    );
+  });
+
+  it("keeps a long list readable", () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({
+      aspect: "Theme",
+      value: `Word ${i}`,
+      why: "not an eBay word",
+    }));
+    const line = describeFill(report({ returned: 20, refused: 20, refusedWords: many }));
+    expect(line).toContain('Theme "Word 14"');
+    expect(line).not.toContain('Theme "Word 15"');
+    expect(line).toContain("and 5 more");
   });
 });

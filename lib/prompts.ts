@@ -117,7 +117,7 @@ WORD ORDER, first to last:
 6. The item word — always present and specific: "Shirt Dress", "Necklace", "Ring", "Heels", "Blazer".
 7. Size or measurement, when the label, a measurement photo or the note supports it:
    - apparel letter sizes as abbreviation then full word: "L Large", "XS Extra Small", "M Medium"
-   - shoes: BOTH the US and the EU size, US first: "6.5 EU 37". Write the size exactly as you read it — "EU 37" from a European insole, "US 6.5" from an American one. Never convert it yourself: the program adds the other size from eBay's official chart.
+   - shoes: BOTH the US and the EU size, US first: "6.5 EU 37". Write the size exactly as you read it — "EU 37" from a European insole, "US 6.5" from an American one. Never convert it yourself: the program adds the other size from eBay's official chart. A US size stamped with a width letter ("7M", "8.5W") is written as stamped. Because the program ADDS the other size (up to 9 characters, e.g. " EU 37.5"), keep a shoe title to 71 characters or fewer, trimming in the order below; otherwise there is no room for it and the title goes out with one size only.
    - rings and numeric apparel: "Size 8", "Size 32"
    - necklaces and other items where length or dimensions decide the purchase: "18in", "10x7in"
 8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip").
