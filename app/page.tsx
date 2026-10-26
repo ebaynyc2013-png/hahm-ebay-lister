@@ -9,6 +9,14 @@ import {
   useState,
 } from "react";
 import { loadDraft, saveDraft } from "@/lib/draft-store";
+import {
+  deleteFromHistory,
+  historyPhotos,
+  isPublished,
+  loadHistory,
+  saveToHistory,
+  type HistoryEntry,
+} from "@/lib/history-store";
 import { processFiles } from "@/lib/intake";
 import { draftIssues } from "@/lib/client-review";
 import { apiPost } from "@/lib/api-client";
@@ -20,6 +28,7 @@ import { EbayConnect } from "./EbayConnect";
 import { ModelSelector } from "./ModelSelector";
 import { ReviewBoard } from "./ReviewBoard";
 import { ListingsView } from "./ListingsView";
+import { HistoryPanel } from "./HistoryPanel";
 import type {
   AnalyzeResponse,
   CompsSummary,
@@ -113,6 +122,10 @@ export default function Home() {
   const [restored, setRestored] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Loading saved work…");
   const [readOnly, setReadOnly] = useState(false);
+  // Written cards kept after they leave the work screen (see history-store).
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyError, setHistoryError] = useState("");
+  const [returningId, setReturningId] = useState<string>();
   const inFlight = useRef(new Set<string>());
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -191,11 +204,21 @@ export default function Home() {
         .then(() => {
           if (current) setSaveStatus("Saved on this device");
         })
+        // Then copy every written card into History, so the next batch
+        // replacing the work screen never takes a listing with it.
+        .then(() => (current ? saveToHistory(groups, photos) : false))
+        .then(async (changed) => {
+          if (changed) setHistory(await loadHistory());
+          setHistoryError("");
+        })
         .catch(() => {
           if (current)
             setSaveStatus(
               "Could not save — device storage may be full. Keep this tab open and export drafts.",
             );
+          setHistoryError(
+            "Could not save to History — device storage may be full. Delete old cards from History to make room.",
+          );
         });
     }, 300);
     return () => {
@@ -213,11 +236,113 @@ export default function Home() {
     step,
   ]);
 
+  // History lives beside the saved work, in this browser.
+  useEffect(() => {
+    if (!restored || readOnly) return;
+    void loadHistory()
+      .then(setHistory)
+      .catch(() => setHistoryError("History could not be read on this device."));
+  }, [restored, readOnly]);
+
+  /**
+   * Bring a card back from History onto the work screen, beside whatever is
+   * already there — nothing on the screen is replaced. A card not yet on eBay
+   * whose category check has expired (it is good for 23 hours) gets a fresh
+   * one at no AI cost, so it can be published without pressing Prepare.
+   */
+  const returnToWork = async (entry: HistoryEntry) => {
+    setReturningId(entry.id);
+    setHistoryError("");
+    try {
+      const back = await historyPhotos(entry.group.photoIds);
+      const group: ItemGroup = {
+        ...entry.group,
+        status: entry.group.listing ? "done" : "idle",
+        postStatus:
+          entry.group.postStatus === "posting" ? "error" : entry.group.postStatus,
+      };
+      setPhotos((prev) => {
+        const have = new Set(prev.map((p) => p.id));
+        return [...prev, ...back.filter((p) => !have.has(p.id))];
+      });
+      setGroups((prev) =>
+        prev.some((g) => g.id === group.id)
+          ? prev.map((g) => (g.id === group.id ? group : g))
+          : [...prev, group],
+      );
+      setOrphanIds((prev) => prev.filter((id) => !group.photoIds.includes(id)));
+      setStep("listings");
+      const listing = group.listing;
+      if (
+        listing?.category_id &&
+        !isPublished(group) &&
+        (!group.preparation || group.preparation.expiresAt < Date.now())
+      ) {
+        // No photos and no enrich: the category is already chosen, so this
+        // only re-reads eBay's fields and conditions — no AI call.
+        const pd = await readJson(
+          await apiPost("/api/ebay/prepare", { listing, images: [], enrich: false }),
+        );
+        setGroups((prev) =>
+          prev.map((g) =>
+            g.id !== group.id || g.listing !== listing
+              ? g
+              : pd.ok
+                ? {
+                    ...g,
+                    listing: pd.listing,
+                    preparation: {
+                      ...pd.preparation,
+                      categoryChoices:
+                        pd.preparation?.categoryChoices ??
+                        group.preparation?.categoryChoices,
+                    },
+                    preparationError: undefined,
+                  }
+                : { ...g, preparationError: pd.error },
+          ),
+        );
+      }
+    } catch (e) {
+      setHistoryError((e as Error).message);
+    } finally {
+      setReturningId(undefined);
+    }
+  };
+
+  const removeFromHistory = async (entry: HistoryEntry) => {
+    try {
+      await deleteFromHistory(entry.id);
+      setHistory(await loadHistory());
+    } catch (e) {
+      setHistoryError((e as Error).message);
+    }
+  };
+
   // Latest groups, readable inside async workers without stale closures.
   const groupsRef = useRef(groups);
   useEffect(() => {
     groupsRef.current = groups;
   }, [groups]);
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
+  /**
+   * Copy the written cards into History right now, before something replaces
+   * or drops them. The autosave does this too, but only once the page has
+   * been still for a moment — a quick click onto the next batch beat it.
+   */
+  const keepInHistory = () =>
+    void saveToHistory(groupsRef.current, photosRef.current)
+      .then(async (changed) => {
+        if (changed) setHistory(await loadHistory());
+      })
+      .catch(() =>
+        setHistoryError(
+          "Could not save to History — device storage may be full. Delete old cards from History to make room.",
+        ),
+      );
 
   // Keep eBay connection status in sync (also after the connect bar updates).
   useEffect(() => {
@@ -360,6 +485,7 @@ export default function Home() {
         status: "idle",
       }));
       setSkuStart(skuOffset);
+      keepInHistory();
       setGroups(nextGroups);
       setOrphanIds([...orphanIdsAll, ...leftover]);
       setStep("review");
@@ -383,6 +509,8 @@ export default function Home() {
     );
 
   const movePhoto = (photoId: string, toGroupId: string | "orphans") => {
+    // Moving a photo clears that card's listing; History keeps the last one.
+    keepInHistory();
     setGroups((prev) =>
       prev.map((g) => {
         const nextIds =
@@ -452,7 +580,10 @@ export default function Home() {
     );
   };
 
-  const deleteGroup = (groupId: string) =>
+  const deleteGroup = (groupId: string) => {
+    // Delete takes a card off the work screen; History keeps it until it is
+    // deleted there too.
+    keepInHistory();
     setGroups((prev) => {
       const target = prev.find((g) => g.id === groupId);
       if (target && target.photoIds.length > 0) {
@@ -460,6 +591,7 @@ export default function Home() {
       }
       return prev.filter((g) => g.id !== groupId);
     });
+  };
 
   const addGroup = () =>
     setGroups((prev) => [
@@ -986,6 +1118,7 @@ export default function Home() {
                 disabled={!photos.length || photos.length > 24 || sorting}
                 onClick={() => {
                   const id = newId();
+                  keepInHistory();
                   setGroups([
                     {
                       id,
@@ -1069,6 +1202,17 @@ export default function Home() {
           onBack={() => setStep("review")}
         />
       )}
+
+      <HistoryPanel
+        // A card on the work screen right now is not shown twice.
+        entries={history.filter(
+          (e) => !groups.some((g) => g.id === e.id && g.listing),
+        )}
+        busyId={returningId}
+        error={historyError}
+        onReturn={(e) => void returnToWork(e)}
+        onDelete={(e) => void removeFromHistory(e)}
+      />
 
       <p className="footnote">
         Your photos are sent securely to sort and write listings, and are not

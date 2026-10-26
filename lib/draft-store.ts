@@ -10,7 +10,7 @@ export interface WorkspaceDraft {
   updatedAt: number;
 }
 const DB = "listing-writer-drafts";
-function openDb(): Promise<IDBDatabase> {
+export function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const r = indexedDB.open(DB, 1);
     r.onupgradeneeded = () => r.result.createObjectStore("workspace");

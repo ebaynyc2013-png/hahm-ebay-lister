@@ -466,3 +466,108 @@ test("shows the AI's category with alternates; tapping one refills that category
   expect(sent[3].category_id).toBe("551");
   await expect(radios.nth(0)).toBeChecked();
 });
+
+test("a written card survives the next batch in History and returns to work", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await setup(page);
+  await draft(page);
+  await expect(page.locator(".title-input")).toHaveValue("Canon R5 Camera");
+  await page.locator(".title-input").fill("Canon R5 Camera Body");
+
+  // Start the next item: the work screen is replaced by the new batch.
+  await page.getByRole("button", { name: "← Back to items" }).click();
+  await page.getByRole("button", { name: "← Back to photos" }).click();
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await expect(page.locator(".title-input")).toHaveCount(0);
+
+  const history = page.getByRole("region", { name: "History" });
+  await expect(history).toContainText("History — 1 saved card");
+  await history.locator("summary").click();
+  await expect(history).toContainText("Canon R5 Camera Body");
+  await expect(history).toContainText("Not published yet");
+
+  // It is kept on this computer: still there after a reload.
+  await page.reload();
+  await expect(page.getByRole("region", { name: "History" })).toContainText(
+    "History — 1 saved card",
+  );
+
+  // Back to work, with the seller's edit and its photos.
+  await page.getByRole("region", { name: "History" }).locator("summary").click();
+  await page.getByRole("button", { name: "↩ Return to work" }).click();
+  await expect(page.locator(".title-input")).toHaveValue("Canon R5 Camera Body");
+  await expect(page.getByRole("region", { name: "History" })).toHaveCount(0);
+
+  // Deleting from History asks first, in the page.
+  await page.getByRole("button", { name: "← Back to items" }).click();
+  await page.getByRole("button", { name: "← Back to photos" }).click();
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  const again = page.getByRole("region", { name: "History" });
+  await again.locator("summary").click();
+  await again.getByRole("button", { name: "Delete" }).click();
+  await expect(again).toContainText("Delete this card from History for good?");
+  await again.getByRole("button", { name: "Keep it" }).click();
+  await expect(again).toContainText("Canon R5 Camera Body");
+  await again.getByRole("button", { name: "Delete" }).click();
+  await again.getByRole("button", { name: "Yes, delete" }).click();
+  await expect(page.getByRole("region", { name: "History" })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("a card returned from History a day later gets a fresh category check at no AI cost", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await setup(page);
+  await draft(page);
+  await page.getByRole("button", { name: "← Back to items" }).click();
+  await page.getByRole("button", { name: "← Back to photos" }).click();
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await expect(page.getByRole("region", { name: "History" })).toBeVisible();
+
+  const sent: any[] = [];
+  await page.route("**/api/ebay/prepare", (r) => {
+    const b = r.request().postDataJSON();
+    sent.push(b);
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: b.listing,
+        preparation: {
+          categoryId: b.listing.category_id,
+          categoryName: "Cameras",
+          aspects: [],
+          conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
+          expiresAt: Date.now() + 3600000,
+          signature: "fresh",
+          issues: [],
+        },
+      },
+    });
+  });
+  await page.clock.fastForward("25:00:00");
+  const history = page.getByRole("region", { name: "History" });
+  await history.locator("summary").click();
+  await history.getByRole("button", { name: "↩ Return to work" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  expect(sent[0].enrich).toBe(false);
+  expect(sent[0].images).toEqual([]);
+  expect(sent[0].listing.category_id).toBe("625");
+  await expect(page.locator(".title-input")).toHaveValue("Canon R5 Camera");
+});
+
+test("History fits a phone screen", async ({ page }) => {
+  await setup(page);
+  await draft(page);
+  await page.getByRole("button", { name: "← Back to items" }).click();
+  await page.getByRole("button", { name: "← Back to photos" }).click();
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  const history = page.getByRole("region", { name: "History" });
+  await history.locator("summary").click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await history.screenshot({ path: "test-results/history-phone.png" });
+});
