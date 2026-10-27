@@ -552,8 +552,33 @@ textarea {
 div.size-warning p {
   margin: 0;
 }
+.size-warning .brand-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.size-warning.maker-marks p + p {
+  margin-top: 0.35rem;
+}
+.size-warning .remembered {
+  color: #174732;
+}
+.size-warning .confirm-brand .why {
+  font-weight: 400;
+  opacity: 0.85;
+}
+.size-warning .remember-brand {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid #174732;
+  border-radius: 8px;
+  background: white;
+  color: #174732;
+  font: inherit;
+  cursor: pointer;
+}
 .size-warning .confirm-brand {
-  margin-top: 0.5rem;
+  margin-top: 0;
   padding: 0.45rem 0.9rem;
   border: 1px solid #174732;
   border-radius: 8px;

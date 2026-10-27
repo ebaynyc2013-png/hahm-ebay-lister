@@ -20,7 +20,17 @@ export const AI_LISTING_SCHEMA = {
     brand: string,
     brand_source: {
       type: "string",
-      enum: ["label", "note", "maker_mark", "none"],
+      enum: ["label", "note", "marks", "none"],
+    },
+    // Possible makers when the marks do not settle it; the seller picks.
+    brand_candidates: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: { brand: string, why: string },
+        required: ["brand", "why"],
+      },
     },
     item_type: string,
     color: strings,
@@ -61,6 +71,7 @@ export const AI_LISTING_SCHEMA = {
     "maker_marks",
     "brand",
     "brand_source",
+    "brand_candidates",
     "item_type",
     "color",
     "size",

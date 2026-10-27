@@ -51,8 +51,13 @@ title: z.string().trim().min(1).max(80),
   aesthetics: z.array(text).max(10).optional(),
   contact_seen: z.array(text).max(20).optional(),
   maker_marks: z.array(text).max(10).optional(),
-  brand_source: z.enum(["label", "note", "maker_mark", "none"]).optional(),
+  brand_source: z.enum(["label", "note", "marks", "seller", "none"]).optional(),
+  brand_candidates: z
+    .array(z.object({ brand: z.string().max(100), why: z.string().max(300) }))
+    .max(5)
+    .optional(),
   brand_confirmed: z.boolean().optional(),
+  brand_remembered: z.boolean().optional(),
   item_specifics: z
     .record(
       z.string().min(1).max(100),

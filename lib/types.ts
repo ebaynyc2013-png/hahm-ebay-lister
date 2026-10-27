@@ -42,13 +42,20 @@ export interface ListingResult {
   contact_seen?: string[];
   /** Maker's marks seen in the photos (stamp, logo, signature tag), with the photo. */
   maker_marks?: string[];
-  /** Where the brand came from: read on a label or the note, or from a known mark. */
-  brand_source?: "label" | "note" | "maker_mark" | "none";
   /**
-   * False while a brand taken from a maker's mark waits for the seller's word;
-   * true once she confirms it or types the brand herself.
+   * Where the brand came from: read on the piece ("label"), the seller's note,
+   * several agreeing maker's marks ("marks"), the seller herself, or nowhere.
+   */
+  brand_source?: "label" | "note" | "marks" | "seller" | "none";
+  /** Possible makers when the marks do not settle it — the seller picks. */
+  brand_candidates?: { brand: string; why: string }[];
+  /**
+   * False while a brand named from marks waits for the seller's word; true
+   * once she confirms it, picks a candidate or types the brand herself.
    */
   brand_confirmed?: boolean;
+  /** This card's mark has been kept in the brand memory. */
+  brand_remembered?: boolean;
   item_specifics?: Record<string, string>;
   item_profile?: string;
 }
@@ -60,6 +67,12 @@ export interface AnalyzeRequestBody {
   // Optional model overrides; server falls back to its defaults when omitted.
   analysisModel?: string;
   routerModel?: string;
+  /** Maker's marks the seller confirmed before (see brand-memory.ts). */
+  references?: {
+    brand: string;
+    marks: string[];
+    image?: { mediaType: string; data: string };
+  }[];
 }
 
 export interface AnalyzeResponse {

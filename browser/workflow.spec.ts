@@ -599,7 +599,7 @@ test("a website seen in the photos is shown as a warning, never in the listing",
   await expect(warning).toContainText("crop or remove that photo");
 });
 
-test("a brand read from a maker's mark waits for the seller's confirmation", async ({
+test("a brand read from several marks waits for the seller's confirmation, then is remembered", async ({
   page,
 }) => {
   await setup(page);
@@ -611,9 +611,12 @@ test("a brand read from a maker's mark waits for the seller's confirmation", asy
           title: "Premier Designs Gold Brown Twisted Cord Pendant Necklace",
           description: "Premier Designs Gold Brown Twisted Cord Pendant Necklace\n\nBrand: Premier Designs",
           brand: "Premier Designs",
-          brand_source: "maker_mark",
+          brand_source: "marks",
           brand_confirmed: false,
-          maker_marks: ["Photo 2: small crown-shaped tag at the end of the extender chain"],
+          maker_marks: [
+            "Photo 2: small crown-shaped tag at the end of the extender chain",
+            "Photo 2: crown stamped on the cord end caps",
+          ],
           item_type: "Necklace",
           condition: "VERY_GOOD",
           suggested_price: 30,
@@ -626,8 +629,57 @@ test("a brand read from a maker's mark waits for the seller's confirmation", asy
   await draft(page);
   const note = page.getByRole("alert").filter({ hasText: "Maker’s mark seen" });
   await expect(note).toContainText("crown-shaped tag");
-  await expect(note).toContainText("comes from that mark, not from a label");
+  await expect(note).toContainText("read from several marks");
   await note.getByRole("button", { name: "✓ Yes, the brand is Premier Designs" }).click();
-  await expect(note).toContainText("Brand confirmed: Premier Designs");
-  await expect(note.getByRole("button")).toHaveCount(0);
+  await expect(note).toContainText("Remembered");
+  const memory = page.getByRole("region", { name: "Learned maker's marks" });
+  await expect(memory).toContainText("Maker’s marks learned from you — 1");
+});
+
+test("when the marks do not settle it, the seller picks the maker and the next analysis sees it", async ({
+  page,
+}) => {
+  await setup(page);
+  const bodies: any[] = [];
+  await page.route("**/api/analyze", (r) => {
+    bodies.push(r.request().postDataJSON());
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "Gold Brown Twisted Cord Open Diamond Pendant Necklace",
+          description: "Gold Brown Twisted Cord Open Diamond Pendant Necklace\n\nCondition: Very good.",
+          brand: "",
+          brand_source: "none",
+          brand_candidates: [
+            { brand: "Premier Designs", why: "crown tag on the extender" },
+            { brand: "Juicy Couture", why: "also uses crowns" },
+          ],
+          maker_marks: ["Photo 2: small crown-shaped tag at the end of the extender chain"],
+          item_type: "Necklace",
+          condition: "VERY_GOOD",
+          suggested_price: 30,
+        },
+        usage: [],
+      },
+    });
+  });
+  await draft(page);
+  const note = page.getByRole("alert").filter({ hasText: "Maker’s mark seen" });
+  await expect(note).toContainText("The marks do not settle the maker");
+  await expect(note.getByRole("button", { name: /Use Juicy Couture/ })).toBeVisible();
+  await note.getByRole("button", { name: /Use Premier Designs/ }).click();
+  await expect(page.locator(".title-input")).toHaveValue(
+    "Premier Designs Gold Brown Twisted Cord Open Diamond Pendant Necklace",
+  );
+  await expect(note).toContainText("Remembered");
+
+  // The next analysis carries the confirmed mark, with its photo.
+  expect(bodies[0].references ?? []).toEqual([]);
+  await page.getByRole("button", { name: "Re-analyze selected photos (replaces this draft)" }).click();
+  await expect.poll(() => bodies.length).toBe(2);
+  expect(bodies[1].references).toHaveLength(1);
+  expect(bodies[1].references[0].brand).toBe("Premier Designs");
+  expect(bodies[1].references[0].marks[0]).toContain("crown-shaped tag");
+  expect(bodies[1].references[0].image?.mediaType).toBe("image/jpeg");
 });

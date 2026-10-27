@@ -1,5 +1,6 @@
 import { scrubContactInfo } from "@/lib/contact-info";
 import { applyMakerMarkRules } from "@/lib/maker-marks";
+import { referenceBlocks, referencesSchema } from "@/lib/brand-references";
 import { acceptedPhotoFact } from "@/lib/photo-facts";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
@@ -118,6 +119,10 @@ async function handle(req: NextRequest) {
   try {
     body = (await req.json()) as AnalyzeRequestBody;
     imagesSchema.parse(body.images);
+    // Marks the seller confirmed before: optional, and never allowed to sink
+    // the request — a malformed set is simply left out.
+    const refs = referencesSchema.safeParse(body.references ?? []);
+    body.references = refs.success ? refs.data : [];
   } catch {
     return NextResponse.json(
       { ok: false, error: "Invalid request body." },
@@ -202,6 +207,8 @@ async function handle(req: NextRequest) {
                 role: "user",
                 content: [
                   ...imageBlocks,
+                  // After the item's photos, so photo numbers stay the item's.
+                  ...referenceBlocks(body.references),
                   {
                     type: "text",
                     text: "Analyze these photos and return the listing JSON now.",

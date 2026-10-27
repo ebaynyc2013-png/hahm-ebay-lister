@@ -2,7 +2,6 @@
 // web app writes listings exactly the way the original script did.
 
 import { aestheticsPromptBlock } from "./aesthetics";
-import { makerMarksPromptBlock } from "./maker-marks";
 
 export const ITEM_PROFILES = [
   "auto",
@@ -468,23 +467,24 @@ eBay hides any listing that offers a way to buy or get in touch outside eBay. La
 - Describe the label without it: "Original label reads Colie Bloom Modern Art Boutique, Hand Made, One of a Kind" — not the web address printed under it.
 - Report each one ONLY in "contact_seen", naming the photo and the kind of detail, e.g. "Photo 3: a website address on the artist's label". Leave "contact_seen" empty when there is none.`;
 
-// The seller's rule after a Premier Designs necklace went out as Unbranded
-// (27 Oct 2026): a maker's mark is never "no brand".
+// The seller's rules after a Premier Designs necklace went out as Unbranded
+// (27 Oct 2026). A maker's mark is never "no brand" — and one mark is never
+// enough to name one, since crowns, hearts and letters are shared by many
+// makers and their marks changed over the years.
 const MAKER_MARKS_SECTION = `
 
 MAKER'S MARKS AND THE BRAND
 
-Look for every maker's mark before you name the brand: a stamped or engraved name or logo, a hallmark carrying a maker's name, a signature tag or charm (often on the clasp or hanging at the end of an extender chain), a logo plate, a printed label.
+Look for every maker's mark before you name the brand: a stamped or engraved name or logo, a hallmark carrying a maker's name, a signature tag or charm (often on the clasp or hanging at the end of an extender chain), marked cord ends or findings, a logo plate, a printed label.
 
-- "maker_marks": describe each mark you see and where, with the photo number — "Photo 2: small crown-shaped tag at the end of the extender chain". Empty when there is none.
-- A name you can READ on a label, tag, stamp or plate is the brand: brand_source "label". A brand the seller wrote on her photographed note: brand_source "note".
-- No name readable, but a mark matches one in KNOWN MAKER'S MARKS below: use that brand, brand_source "maker_mark". The seller confirms it before posting, so name the mark plainly in "maker_marks".
-- A mark is visible but you cannot tell whose it is: brand "" (empty), brand_source "none". NEVER "Unbranded" when any maker's mark is visible — an unknown maker is not no maker, and a buyer searching that brand would never find the piece. Leave the brand out of the title, and leave the Brand line out of the description.
+- "maker_marks": describe each mark you see in close detail and where it is, with the photo number — its shape, letters, the details of the design, what it is attached to. "Photo 2: small gold crown-shaped tag at the end of the extender chain; five points, a ball on each, open scrollwork band". Empty when there is none.
+- A maker's name you can READ on the piece (stamp, tag, plate, label) is the brand: brand_source "label". A brand the seller wrote on her photographed note: brand_source "note". These always win over any mark.
+- Otherwise name a brand ONLY when SEVERAL independent marks agree on the same maker — for example the exact design of its logo tag AND its marked findings AND its stamp — and no other maker shares that combination: brand_source "marks". The seller confirms it before posting.
+- ONE mark, or marks that several makers share (a crown, a heart, a star, a single letter), are NOT enough. Leave brand "" (empty), brand_source "none", and list in "brand_candidates" each maker it could be, with the marks that point to it. Never prefer a maker because it is pricier or more often named in eBay listings: sellers often label a cheaper maker as a more expensive one.
+- NEVER "Unbranded" when any maker's mark is visible: an unknown maker is not no maker, and a buyer searching that brand would never find the piece. When the brand is empty, leave it out of the title and leave the Brand line out of the description.
 - "Unbranded" only when the piece shows no maker's mark at all.
-- A maker's mark is a mark, not decoration: do not put it in the title as a feature ("Crown Charm").
-
-KNOWN MAKER'S MARKS
-${makerMarksPromptBlock()}`;
+- A maker's mark is a mark, not decoration: never put it in the title as a feature ("Crown Charm").
+- REFERENCE photos may follow the item's photos: marks the seller has confirmed before, each labelled with its maker. They are not photos of this item — never cite them. Compare details closely; a reference whose details match exactly counts as ONE strong mark, never as the whole answer.`;
 
 export function buildProfiledAnalysisPrompt(profile: string): string {
   const normalized = normalizeItemProfile(profile);

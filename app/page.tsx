@@ -29,6 +29,8 @@ import { ModelSelector } from "./ModelSelector";
 import { ReviewBoard } from "./ReviewBoard";
 import { ListingsView } from "./ListingsView";
 import { HistoryPanel } from "./HistoryPanel";
+import { BrandMemoryPanel } from "./BrandMemoryPanel";
+import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
 import type {
   AnalyzeResponse,
   CompsSummary,
@@ -622,9 +624,15 @@ export default function Home() {
         ),
       );
       try {
+        // The seller's confirmed marks go along, newest first; if the
+        // browser cannot read them the analysis simply runs without.
+        const references = await loadBrandMarks()
+          .then(referencesForAnalysis)
+          .catch(() => []);
         const res = await apiPost("/api/analyze", {
           profile: "auto",
           images: imgs,
+          references,
           analysisModel: getAnalysisModel() ?? undefined,
           routerModel: getSortModel() ?? undefined,
         });
@@ -1213,6 +1221,8 @@ export default function Home() {
         onReturn={(e) => void returnToWork(e)}
         onDelete={(e) => void removeFromHistory(e)}
       />
+
+      <BrandMemoryPanel />
 
       <p className="footnote">
         Your photos are sent securely to sort and write listings, and are not

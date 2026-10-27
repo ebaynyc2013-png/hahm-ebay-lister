@@ -1,5 +1,7 @@
 "use client";
 
+import { applyChosenBrand, photoNumberOfMark } from "@/lib/maker-marks";
+import { imageFromDataUrl, rememberBrandMark } from "@/lib/brand-memory";
 import { DraftControls } from "./DraftControls";
 import { draftIssues } from "@/lib/client-review";
 import { useEffect, useMemo, useState } from "react";
@@ -103,6 +105,27 @@ export function ListingCard({
   const priceMissing =
     group.status === "done" &&
     (priceNum === undefined || Number.isNaN(priceNum) || priceNum <= 0);
+
+  // Keep a confirmed maker's mark: its description and the small copy of the
+  // photo it was seen on ("Photo 2: …"). The program learns marks only from
+  // the seller, never from other eBay listings.
+  const rememberMark = async (brand: string) => {
+    if (!listing || !brand.trim()) return;
+    const marks = listing.maker_marks ?? [];
+    const n = marks.map(photoNumberOfMark).find((x): x is number => Boolean(x));
+    const ids = group.evidencePhotoIds ?? group.analysisPhotoIds ?? group.photoIds;
+    const photo = n ? photoById(ids[n - 1]) : undefined;
+    try {
+      await rememberBrandMark({
+        brand,
+        marks,
+        itemType: listing.item_type,
+        image: imageFromDataUrl(photo?.previewUrl),
+      });
+    } catch {
+      onEdit(group.id, { brand_remembered: false });
+    }
+  };
 
   return (
     <article className={`listing-card status-${group.status}`}>
@@ -308,28 +331,98 @@ export function ListingCard({
           )}
 
           {!!listing?.maker_marks?.length && (
-            <div className="size-warning" role="alert">
-              <p>
-                🔎 Maker&rsquo;s mark seen: {listing.maker_marks.join("; ")}.
-                {listing.brand
-                  ? listing.brand_source === "maker_mark"
-                    ? listing.brand_confirmed
-                      ? ` Brand confirmed: ${listing.brand}.`
-                      : ` The brand ${listing.brand} comes from that mark, not from a label — check it before posting.`
-                    : ""
-                  : " No brand was written — if you know whose mark it is, enter it in Brand under Editable item specifics."}
-              </p>
-              {listing.brand_source === "maker_mark" &&
-                listing.brand &&
-                listing.brand_confirmed === false && (
-                  <button
-                    type="button"
-                    className="confirm-brand"
-                    onClick={() => onEdit(group.id, { brand_confirmed: true })}
-                  >
-                    ✓ Yes, the brand is {listing.brand}
-                  </button>
+            <div className="size-warning maker-marks" role="alert">
+              <p>🔎 Maker&rsquo;s mark seen: {listing.maker_marks.join("; ")}.</p>
+              {listing.brand ? (
+                listing.brand_source === "marks" && !listing.brand_confirmed ? (
+                  <p>
+                    The brand {listing.brand} was read from several marks, not
+                    from a name on the piece — check it before posting.
+                  </p>
+                ) : null
+              ) : listing.brand_candidates?.length ? (
+                <p>
+                  The marks do not settle the maker. Pick the right one, or
+                  type the brand in Brand under Editable item specifics:
+                </p>
+              ) : (
+                <p>
+                  No brand was written — if you know whose mark it is, type it
+                  in Brand under Editable item specifics.
+                </p>
+              )}
+              <div className="brand-actions">
+                {listing.brand_source === "marks" &&
+                  listing.brand &&
+                  listing.brand_confirmed === false && (
+                    <button
+                      type="button"
+                      className="confirm-brand"
+                      onClick={() => {
+                        onEdit(group.id, {
+                          brand_confirmed: true,
+                          brand_remembered: true,
+                        });
+                        void rememberMark(listing.brand ?? "");
+                      }}
+                    >
+                      ✓ Yes, the brand is {listing.brand}
+                    </button>
+                  )}
+                {!listing.brand &&
+                  listing.brand_candidates?.map((c) => (
+                    <button
+                      key={c.brand}
+                      type="button"
+                      className="confirm-brand"
+                      title={c.why}
+                      onClick={() => {
+                        const { listing: next } = applyChosenBrand(listing, c.brand);
+                        onEdit(group.id, {
+                          brand: next.brand,
+                          brand_source: next.brand_source,
+                          brand_confirmed: true,
+                          brand_remembered: true,
+                          item_specifics: next.item_specifics,
+                          title: next.title,
+                          description: next.description,
+                        });
+                        void rememberMark(c.brand);
+                      }}
+                    >
+                      Use {c.brand}
+                      {c.why ? <span className="why"> — {c.why}</span> : null}
+                    </button>
+                  ))}
+                {listing.brand &&
+                  !listing.brand_remembered &&
+                  !(listing.brand_source === "marks" && !listing.brand_confirmed) && (
+                    <button
+                      type="button"
+                      className="remember-brand"
+                      onClick={() => {
+                        onEdit(group.id, { brand_remembered: true });
+                        void rememberMark(listing.brand ?? "");
+                      }}
+                    >
+                      🧠 Remember: this mark belongs to {listing.brand}
+                    </button>
+                  )}
+              </div>
+              {listing.brand &&
+                listing.brand_source === "seller" &&
+                !listing.title.toLowerCase().includes(listing.brand.toLowerCase()) && (
+                  <p>
+                    {listing.brand} did not fit in the 80-character title — add
+                    it to the title by hand, right after any Vintage and era.
+                  </p>
                 )}
+              {listing.brand_remembered && (
+                <p className="remembered">
+                  🧠 Remembered — the program will compare future marks with
+                  this one.
+                </p>
+              )}
             </div>
           )}
 
