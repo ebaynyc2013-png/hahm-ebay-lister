@@ -93,6 +93,8 @@ export function scrubContactInfo(listing: ListingResult): string[] {
   listing.key_features = cleanList(listing.key_features);
   listing.search_terms = cleanList(listing.search_terms);
   listing.seo_keywords = cleanList(listing.seo_keywords);
+  listing.hashtags = cleanList(listing.hashtags);
+  listing.etsy_tags = cleanList(listing.etsy_tags);
   if (listing.item_specifics)
     listing.item_specifics = Object.fromEntries(
       Object.entries(listing.item_specifics)

@@ -627,6 +627,42 @@ div.size-warning p {
   border: 1px solid color-mix(in oklch, var(--color-accent), white 70%);
 }
 
+.field-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-ink-faint);
+}
+
+.other-shops .tag-line {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunk);
+  margin-bottom: 0.5rem;
+}
+
+.other-shops .tag-k {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.other-shops .tag-k small {
+  font-weight: 400;
+  color: var(--color-ink-faint);
+}
+
+.other-shops .tag-v {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.other-shops .tag-line .btn-ghost {
+  justify-self: start;
+}
+
 .copy-row {
   display: flex;
   gap: 0.5rem;

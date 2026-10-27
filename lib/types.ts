@@ -56,6 +56,18 @@ export interface ListingResult {
   brand_confirmed?: boolean;
   /** This card's mark has been kept in the brand memory. */
   brand_remembered?: boolean;
+  /**
+   * Sections left out of the description to keep it within 800 characters
+   * (eBay shows that much in full on a phone). Shown on the card.
+   */
+  description_dropped?: string[];
+  /**
+   * For the seller's other shops, shown on the card for copying and never
+   * sent to eBay: up to 5 hashtags for Depop and Mercari (most important
+   * first — Mercari takes 3), and 13 Etsy tags.
+   */
+  hashtags?: string[];
+  etsy_tags?: string[];
   item_specifics?: Record<string, string>;
   item_profile?: string;
 }

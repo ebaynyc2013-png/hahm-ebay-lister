@@ -64,6 +64,9 @@ export const AI_LISTING_SCHEMA = {
     suggested_price: { type: "number" },
     title: { type: "string", maxLength: 80 },
     description: string,
+    // For Depop/Mercari and Etsy — shown on the card, never sent to eBay.
+    hashtags: strings,
+    etsy_tags: strings,
   },
   required: [
     "category",
@@ -88,6 +91,8 @@ export const AI_LISTING_SCHEMA = {
     "suggested_price",
     "title",
     "description",
+    "hashtags",
+    "etsy_tags",
   ],
 };
 

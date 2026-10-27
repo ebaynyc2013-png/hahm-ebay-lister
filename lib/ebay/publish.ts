@@ -1042,17 +1042,49 @@ export interface PublishInput {
  *
  * Only the offer's listingDescription is converted. The inventory item keeps
  * the plain text, which is what the SKU check compares on a retry.
+ *
+ * Lines marked "• " (or "- ", "* ") become a list. That is how the actual
+ * measurements arrive — one per line, the seller's rule — and a list is also
+ * what eBay's phone limit counts most kindly: its mobile guide counts every
+ * <br> as 50 of the 800 characters, every list item as 3.
  */
 export function descriptionToHtml(text: string): string {
   const esc = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const bullet = /^(?:[-*•–·])\s+/;
+  const block = (p: string) => {
+    const out: string[] = [];
+    let para: string[] = [];
+    let list: string[] = [];
+    const flushPara = () => {
+      if (para.length) out.push(`<p>${para.map(esc).join("<br>")}</p>`);
+      para = [];
+    };
+    const flushList = () => {
+      if (list.length)
+        out.push(`<ul>${list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`);
+      list = [];
+    };
+    for (const line of p.split("\n").map((l) => l.trim()).filter(Boolean)) {
+      if (bullet.test(line)) {
+        flushPara();
+        list.push(line.replace(bullet, ""));
+      } else {
+        flushList();
+        para.push(line);
+      }
+    }
+    flushPara();
+    flushList();
+    return out.join("");
+  };
   return String(text ?? "")
     .replace(/\r\n?/g, "\n")
     .trim()
     .split(/\n[ \t]*\n/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => `<p>${esc(p).replace(/[ \t]*\n[ \t]*/g, "<br>")}</p>`)
+    .map(block)
     .join("\n");
 }
 
