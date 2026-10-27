@@ -598,3 +598,44 @@ test("a website seen in the photos is shown as a warning, never in the listing",
   await expect(warning).toContainText("Photo 3: a website address on the artist's label");
   await expect(warning).toContainText("crop or remove that photo");
 });
+
+test("the description shows its length, and tags for other shops sit apart from it", async ({
+  page,
+}) => {
+  await setup(page);
+  const description =
+    "Gold Cord Pendant Necklace\n\nBrand: Premier Designs\n\nCondition: Very good.\n\nActual Measurements:\n• Length: 18 in";
+  await page.route("**/api/analyze", (r) =>
+    r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "Gold Cord Pendant Necklace",
+          description,
+          description_dropped: ["Occasion"],
+          brand: "Premier Designs",
+          item_type: "Necklace",
+          condition: "VERY_GOOD",
+          suggested_price: 25,
+          hashtags: ["#goldnecklace", "#cordnecklace", "#bohojewelry"],
+          etsy_tags: ["gold cord necklace", "boho necklace", "gift for her"],
+        },
+        usage: [],
+      },
+    }),
+  );
+  await draft(page);
+  await expect(page.getByText(`${description.length}/800`)).toBeVisible();
+  await expect(page.getByText("Left out to fit 800 characters: Occasion.")).toBeVisible();
+  const tags = page.getByRole("region", { name: "Tags for other shops" });
+  await expect(tags).toContainText("#goldnecklace #cordnecklace #bohojewelry");
+  await expect(tags).toContainText("Mercari takes the first 3");
+  await expect(tags).toContainText("Etsy · 3 of 13");
+  await expect(tags).toContainText("gold cord necklace, boho necklace, gift for her");
+  await expect(tags.getByRole("button", { name: "📋 Copy Etsy tags" })).toBeVisible();
+  // Never part of what eBay receives.
+  await expect(page.locator("textarea").first()).not.toHaveValue(/#goldnecklace/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await tags.screenshot({ path: "test-results/other-shops-phone.png" });
+});

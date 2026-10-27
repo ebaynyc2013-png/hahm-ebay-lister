@@ -4,6 +4,13 @@ import { DraftControls } from "./DraftControls";
 import { draftIssues } from "@/lib/client-review";
 import { useEffect, useMemo, useState } from "react";
 import { SIZE_REQUIRED_CATEGORIES } from "@/lib/categories";
+import { DESCRIPTION_LIMIT } from "@/lib/description-format";
+import {
+  MERCARI_HASHTAGS,
+  ETSY_TAG_LIMIT,
+  etsyTagLine,
+  hashtagLine,
+} from "@/lib/marketplace-tags";
 import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
@@ -325,7 +332,17 @@ export function ListingCard({
           )}
 
           <div className="result-field">
-            <label>Description</label>
+            <label>
+              Description
+              <span
+                className={`count${
+                  listing.description.length > DESCRIPTION_LIMIT ? " over" : ""
+                }`}
+                title="eBay shows up to 800 characters in full on a phone"
+              >
+                {listing.description.length}/{DESCRIPTION_LIMIT}
+              </span>
+            </label>
             <textarea
               value={listing.description}
               onChange={(e) =>
@@ -333,10 +350,57 @@ export function ListingCard({
               }
               rows={8}
             />
+            {listing.description.length > DESCRIPTION_LIMIT && (
+              <p className="size-warning" role="alert">
+                ⚠️ The description is {listing.description.length} characters.
+                eBay shows only {DESCRIPTION_LIMIT} in full on a phone —
+                shorten it to fit.
+              </p>
+            )}
+            {!!listing.description_dropped?.length && (
+              <p className="field-note">
+                Left out to fit {DESCRIPTION_LIMIT} characters:{" "}
+                {listing.description_dropped.join(", ")}.
+              </p>
+            )}
             <div className="copy-row">
               <CopyButton text={listing.description} label="description" />
             </div>
           </div>
+
+          {!!(listing.hashtags?.length || listing.etsy_tags?.length) && (
+            <section
+              className="result-field other-shops"
+              aria-label="Tags for other shops"
+            >
+              <label>Tags for Depop, Mercari and Etsy · not sent to eBay</label>
+              {!!listing.hashtags?.length && (
+                <div className="tag-line">
+                  <span className="tag-k">
+                    Depop / Mercari
+                    <small> · Mercari takes the first {MERCARI_HASHTAGS}</small>
+                  </span>
+                  <span className="tag-v">{hashtagLine(listing.hashtags)}</span>
+                  <CopyButton
+                    text={hashtagLine(listing.hashtags)}
+                    label="hashtags"
+                  />
+                </div>
+              )}
+              {!!listing.etsy_tags?.length && (
+                <div className="tag-line">
+                  <span className="tag-k">
+                    Etsy · {listing.etsy_tags.length} of {ETSY_TAG_LIMIT}
+                  </span>
+                  <span className="tag-v">{etsyTagLine(listing.etsy_tags)}</span>
+                  <CopyButton
+                    text={etsyTagLine(listing.etsy_tags)}
+                    label="Etsy tags"
+                  />
+                </div>
+              )}
+            </section>
+          )}
 
           <button type="button" onClick={() => onRetry(group.id)}>
             Re-analyze selected photos (replaces this draft)

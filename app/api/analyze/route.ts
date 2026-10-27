@@ -1,4 +1,6 @@
 import { scrubContactInfo } from "@/lib/contact-info";
+import { formatDescription } from "@/lib/description-format";
+import { cleanEtsyTags, cleanHashtags } from "@/lib/marketplace-tags";
 import { acceptedPhotoFact } from "@/lib/photo-facts";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
@@ -244,6 +246,13 @@ const firstContentIndex = descriptionLines.findIndex((line) => line.trim().lengt
 if (firstContentIndex >= 0) descriptionLines.splice(firstContentIndex, 1);
 const descriptionBody = descriptionLines.join("\n").trim();
 listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}` : listing.title;
+        // The seller's order and eBay's 800-character phone limit — applied
+        // after the final title is in place, since the title line counts.
+        const shaped = formatDescription(listing.description);
+        listing.description = shaped.text;
+        if (shaped.dropped.length) listing.description_dropped = shaped.dropped;
+        listing.hashtags = cleanHashtags(listing.hashtags);
+        listing.etsy_tags = cleanEtsyTags(listing.etsy_tags);
         // Same principle for the optional storewide markup: applied pre-review,
         // so the price on the card is exactly the price that publishes.
         listing.suggested_price = applyPriceMarkup(

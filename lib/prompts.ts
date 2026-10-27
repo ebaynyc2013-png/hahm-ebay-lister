@@ -224,84 +224,64 @@ DESCRIPTION
 
 The description must be clear, useful, buyer-friendly, and easy to understand. Write like an experienced professional reseller explaining a great item to an interested buyer in natural everyday language.
 
-The description must never exceed 1000 words. Use as much detail as is genuinely useful, but NEVER add filler merely to make the description longer or approach the word limit. Every sentence should either give the buyer useful information or help the buyer clearly understand and picture the item.
+LENGTH: the whole description — the title line, every section, every space and line break — must be AT MOST 800 CHARACTERS. eBay shows a description of that length in full on a phone. Choose the facts a buyer needs most and say each once; never pad. Aim for 600–780 characters.
 
 The description must NOT be one continuous paragraph.
 
-Use short labeled sections with exactly one blank line between every section.
+Use short labeled sections with exactly one blank line between every section. Inside a section write on one line — no line breaks — except in the Actual Measurements list.
 
 The FIRST line of the description must be the COMPLETE FINAL TITLE, copied exactly word-for-word and in the same order. Do not shorten it, rewrite it, summarize it, or create a different introductory sentence.
 
 Shoe sizes in the description never carry the word "EU" either: the seller writes "Size: 7M" or "Size: 37", never "EU 37".
+
+SECTION ORDER — always this order, the same in every listing, so a buyer on a phone finds each thing in the same place. Leave out a section that has nothing true to say; never move one.
+
+1. The exact title
+2. Brand
+3. Condition
+4. Size — the marked size (Ring Size for rings), only when the item has one
+5. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Never two measurements on one line. Weight belongs in this list.
+6. Type
+7. Color
+8. Material (Metal, Metal Purity)
+9. The stones (The Stone, The Stones, Main Stone, Accent Stones)
+10. Design and Details (a pendant, setting or pattern described here)
+11. Closure, Fit, Chain or Bail
+12. Style and Occasion
+13. Hallmarks and label details (Collection, Style/Model Name or Code, Model Number, Reference Number, UPC, Country of Manufacture, Care)
+
+NEVER write a Keywords section, a list of search words, or hashtags in the description. Put the most useful search words naturally into the sentences instead, early in their sections.
 
 The example below shows the SHAPE of a description and nothing else. Its
 brand, stones, measurements and attributes belong to that one item. Never
 carry them onto the item you are describing, and never let a resemblance
 between the example and your item stand in for evidence.
 
-Example:
+Example (728 characters):
 
-Black Faceted Stone Drop Dangle Sterling Silver 925 Earrings Omega Back
+Judith Ripka Black Stone Drop Dangle Sterling Silver 925 Earrings Omega Back
 
-Brand: Unbranded
+Brand: Judith Ripka
 
-Condition: Very good pre-owned condition. Bright polished sterling with light surface wear consistent with prior wear. Omega backs open and close securely. The drops are smooth and intact.
+Condition: Very good pre-owned condition. Light surface wear on the polished silver. The omega backs open and close securely and the drops are intact.
 
-Type: Drop dangle earrings, approximately 1.25in long. Pair.
+Actual Measurements:
+• Length: 1.25 in
+• Weight: 5.3 g for the pair
 
-The Stones: Polished black trapezoid-shape drops with a smooth high-gloss finish. The stone is not marked or identified anywhere on the piece, so it is described rather than named.
+Type: Drop dangle earrings, a pair.
 
-Design: Cable twisted-cord half-hoop tops connect to a beaded open circle link that suspends the black drop. Twisted cable and beaded detailing throughout.
+Material: Sterling silver, stamped 925.
 
-Closure: Omega-style post backs for pierced ears.
+The Stones: Polished black trapezoid drops with a high-gloss finish. Not marked or identified, so described rather than named.
 
-Weight: 5.3g for the pair.
+Design: Twisted cable half-hoop tops connect to a beaded open circle that holds the black drop.
+
+Closure: Omega backs for pierced ears.
 
 Hallmarks: Stamped JUDITH RIPKA 925 THAILAND on the circle links.
 
-After the exact title, choose labeled sections that are useful for the actual item. Do not mechanically use the same sections for every listing.
-
-Possible useful sections include:
-
-Brand
-Condition
-Type
-Style
-Color
-Size
-Material
-Metal
-Metal Purity
-The Stone
-The Stones
-Main Stone
-Accent Stones
-Design
-Details
-Setting
-Closure
-Chain or Bail
-Fit
-Pattern
-Occasion
-Care
-Measurements
-Actual Measurements
-Length
-Width
-Weight
-Ring Size
-Hallmarks
-Country of Manufacture
-Collection
-Style/Model Name
-Style/Model Code
-Model Number
-Reference Number
-UPC
-Keywords
-
-Use other clear buyer-friendly labels when the item requires them.
+Use other clear buyer-friendly labels when the item requires them, placed with the section they belong to.
 
 Extract as much commercially useful information as can reasonably be established from the supplied photos, readable labels, tags, hallmarks, stamps, measurements, packaging, model information, and seller-provided information.
 
@@ -375,6 +355,8 @@ Include weight when supplied or reliably available.
 
 For clothing, shoes, accessories, and other sized goods, preserve useful actual measurements separately from the manufacturer's marked size.
 
+In the description, actual measurements go in the Actual Measurements list, one measurement per line, each line starting with "• ".
+
 IDENTIFIERS AND LABEL INFORMATION
 
 Do not lose useful information visible on tags, labels, hallmarks, stamps, packaging, or the item itself.
@@ -385,13 +367,13 @@ Transcribe important hallmarks and stamps accurately when readable.
 
 A hallmark or stamp is evidence of the visible marking but must not be turned into an unsupported authenticity claim.
 
-STYLE, AESTHETICS, OCCASION, AND KEYWORDS
+STYLE, AESTHETICS AND OCCASION
 
 When genuinely appropriate to the item, include useful buyer-facing style, aesthetic, occasion, or search language such as Classic, Romantic, Gothic, Goth, Boho, Art Deco, Minimalist, Statement, Resort, Vacation, Office, Casual, Evening, or other relevant terms.
 
 These terms must reasonably fit the actual item. Never force an aesthetic, occasion, or trend merely for SEO.
 
-If a Keywords section is useful, keep it concise and use accurate natural search phrases. Do not turn the description into keyword stuffing.
+Do not add a Keywords section to the description; weave accurate natural search phrases into the sentences. Never keyword stuffing.
 
 FINAL WRITING STYLE
 
@@ -414,6 +396,16 @@ The finished description should feel complete and informative, but never padded.
 Choose the most appropriate jewelry category_hint using a specific category search phrase rather than a guessed numeric category ID.
 
 Return up to 4 short distinctive search_terms based on the item's exact recognizable features, brand, collection, gemstone, model, or design.
+
+TAGS FOR THE SELLER'S OTHER SHOPS
+
+The seller also lists the item on Depop, Mercari and Etsy. These two fields are shown to her separately for copying and are NEVER part of the description.
+
+"hashtags": up to 5 hashtags for Depop and Mercari, the most important FIRST (Mercari takes only the first 3). Each is # followed by words joined with no spaces, lowercase letters and digits only: #goldnecklace, #bohojewelry, #premierdesigns. Three or four say what the item is (item, brand when the evidence supports it, material, colour); at most two name a style or trend.
+
+"etsy_tags": exactly 13 Etsy tags, the three most important FIRST. Each at most 20 characters counting spaces; only letters, digits, spaces, hyphens and apostrophes — no &, /, commas, periods or #. No tag twice. Short phrases a buyer types: "gold cord necklace", "boho necklace", "gift for her".
+
+Every word in both must be true of this item: never a brand, material, stone or era the evidence does not support, never another brand the item merely resembles, and never a contact detail.
 
 suggested_price is an unverified estimate from general knowledge, not current sold data. Use 0 when the exact item cannot be identified confidently. Do not invent comparable URLs, sales, or claims of current market research.
 

@@ -50,6 +50,11 @@ title: z.string().trim().min(1).max(80),
   key_features: z.array(text).max(10).optional(),
   aesthetics: z.array(text).max(10).optional(),
   contact_seen: z.array(text).max(20).optional(),
+  description_dropped: z.array(text).max(20).optional(),
+  // Generous on purpose: the model is asked for 5 and 13, and the cleaner
+  // trims — one tag too many must never fail a whole analysis.
+  hashtags: z.array(text).max(30).optional(),
+  etsy_tags: z.array(text).max(40).optional(),
   item_specifics: z
     .record(
       z.string().min(1).max(100),

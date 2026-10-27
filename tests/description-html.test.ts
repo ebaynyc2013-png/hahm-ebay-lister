@@ -30,6 +30,17 @@ describe("descriptionToHtml", () => {
     );
   });
 
+  it("sends measurements marked with • as a list", () => {
+    // eBay's phone limit counts a list item as 3 characters, a <br> as 50.
+    expect(
+      descriptionToHtml(
+        "Actual Measurements:\n• Length: 18 in\n• Weight: 12 g\n\nColor: Gold & brown",
+      ),
+    ).toBe(
+      "<p>Actual Measurements:</p><ul><li>Length: 18 in</li><li>Weight: 12 g</li></ul>\n<p>Color: Gold &amp; brown</p>",
+    );
+  });
+
   it("escapes text so a brand with & or < survives", () => {
     expect(descriptionToHtml("Brand: Charles & Keith\n\nSize <M>")).toBe(
       "<p>Brand: Charles &amp; Keith</p>\n<p>Size &lt;M&gt;</p>",
