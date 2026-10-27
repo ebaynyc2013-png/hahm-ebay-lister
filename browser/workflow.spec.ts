@@ -598,3 +598,36 @@ test("a website seen in the photos is shown as a warning, never in the listing",
   await expect(warning).toContainText("Photo 3: a website address on the artist's label");
   await expect(warning).toContainText("crop or remove that photo");
 });
+
+test("a brand read from a maker's mark waits for the seller's confirmation", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/analyze", (r) =>
+    r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "Premier Designs Gold Brown Twisted Cord Pendant Necklace",
+          description: "Premier Designs Gold Brown Twisted Cord Pendant Necklace\n\nBrand: Premier Designs",
+          brand: "Premier Designs",
+          brand_source: "maker_mark",
+          brand_confirmed: false,
+          maker_marks: ["Photo 2: small crown-shaped tag at the end of the extender chain"],
+          item_type: "Necklace",
+          condition: "VERY_GOOD",
+          suggested_price: 30,
+          item_specifics: { Brand: "Premier Designs" },
+        },
+        usage: [],
+      },
+    }),
+  );
+  await draft(page);
+  const note = page.getByRole("alert").filter({ hasText: "Maker’s mark seen" });
+  await expect(note).toContainText("crown-shaped tag");
+  await expect(note).toContainText("comes from that mark, not from a label");
+  await note.getByRole("button", { name: "✓ Yes, the brand is Premier Designs" }).click();
+  await expect(note).toContainText("Brand confirmed: Premier Designs");
+  await expect(note.getByRole("button")).toHaveCount(0);
+});

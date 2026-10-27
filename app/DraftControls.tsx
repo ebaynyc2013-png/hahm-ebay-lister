@@ -38,6 +38,8 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
       ] as const)
         if (key in patch.item_specifics)
           next[field] = patch.item_specifics[key];
+      // The seller typing the brand herself is her word on it.
+      if ("Brand" in patch.item_specifics) next.brand_confirmed = true;
       next.evidence = {};
     }
     onGroupEdit(g.id, {

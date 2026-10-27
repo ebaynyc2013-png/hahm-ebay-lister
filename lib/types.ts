@@ -40,6 +40,15 @@ export interface ListingResult {
    * she crops or removes the photo; eBay hides listings that show them.
    */
   contact_seen?: string[];
+  /** Maker's marks seen in the photos (stamp, logo, signature tag), with the photo. */
+  maker_marks?: string[];
+  /** Where the brand came from: read on a label or the note, or from a known mark. */
+  brand_source?: "label" | "note" | "maker_mark" | "none";
+  /**
+   * False while a brand taken from a maker's mark waits for the seller's word;
+   * true once she confirms it or types the brand herself.
+   */
+  brand_confirmed?: boolean;
   item_specifics?: Record<string, string>;
   item_profile?: string;
 }

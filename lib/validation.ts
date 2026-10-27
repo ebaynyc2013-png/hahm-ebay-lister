@@ -50,6 +50,9 @@ title: z.string().trim().min(1).max(80),
   key_features: z.array(text).max(10).optional(),
   aesthetics: z.array(text).max(10).optional(),
   contact_seen: z.array(text).max(20).optional(),
+  maker_marks: z.array(text).max(10).optional(),
+  brand_source: z.enum(["label", "note", "maker_mark", "none"]).optional(),
+  brand_confirmed: z.boolean().optional(),
   item_specifics: z
     .record(
       z.string().min(1).max(100),

@@ -307,6 +307,32 @@ export function ListingCard({
             </p>
           )}
 
+          {!!listing?.maker_marks?.length && (
+            <div className="size-warning" role="alert">
+              <p>
+                🔎 Maker&rsquo;s mark seen: {listing.maker_marks.join("; ")}.
+                {listing.brand
+                  ? listing.brand_source === "maker_mark"
+                    ? listing.brand_confirmed
+                      ? ` Brand confirmed: ${listing.brand}.`
+                      : ` The brand ${listing.brand} comes from that mark, not from a label — check it before posting.`
+                    : ""
+                  : " No brand was written — if you know whose mark it is, enter it in Brand under Editable item specifics."}
+              </p>
+              {listing.brand_source === "maker_mark" &&
+                listing.brand &&
+                listing.brand_confirmed === false && (
+                  <button
+                    type="button"
+                    className="confirm-brand"
+                    onClick={() => onEdit(group.id, { brand_confirmed: true })}
+                  >
+                    ✓ Yes, the brand is {listing.brand}
+                  </button>
+                )}
+            </div>
+          )}
+
           {!!listing?.contact_seen?.length && (
             <p className="size-warning" role="alert">
               ⚠️ Contact details are visible: {listing.contact_seen.join("; ")}.

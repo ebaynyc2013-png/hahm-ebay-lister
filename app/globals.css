@@ -549,6 +549,20 @@ textarea {
   color: var(--color-danger);
   font-size: 0.88rem;
 }
+div.size-warning p {
+  margin: 0;
+}
+.size-warning .confirm-brand {
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid #174732;
+  border-radius: 8px;
+  background: #174732;
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 .specifics {
   border: 1px solid var(--color-border);

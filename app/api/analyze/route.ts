@@ -1,4 +1,5 @@
 import { scrubContactInfo } from "@/lib/contact-info";
+import { applyMakerMarkRules } from "@/lib/maker-marks";
 import { acceptedPhotoFact } from "@/lib/photo-facts";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
@@ -229,6 +230,9 @@ async function handle(req: NextRequest) {
         listing.evidence = Object.fromEntries(
           supported.map((s: any) => [s.name, s.photoIndices]),
         );
+        // A piece with a maker's mark is never "Unbranded"; a brand taken
+        // from a known mark waits for the seller's confirmation.
+        applyMakerMarkRules(listing);
         // No contact details in anything that publishes; whatever had to be
         // taken out is told to the seller beside what the model saw.
         const removed = scrubContactInfo(listing);

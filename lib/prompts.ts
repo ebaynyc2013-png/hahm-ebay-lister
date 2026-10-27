@@ -2,6 +2,7 @@
 // web app writes listings exactly the way the original script did.
 
 import { aestheticsPromptBlock } from "./aesthetics";
+import { makerMarksPromptBlock } from "./maker-marks";
 
 export const ITEM_PROFILES = [
   "auto",
@@ -467,10 +468,34 @@ eBay hides any listing that offers a way to buy or get in touch outside eBay. La
 - Describe the label without it: "Original label reads Colie Bloom Modern Art Boutique, Hand Made, One of a Kind" — not the web address printed under it.
 - Report each one ONLY in "contact_seen", naming the photo and the kind of detail, e.g. "Photo 3: a website address on the artist's label". Leave "contact_seen" empty when there is none.`;
 
+// The seller's rule after a Premier Designs necklace went out as Unbranded
+// (27 Oct 2026): a maker's mark is never "no brand".
+const MAKER_MARKS_SECTION = `
+
+MAKER'S MARKS AND THE BRAND
+
+Look for every maker's mark before you name the brand: a stamped or engraved name or logo, a hallmark carrying a maker's name, a signature tag or charm (often on the clasp or hanging at the end of an extender chain), a logo plate, a printed label.
+
+- "maker_marks": describe each mark you see and where, with the photo number — "Photo 2: small crown-shaped tag at the end of the extender chain". Empty when there is none.
+- A name you can READ on a label, tag, stamp or plate is the brand: brand_source "label". A brand the seller wrote on her photographed note: brand_source "note".
+- No name readable, but a mark matches one in KNOWN MAKER'S MARKS below: use that brand, brand_source "maker_mark". The seller confirms it before posting, so name the mark plainly in "maker_marks".
+- A mark is visible but you cannot tell whose it is: brand "" (empty), brand_source "none". NEVER "Unbranded" when any maker's mark is visible — an unknown maker is not no maker, and a buyer searching that brand would never find the piece. Leave the brand out of the title, and leave the Brand line out of the description.
+- "Unbranded" only when the piece shows no maker's mark at all.
+- A maker's mark is a mark, not decoration: do not put it in the title as a feature ("Crown Charm").
+
+KNOWN MAKER'S MARKS
+${makerMarksPromptBlock()}`;
+
 export function buildProfiledAnalysisPrompt(profile: string): string {
   const normalized = normalizeItemProfile(profile);
   const addon = PROFILE_PROMPT_ADDONS[normalized] ?? "";
-  return ANALYSIS_PROMPT + AESTHETICS_SECTION + CONTACT_SECTION + addon;
+  return (
+    ANALYSIS_PROMPT +
+    AESTHETICS_SECTION +
+    CONTACT_SECTION +
+    MAKER_MARKS_SECTION +
+    addon
+  );
 }
 
 // ── Sorting prompts (ported from sort_photos in the Python script) ──────────

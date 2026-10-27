@@ -14,7 +14,14 @@ export const AI_LISTING_SCHEMA = {
   properties: {
     category: string,
     category_hint: string,
+    // Looked for before the brand is named: a mark seen first is a mark the
+    // brand has to answer to (never "Unbranded" with a maker's mark in view).
+    maker_marks: strings,
     brand: string,
+    brand_source: {
+      type: "string",
+      enum: ["label", "note", "maker_mark", "none"],
+    },
     item_type: string,
     color: strings,
     size: string,
@@ -51,7 +58,9 @@ export const AI_LISTING_SCHEMA = {
   required: [
     "category",
     "category_hint",
+    "maker_marks",
     "brand",
+    "brand_source",
     "item_type",
     "color",
     "size",

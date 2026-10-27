@@ -1,6 +1,7 @@
 import type { ItemGroup } from "./types";
 import { shippingSchema, skuSchema } from "./validation";
 import { validateAspects } from "./ebay/draft";
+import { brandNeedsConfirmation } from "./maker-marks";
 export function draftIssues(g: ItemGroup): string[] {
   const l = g.listing;
   if (!l) return ["Generate a draft first."];
@@ -9,6 +10,10 @@ export function draftIssues(g: ItemGroup): string[] {
   if (!l.title.trim() || l.title.length > 80)
     issues.push("Title must be 1–80 characters.");
   if (!l.description.trim()) issues.push("Enter a description.");
+  if (brandNeedsConfirmation(l))
+    issues.push(
+      `Confirm the brand ${l.brand} — the AI read it from a maker's mark, not a label.`,
+    );
   if (
     !Number.isFinite(Number(l.suggested_price)) ||
     Number(l.suggested_price) <= 0
