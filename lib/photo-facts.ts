@@ -163,9 +163,38 @@ export function photoFactProblem(
       : "not what the label says";
   }
   if (s.basis !== "visible_feature") return "no reason given";
+  if (isStoneAbsence(s.value, aspect)) return null;
   return visible.has(s.name.toLowerCase()) || choosableFromPhoto(aspect)
     ? null
     : "needs a label or your note, not just a look";
+}
+
+// A stone field is one that asks WHICH stone: Main Stone, Secondary Stone,
+// Gemstone, Accent Stone. Not its colour, shape, cut, size or count.
+const STONE_FIELD = /\b(?:gem)?stones?\b/i;
+const STONE_DETAIL =
+  /\b(?:colou?r|shape|creation|treatment|clarity|depth|length|width|size|weight|number|count|grade|cut|setting)\b/i;
+const ABSENCE = /^(?:no(?:\s+main)?\s+stones?|none)$/i;
+
+/**
+ * "No Stone" from a photo — for every kind of jewellery, in every category
+ * whose stone field offers it (the seller's rule, 27 Oct 2026).
+ *
+ * Which stone a piece holds is not settled by looking — topaz and citrine,
+ * glass and crystal — and stays with a label or the seller's note. But that
+ * a piece holds no stone at all, only metal, is exactly what a photo shows.
+ * The rule against naming a stone by eye was refusing that too: a plain gold
+ * pendant came back with "No Stone" refused, and in categories where Main
+ * Stone is required (fine earrings) the listing could not have posted.
+ * Only eBay's own word for "none", and only on its own — "No Stone | Pearl"
+ * is not an absence.
+ */
+export function isStoneAbsence(value: string, aspect?: AspectShape): boolean {
+  if (!aspect) return false;
+  if (!STONE_FIELD.test(aspect.name) || STONE_DETAIL.test(aspect.name)) return false;
+  const v = value.trim();
+  if (!ABSENCE.test(v)) return false;
+  return aspect.values.some((x) => x.trim().toLowerCase() === v.toLowerCase());
 }
 export const PHOTO_FACT_SCHEMA = {
   type: "object",
