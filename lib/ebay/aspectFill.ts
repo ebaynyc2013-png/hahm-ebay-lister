@@ -36,9 +36,12 @@ import {
 } from "./aspects";
 
 const FILL_MODEL = "claude-sonnet-4-6";
-// Prompt-size bound, applied AFTER priority sorting — a category with 60
-// aspects fills its required + recommended ones first, never junk-first.
-const MAX_ASPECTS_TO_FILL = 40;
+// Prompt-size bound, applied AFTER priority sorting — required and
+// recommended aspects always come first. It was 40, and jewellery categories
+// run to 45–53 aspects: earrings lost Theme, Vintage and Signed at the end of
+// the list, which the model never saw. 80 covers every category met so far
+// and still stops a runaway list from becoming a token bomb.
+export const MAX_ASPECTS_TO_FILL = 80;
 // Spell a vocabulary out in full up to this length. eBay's Style list for
 // dresses runs to 63 words, and the useful ones — Basic, Bohemian, Casual,
 // Chic, Prairie — sit past the first dozen alphabetically, behind 40s, 50s,
@@ -219,6 +222,8 @@ export interface FillReport {
   photos: number;
   /** Aspects put in front of the model. */
   offered: number;
+  /** Aspects past the cap, never shown to the model. Said, not hidden. */
+  skipped?: number;
   /** Facts it sent back. */
   returned: number;
   /** Facts refused — not one of eBay's words, or no photo to cite. */
@@ -239,7 +244,9 @@ export function describeFill(r: FillReport): string {
   if (!r.ran) return r.note || "did not run";
   const how = r.photos ? `${r.photos} photos` : "no photos — text only";
   const refused = describeRefused(r.refusedWords ?? []);
-  const why = refused ? `. ${refused}` : "";
+  const why =
+    (refused ? `. ${refused}` : "") +
+    (r.skipped ? `. ${r.skipped} fields were not offered to the AI (over the limit of ${MAX_ASPECTS_TO_FILL})` : "");
   if (!r.returned) return `ran (${how}), model proposed nothing`;
   if (!r.added && r.refused === r.returned)
     return `ran (${how}), all ${r.refused} proposals refused${r.photos ? "" : " — with no photos nothing can be cited"}${why}`;
@@ -282,6 +289,7 @@ export async function fillRecommendedAspects(
     ),
   );
   const unfilled = candidates.slice(0, MAX_ASPECTS_TO_FILL);
+  report.skipped = candidates.length - unfilled.length;
   if (candidates.length > unfilled.length) {
     console.log(
       `[ebay/publish] aspect-fill sku=${sku}: ${candidates.length - unfilled.length} low-priority aspects skipped (cap ${MAX_ASPECTS_TO_FILL})`,
@@ -387,7 +395,9 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       client,
       {
         model: FILL_MODEL,
-        max_tokens: 2200,
+        // Room for an answer to every one of up to 80 aspects; a cut-off
+        // answer is unreadable and loses the whole pass. Billed as used.
+        max_tokens: 4000,
         output_config: {
           format: {
             type: "json_schema",
