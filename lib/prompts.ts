@@ -117,7 +117,7 @@ WORD ORDER, first to last:
 6. The item word — always present and specific: "Shirt Dress", "Necklace", "Ring", "Heels", "Blazer".
 7. Size or measurement, when the label, a measurement photo or the note supports it:
    - apparel letter sizes as abbreviation then full word: "L Large", "XS Extra Small", "M Medium"
-   - shoes: BOTH the US and the EU size, US first: "6.5 EU 37". Write the size exactly as you read it — "EU 37" from a European insole, "US 6.5" from an American one. Never convert it yourself: the program adds the other size from eBay's official chart. A US size stamped with a width letter ("7M", "8.5W") is written as stamped. Because the program ADDS the other size (up to 9 characters, e.g. " EU 37.5"), keep a shoe title to 71 characters or fewer, trimming in the order below; otherwise there is no room for it and the title goes out with one size only.
+   - shoes: BOTH the US and the European size, US first, with NO word "EU" between them — the program writes the final form, "6.5 37" or "7M 37.5". Write the size exactly as you read it, with its marker — "EU 37" from a European insole, "US 6.5" from an American one; the program uses that marker to know which system it is, then removes the word "EU". Never convert it yourself: the program adds the other size from eBay's official chart. A US size stamped with a width letter ("7M", "8.5W") is written as stamped. Because the program ADDS the other size (up to 5 characters, e.g. " 37.5"), keep a shoe title to 75 characters or fewer, trimming in the order below; otherwise there is no room for it and the title goes out with one size only.
    - rings and numeric apparel: "Size 8", "Size 32"
    - necklaces and other items where length or dimensions decide the purchase: "18in", "10x7in"
 8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip").
@@ -231,6 +231,8 @@ The description must NOT be one continuous paragraph.
 Use short labeled sections with exactly one blank line between every section.
 
 The FIRST line of the description must be the COMPLETE FINAL TITLE, copied exactly word-for-word and in the same order. Do not shorten it, rewrite it, summarize it, or create a different introductory sentence.
+
+Shoe sizes in the description never carry the word "EU" either: the seller writes "Size: 7M" or "Size: 37", never "EU 37".
 
 The example below shows the SHAPE of a description and nothing else. Its
 brand, stones, measurements and attributes belong to that one item. Never

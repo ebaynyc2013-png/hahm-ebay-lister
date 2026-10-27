@@ -14,30 +14,40 @@ const RED = "Richard Tyler Red Satin Crystal Strappy Slingback Heels";
 describe("shoe titles carry both sizes, from eBay's chart", () => {
   it("adds the US size to a European one", () => {
     // The real red heels: the insole says 37.
-    expect(shoeSizesInTitle(`${RED} EU 37`, heels)).toBe(`${RED} 6.5 EU 37`);
-    expect(shoeSizesInTitle(`${RED} 37 EU`, heels)).toBe(`${RED} 6.5 EU 37`);
-    expect(shoeSizesInTitle(`${RED} Size 37`, heels)).toBe(
-      `${RED} Size 6.5 EU 37`,
-    );
+    expect(shoeSizesInTitle(`${RED} EU 37`, heels)).toBe(`${RED} 6.5 37`);
+    expect(shoeSizesInTitle(`${RED} 37 EU`, heels)).toBe(`${RED} 6.5 37`);
+    expect(shoeSizesInTitle(`${RED} Size 37`, heels)).toBe(`${RED} Size 6.5 37`);
   });
 
   it("adds the EU size to a marked US one", () => {
-    expect(shoeSizesInTitle(`${RED} US 6.5`, heels)).toBe(`${RED} 6.5 EU 37`);
+    expect(shoeSizesInTitle(`${RED} US 6.5`, heels)).toBe(`${RED} 6.5 37`);
   });
 
   it("corrects a US size the chart disagrees with", () => {
-    expect(shoeSizesInTitle(`${RED} 7 EU 37`, heels)).toBe(`${RED} 6.5 EU 37`);
+    expect(shoeSizesInTitle(`${RED} 7 EU 37`, heels)).toBe(`${RED} 6.5 37`);
+    expect(shoeSizesInTitle(`${RED} 7 37`, heels)).toBe(`${RED} 6.5 37`);
   });
 
   it("leaves a correct pair exactly as it is", () => {
-    expect(shoeSizesInTitle(`${RED} 6.5 EU 37`, heels)).toBe(`${RED} 6.5 EU 37`);
+    expect(shoeSizesInTitle(`${RED} 6.5 37`, heels)).toBe(`${RED} 6.5 37`);
+  });
+
+  it("never writes the word EU — the seller's rule", () => {
+    // Buyers understand "6.5 37"; "EU" only takes room.
+    expect(shoeSizesInTitle(`${RED} 6.5 EU 37`, heels)).toBe(`${RED} 6.5 37`);
+    expect(shoeSizesInTitle(`${RED} US 6.5 EU 37`, heels)).toBe(`${RED} 6.5 37`);
+  });
+
+  it("never reads a model number as a size", () => {
+    const max = "Nike Air Max 90 Sneakers White 38";
+    expect(shoeSizesInTitle(max, { ...heels, item_type: "Sneakers" })).toBe(max);
   });
 
   it("reads the men's chart only when the listing says men's", () => {
     // EU 37 is women's US 6.5 but men's US 4.5.
     const mens = { ...heels, item_type: "Oxfords", item_specifics: { Department: "Men" } };
     expect(shoeSizesInTitle("Allen Edmonds Brown Leather Oxfords EU 37", mens)).toBe(
-      "Allen Edmonds Brown Leather Oxfords 4.5 EU 37",
+      "Allen Edmonds Brown Leather Oxfords 4.5 37",
     );
   });
 
@@ -46,15 +56,17 @@ describe("shoe titles carry both sizes, from eBay's chart", () => {
     const mk = "MICHAEL Michael Kors Black Suede Studded Buckle Pointed Pumps 7M Heels";
     const pumps = { ...heels, item_type: "Pumps" };
     expect(shoeSizesInTitle(mk, pumps)).toBe(
-      "MICHAEL Michael Kors Black Suede Studded Buckle Pointed Pumps 7M EU 37.5 Heels",
+      "MICHAEL Michael Kors Black Suede Studded Buckle Pointed Pumps 7M 37.5 Heels",
     );
-    expect(shoeSizesInTitle(`${RED} Size 8.5W`, heels)).toBe(`${RED} Size 8.5W EU 39`);
-    expect(shoeSizesInTitle(`${RED} 9 N`, heels)).toBe(`${RED} 9N EU 39.5`);
+    expect(shoeSizesInTitle(`${RED} Size 8.5W`, heels)).toBe(`${RED} Size 8.5W 39`);
+    expect(shoeSizesInTitle(`${RED} 9 N`, heels)).toBe(`${RED} 9N 39.5`);
+    expect(shoeSizesInTitle(`${RED} US 7M`, heels)).toBe(`${RED} 7M 37.5`);
   });
 
   it("leaves a sized pair with a width letter alone, and corrects only the number", () => {
-    expect(shoeSizesInTitle(`${RED} 7M EU 37.5`, heels)).toBe(`${RED} 7M EU 37.5`);
-    expect(shoeSizesInTitle(`${RED} 7M EU 37`, heels)).toBe(`${RED} 6.5M EU 37`);
+    expect(shoeSizesInTitle(`${RED} 7M 37.5`, heels)).toBe(`${RED} 7M 37.5`);
+    expect(shoeSizesInTitle(`${RED} 7M EU 37.5`, heels)).toBe(`${RED} 7M 37.5`);
+    expect(shoeSizesInTitle(`${RED} 7M EU 37`, heels)).toBe(`${RED} 6.5M 37`);
   });
 
   it("does not mistake metres or a lower-case m for a width", () => {
@@ -69,7 +81,8 @@ describe("shoe titles carry both sizes, from eBay's chart", () => {
     const long = "Christian Louboutin Black Patent Leather So Kate Pumps Stiletto Size 37";
     const out = shoeSizesInTitle(long, { ...heels, item_type: "Pumps" });
     expect(out.length).toBeLessThanOrEqual(80);
-    expect(out).toContain("6.5 EU 37");
+    expect(out).toContain("6.5 37");
+    expect(out).not.toContain("EU");
   });
 
   it("does nothing to anything that is not a shoe", () => {
@@ -81,9 +94,7 @@ describe("shoe titles carry both sizes, from eBay's chart", () => {
   });
 
   it("runs as part of the title clean-up", () => {
-    expect(optimizeTitle({ ...heels, title: `${RED} EU 37` })).toBe(
-      `${RED} 6.5 EU 37`,
-    );
+    expect(optimizeTitle({ ...heels, title: `${RED} EU 37` })).toBe(`${RED} 6.5 37`);
   });
 });
 
