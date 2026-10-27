@@ -35,6 +35,9 @@ export const AI_LISTING_SCHEMA = {
     // Named style aesthetics the item genuinely shows — the words buyers
     // browse by. Empty is a normal answer for a plain item.
     aesthetics: strings,
+    // Websites, phones, emails, @handles or QR codes readable in the photos —
+    // reported here and written nowhere else (eBay hides listings showing them).
+    contact_seen: strings,
     specifics: {
       type: "array",
       items: PHOTO_FACT_SCHEMA,
@@ -58,6 +61,7 @@ export const AI_LISTING_SCHEMA = {
     "measurements",
     "key_features",
     "aesthetics",
+    "contact_seen",
     "specifics",
     "search_terms",
     "seo_keywords",

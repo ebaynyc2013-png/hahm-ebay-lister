@@ -455,10 +455,22 @@ Rules:
 
 ${aestheticsPromptBlock()}`;
 
+// The seller's rule after eBay hid a painting whose label photo read
+// WWW.COLIEBLOOM.COM (27 Oct 2026).
+const CONTACT_SECTION = `
+
+CONTACT DETAILS SEEN IN THE PHOTOS
+
+eBay hides any listing that offers a way to buy or get in touch outside eBay. Labels, tags, cards, hang tags and packaging often print a website (www…, …com), a phone number, an email address, a social-media handle (@…) or a QR code.
+
+- Even when you can read one plainly, NEVER write it anywhere in the listing: not in the title, the description, condition notes, key features, search terms, keywords or item specifics.
+- Describe the label without it: "Original label reads Colie Bloom Modern Art Boutique, Hand Made, One of a Kind" — not the web address printed under it.
+- Report each one ONLY in "contact_seen", naming the photo and the kind of detail, e.g. "Photo 3: a website address on the artist's label". Leave "contact_seen" empty when there is none.`;
+
 export function buildProfiledAnalysisPrompt(profile: string): string {
   const normalized = normalizeItemProfile(profile);
   const addon = PROFILE_PROMPT_ADDONS[normalized] ?? "";
-  return ANALYSIS_PROMPT + AESTHETICS_SECTION + addon;
+  return ANALYSIS_PROMPT + AESTHETICS_SECTION + CONTACT_SECTION + addon;
 }
 
 // ── Sorting prompts (ported from sort_photos in the Python script) ──────────

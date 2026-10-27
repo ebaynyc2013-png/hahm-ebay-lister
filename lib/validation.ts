@@ -49,6 +49,7 @@ title: z.string().trim().min(1).max(80),
   seo_keywords: z.array(text).max(10).optional(),
   key_features: z.array(text).max(10).optional(),
   aesthetics: z.array(text).max(10).optional(),
+  contact_seen: z.array(text).max(20).optional(),
   item_specifics: z
     .record(
       z.string().min(1).max(100),

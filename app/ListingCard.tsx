@@ -307,6 +307,15 @@ export function ListingCard({
             </p>
           )}
 
+          {!!listing?.contact_seen?.length && (
+            <p className="size-warning" role="alert">
+              ⚠️ Contact details are visible: {listing.contact_seen.join("; ")}.
+              They are kept out of the title, description and specifics, but
+              eBay also hides listings whose PHOTOS show a website, phone,
+              email or @account — crop or remove that photo before posting.
+            </p>
+          )}
+
           {priceMissing && (
             <p className="size-warning" role="alert">
               ⚠️ No price yet — the analysis couldn&rsquo;t estimate one for

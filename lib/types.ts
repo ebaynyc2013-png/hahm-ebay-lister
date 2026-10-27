@@ -34,6 +34,12 @@ export interface ListingResult {
   key_features?: string[];
   /** Named style aesthetics the item shows — what buyers browse by. */
   aesthetics?: string[];
+  /**
+   * Contact details seen in the photos (a website on a label, a phone on a
+   * tag) or taken out of the text. Never published — shown to the seller so
+   * she crops or removes the photo; eBay hides listings that show them.
+   */
+  contact_seen?: string[];
   item_specifics?: Record<string, string>;
   item_profile?: string;
 }

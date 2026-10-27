@@ -571,3 +571,30 @@ test("History fits a phone screen", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await history.screenshot({ path: "test-results/history-phone.png" });
 });
+
+test("a website seen in the photos is shown as a warning, never in the listing", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/analyze", (r) =>
+    r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "Colie Bloom Resin Geode Painting",
+          description: "Colie Bloom Resin Geode Painting\n\nHallmarks: label reads Colie Bloom.",
+          brand: "Colie Bloom",
+          item_type: "Painting",
+          condition: "EXCELLENT",
+          suggested_price: 120,
+          contact_seen: ["Photo 3: a website address on the artist's label"],
+        },
+        usage: [],
+      },
+    }),
+  );
+  await draft(page);
+  const warning = page.getByRole("alert").filter({ hasText: "Contact details are visible" });
+  await expect(warning).toContainText("Photo 3: a website address on the artist's label");
+  await expect(warning).toContainText("crop or remove that photo");
+});

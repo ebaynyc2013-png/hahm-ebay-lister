@@ -1,3 +1,4 @@
+import { scrubContactInfo } from "@/lib/contact-info";
 import { acceptedPhotoFact } from "@/lib/photo-facts";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
@@ -228,6 +229,13 @@ async function handle(req: NextRequest) {
         listing.evidence = Object.fromEntries(
           supported.map((s: any) => [s.name, s.photoIndices]),
         );
+        // No contact details in anything that publishes; whatever had to be
+        // taken out is told to the seller beside what the model saw.
+        const removed = scrubContactInfo(listing);
+        listing.contact_seen = [
+          ...(listing.contact_seen ?? []),
+          ...removed.map((r) => `"${r}" was in the text — taken out`),
+        ];
         // Deterministic title cleanup happens HERE, before the seller reviews —
         // the title on the card is exactly the title that publishes.
         listing.title = optimizeTitle(listing);
