@@ -44,3 +44,35 @@ it("does not relabel Good as Excellent or add unsupported size types", () => {
   expect(l.ebay_condition).toBeUndefined();
   expect(l.item_specifics).toBeUndefined();
 });
+
+const customized = (values: string[]): AspectMeta => ({
+  name: "Customized",
+  values,
+  mode: "FREE_TEXT",
+  required: false,
+  usage: "RECOMMENDED",
+  cardinality: "SINGLE",
+});
+it("answers Customized with No wherever eBay asks it", () => {
+  // The seller almost never sells a customized piece (27 Oct 2026).
+  const l: ListingResult = { title: "Pumps", description: "" };
+  applyListingDefaults(l, [customized(["No", "Yes"])], new Set());
+  expect(l.item_specifics?.Customized).toBe("No");
+});
+it("keeps a Customized answer the seller already gave", () => {
+  const l: ListingResult = {
+    title: "Engraved ring",
+    description: "",
+    item_specifics: { Customized: "Yes" },
+  };
+  applyListingDefaults(l, [customized(["No", "Yes"])], new Set());
+  expect(l.item_specifics?.Customized).toBe("Yes");
+});
+it("adds no Customized where eBay does not ask, or offers no No", () => {
+  const a: ListingResult = { title: "Painting", description: "" };
+  applyListingDefaults(a, [], new Set());
+  expect(a.item_specifics?.Customized).toBeUndefined();
+  const b: ListingResult = { title: "Odd", description: "" };
+  applyListingDefaults(b, [customized(["Yes"])], new Set());
+  expect(b.item_specifics?.Customized).toBeUndefined();
+});
