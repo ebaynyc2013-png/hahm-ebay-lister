@@ -63,6 +63,8 @@ title: z.string().trim().min(1).max(80),
   // trims — one tag too many must never fail a whole analysis.
   hashtags: z.array(text).max(30).optional(),
   etsy_tags: z.array(text).max(40).optional(),
+  hashtags_original: z.array(text).max(30).optional(),
+  etsy_tags_original: z.array(text).max(40).optional(),
   item_specifics: z
     .record(
       z.string().min(1).max(100),

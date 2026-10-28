@@ -105,12 +105,20 @@ describe("what the analysis model is shown", () => {
   it("carries the whole catalogue, cues and all", () => {
     expect(prompt).toContain("STYLE AESTHETICS");
     expect(prompt).toContain("Cottagecore: florals, puff sleeves, gingham");
-    expect(prompt).toContain("Office Siren: pencil skirts");
+    expect(prompt).toContain("Office Siren: late-90s and early-2000s corporate: pencil skirts");
+    // The 2026 guide: jewellery and accessory cues, aliases, new entries.
+    expect(prompt).toContain("Phoebe Buffay Style (also: Phoebe Buffay): 90s revival");
+    expect(prompt).toContain("Academia (also: Light Academia)");
+    expect(prompt).toContain("Cowgirl: western with feminine styling");
+    expect(prompt).toContain("Mid-Century Modern: home and objects");
   });
 
-  it("says to judge by the cues and to return none when none fit", () => {
+  it("says to judge by the cues and to find three honest ones (seller, 28 Oct 2026)", () => {
     expect(prompt).toContain("Judge by the cues");
-    expect(prompt).toContain("Return an empty list when nothing fits");
+    expect(prompt).toContain("Return THREE whenever three honestly fit");
+    expect(prompt).toContain("Fewer than three only when no more honestly fit");
+    // Her correction: Y2K is low-rise.
+    expect(prompt).toContain("Y2K is LOW-rise — never for high-rise or high-waisted pieces");
   });
 
   it("renders one aesthetic per line", () => {

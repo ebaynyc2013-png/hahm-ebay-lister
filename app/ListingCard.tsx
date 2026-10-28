@@ -3,16 +3,12 @@
 import { applyChosenBrand, photoNumberOfMark } from "@/lib/maker-marks";
 import { imageFromDataUrl, rememberBrandMark } from "@/lib/brand-memory";
 import { DraftControls } from "./DraftControls";
+import { CopyButton } from "./CopyButton";
+import { OtherShopsTags } from "./OtherShopsTags";
 import { draftIssues } from "@/lib/client-review";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SIZE_REQUIRED_CATEGORIES } from "@/lib/categories";
 import { DESCRIPTION_LIMIT } from "@/lib/description-format";
-import {
-  MERCARI_HASHTAGS,
-  ETSY_TAG_LIMIT,
-  etsyTagLine,
-  hashtagLine,
-} from "@/lib/marketplace-tags";
 import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
@@ -39,30 +35,6 @@ function priceToInput(value: ListingResult["suggested_price"]): string {
   return n === undefined || Number.isNaN(n) ? "" : String(n);
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 1600);
-    return () => clearTimeout(t);
-  }, [copied]);
-  return (
-    <button
-      type="button"
-      className="btn-ghost"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          setCopied(true);
-        } catch {
-          /* clipboard blocked */
-        }
-      }}
-    >
-      {copied ? "✓ Copied" : `📋 Copy ${label}`}
-    </button>
-  );
-}
 
 interface ListingCardProps {
   group: ItemGroup;
@@ -488,37 +460,10 @@ export function ListingCard({
           </div>
 
           {!!(listing.hashtags?.length || listing.etsy_tags?.length) && (
-            <section
-              className="result-field other-shops"
-              aria-label="Tags for other shops"
-            >
-              <label>Tags for Depop, Mercari and Etsy · not sent to eBay</label>
-              {!!listing.hashtags?.length && (
-                <div className="tag-line">
-                  <span className="tag-k">
-                    Depop / Mercari
-                    <small> · Mercari takes the first {MERCARI_HASHTAGS}</small>
-                  </span>
-                  <span className="tag-v">{hashtagLine(listing.hashtags)}</span>
-                  <CopyButton
-                    text={hashtagLine(listing.hashtags)}
-                    label="hashtags"
-                  />
-                </div>
-              )}
-              {!!listing.etsy_tags?.length && (
-                <div className="tag-line">
-                  <span className="tag-k">
-                    Etsy · {listing.etsy_tags.length} of {ETSY_TAG_LIMIT}
-                  </span>
-                  <span className="tag-v">{etsyTagLine(listing.etsy_tags)}</span>
-                  <CopyButton
-                    text={etsyTagLine(listing.etsy_tags)}
-                    label="Etsy tags"
-                  />
-                </div>
-              )}
-            </section>
+            <OtherShopsTags
+              listing={listing}
+              onEdit={(patch) => onEdit(group.id, patch)}
+            />
           )}
 
           <button type="button" onClick={() => onRetry(group.id)}>

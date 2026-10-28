@@ -657,6 +657,18 @@ div.size-warning p {
 .other-shops .tag-v {
   font-size: 0.9rem;
   overflow-wrap: anywhere;
+  width: 100%;
+  resize: vertical;
+}
+
+.other-shops .tag-remember {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+}
+
+.field-note.warn {
+  color: var(--color-danger);
 }
 
 .other-shops .tag-line .btn-ghost {

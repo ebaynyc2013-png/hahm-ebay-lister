@@ -30,7 +30,10 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
   });
 
   it("asks for hashtags and 13 Etsy tags, outside the description", () => {
-    expect(prompt).toContain('"hashtags": up to 5 hashtags');
+    expect(prompt).toContain('"hashtags": exactly 5 hashtags for Depop, Mercari and Poshmark, in THIS ORDER');
+    expect(prompt).toContain("1st and 2nd — WHAT THE ITEM IS");
+    expect(prompt).toContain("3rd, 4th and 5th — AESTHETICS");
+    expect(prompt).toContain("never #goldnecklace");
     expect(prompt).toContain('"etsy_tags": exactly 13 Etsy tags');
     expect(prompt).toContain("NEVER part of the description");
     const keys = Object.keys(AI_LISTING_SCHEMA.properties);

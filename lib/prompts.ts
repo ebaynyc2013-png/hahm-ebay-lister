@@ -401,9 +401,12 @@ TAGS FOR THE SELLER'S OTHER SHOPS
 
 The seller also lists the item on Depop, Mercari and Etsy. These two fields are shown to her separately for copying and are NEVER part of the description.
 
-"hashtags": up to 5 hashtags for Depop and Mercari, the most important FIRST (Mercari takes only the first 3). Each is # followed by words joined with no spaces, lowercase letters and digits only: #goldnecklace, #bohojewelry, #premierdesigns. Three or four say what the item is (item, brand when the evidence supports it, material, colour); at most two name a style or trend.
+"hashtags": exactly 5 hashtags for Depop, Mercari and Poshmark, in THIS ORDER (Mercari takes only the first 3). Each is # followed by words joined with no spaces, lowercase letters and digits only.
+- 1st and 2nd — WHAT THE ITEM IS: its full name plus its main visible feature, two or three words joined: #pendantnecklace, #cordnecklace, #cigarettecase, #denimshorts, #highwaistshorts, #strappysandals. Name the item in full, never a fragment that could mean another thing (#vintagecase or #engravedcase read as a suitcase — write #cigarettecase). Never one bare generic word (#necklace, #ring, #shorts, #boho, #vintage). No brand. No size, length, measurement or heel height.
+- 3rd, 4th and 5th — AESTHETICS: the aesthetics you returned in "aesthetics", best first, as the name joined: #mobwife, #phoebebuffaystyle, #bohemian, #oldmoney, #retroglam. If fewer than three honestly fit, use another what-the-item-is hashtag instead of forcing one.
+- Metals: never "gold" or "silver" as a material unless a karat stamp (10K, 14K, 18K, 375, 585, 750) or a 925/sterling mark is visible or on the seller's note — otherwise goldtone or silvertone (#goldtonenecklace, never #goldnecklace).
 
-"etsy_tags": exactly 13 Etsy tags, the three most important FIRST. Each at most 20 characters counting spaces; only letters, digits, spaces, hyphens and apostrophes — no &, /, commas, periods or #. No tag twice. Short phrases a buyer types: "gold cord necklace", "boho necklace", "gift for her".
+"etsy_tags": exactly 13 Etsy tags, the three most important FIRST. Each at most 20 characters counting spaces; only letters, digits, spaces, hyphens and apostrophes — no &, /, commas, periods or #. No tag twice. Short phrases a buyer types: "cord necklace", "boho necklace", "gift for her". The same metal rule: "gold" or "silver" only with a karat or 925/sterling mark, otherwise "gold tone" or "silver tone".
 
 Every word in both must be true of this item: never a brand, material, stone or era the evidence does not support, never another brand the item merely resembles, and never a contact detail.
 
@@ -437,12 +440,12 @@ STYLE AESTHETICS
 
 Buyers browse by aesthetic — "bohemian blue dress", "office siren blazer", "gorpcore fleece" — and an item whose listing never names its aesthetic is invisible to every one of those searches.
 
-Return in "aesthetics" every aesthetic below whose cues the item genuinely shows. Judge by the cues, not by the name: the cues are what a photograph can settle.
+Return in "aesthetics" the aesthetics below whose cues the item genuinely shows, BEST FIRST. Judge by the cues, not by the name: the cues are what a photograph can settle.
 
 Rules:
-- Name an aesthetic only when the item really shows its cues. A trending word on an item that does not fit brings the wrong buyer, loses the sale, and risks the listing.
-- Several may apply at once. Two or three is normal; return them all.
-- Return an empty list when nothing fits. A plain item with no aesthetic is an ordinary outcome, not a failure.
+- Return THREE whenever three honestly fit — and with this catalogue they nearly always do. Look past clothes: many entries list jewellery, accessories and home cues (a long pendant on a cord is Phoebe Buffay Style and Bohemian; bold gold-tone jewellery is Mob Wife; an engraved cigarette case is Old Money and Retro Glam; a vase can be Mid-Century Modern or Farmhouse). Return more only when they genuinely fit too.
+- Name an aesthetic only when the item really shows its cues. A trending word on an item that does not fit brings the wrong buyer, loses the sale, and risks the listing. Fewer than three only when no more honestly fit.
+- Respect what a cue rules out: Y2K is LOW-rise — never for high-rise or high-waisted pieces.
 - These are aesthetics, not condition, not size and not occasion.
 
 ${aestheticsPromptBlock()}`;

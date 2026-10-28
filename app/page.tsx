@@ -31,6 +31,8 @@ import { ListingsView } from "./ListingsView";
 import { HistoryPanel } from "./HistoryPanel";
 import { BrandMemoryPanel } from "./BrandMemoryPanel";
 import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
+import { lessonsForAnalysis, loadTagLessons } from "@/lib/tag-memory";
+import { TagMemoryPanel } from "./TagMemoryPanel";
 import type {
   AnalyzeResponse,
   CompsSummary,
@@ -629,10 +631,15 @@ export default function Home() {
         const references = await loadBrandMarks()
           .then(referencesForAnalysis)
           .catch(() => []);
+        // Her corrections to tags on earlier cards, newest first.
+        const lessons = await loadTagLessons()
+          .then(lessonsForAnalysis)
+          .catch(() => []);
         const res = await apiPost("/api/analyze", {
           profile: "auto",
           images: imgs,
           references,
+          lessons,
           analysisModel: getAnalysisModel() ?? undefined,
           routerModel: getSortModel() ?? undefined,
         });
@@ -1223,6 +1230,7 @@ export default function Home() {
       />
 
       <BrandMemoryPanel />
+      <TagMemoryPanel />
 
       <p className="footnote">
         Your photos are sent securely to sort and write listings, and are not

@@ -1,8 +1,10 @@
 import { scrubContactInfo } from "@/lib/contact-info";
 import { applyMakerMarkRules } from "@/lib/maker-marks";
 import { referenceBlocks, referencesSchema } from "@/lib/brand-references";
+import { lessonBlocks, lessonsSchema } from "@/lib/tag-lessons";
 import { formatDescription } from "@/lib/description-format";
-import { cleanEtsyTags, cleanHashtags } from "@/lib/marketplace-tags";
+import { cleanEtsyTags, cleanHashtags, tagEvidence } from "@/lib/marketplace-tags";
+import { isAestheticHashtag } from "@/lib/aesthetics";
 import { acceptedPhotoFact } from "@/lib/photo-facts";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
@@ -125,6 +127,9 @@ async function handle(req: NextRequest) {
     // the request — a malformed set is simply left out.
     const refs = referencesSchema.safeParse(body.references ?? []);
     body.references = refs.success ? refs.data : [];
+    // The seller's tag corrections: the same — optional, never fatal.
+    const lessons = lessonsSchema.safeParse(body.lessons ?? []);
+    body.lessons = lessons.success ? lessons.data : [];
   } catch {
     return NextResponse.json(
       { ok: false, error: "Invalid request body." },
@@ -211,6 +216,7 @@ async function handle(req: NextRequest) {
                   ...imageBlocks,
                   // After the item's photos, so photo numbers stay the item's.
                   ...referenceBlocks(body.references),
+                  ...lessonBlocks(body.lessons),
                   {
                     type: "text",
                     text: "Analyze these photos and return the listing JSON now.",
@@ -262,8 +268,21 @@ listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}`
         const shaped = formatDescription(listing.description);
         listing.description = shaped.text;
         if (shaped.dropped.length) listing.description_dropped = shaped.dropped;
-        listing.hashtags = cleanHashtags(listing.hashtags);
-        listing.etsy_tags = cleanEtsyTags(listing.etsy_tags);
+        // "Gold" and "silver" only with a karat or sterling mark among the
+        // listing's own facts; hashtags in the seller's order.
+        const marks = tagEvidence(
+          [
+            listing.title,
+            listing.description,
+            listing.condition_notes,
+            ...Object.values(listing.item_specifics ?? {}),
+            ...(listing.maker_marks ?? []),
+          ].join(" "),
+        );
+        listing.hashtags = cleanHashtags(listing.hashtags, marks, isAestheticHashtag);
+        listing.etsy_tags = cleanEtsyTags(listing.etsy_tags, marks);
+        listing.hashtags_original = [...listing.hashtags];
+        listing.etsy_tags_original = [...listing.etsy_tags];
         // Same principle for the optional storewide markup: applied pre-review,
         // so the price on the card is exactly the price that publishes.
         listing.suggested_price = applyPriceMarkup(

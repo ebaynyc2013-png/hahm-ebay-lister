@@ -702,8 +702,10 @@ test("the description shows its length, and tags for other shops sit apart from 
           item_type: "Necklace",
           condition: "VERY_GOOD",
           suggested_price: 25,
-          hashtags: ["#goldnecklace", "#cordnecklace", "#bohojewelry"],
-          etsy_tags: ["gold cord necklace", "boho necklace", "gift for her"],
+          hashtags: ["#pendantnecklace", "#cordnecklace", "#mobwife"],
+          hashtags_original: ["#pendantnecklace", "#cordnecklace", "#mobwife"],
+          etsy_tags: ["cord necklace", "boho necklace", "gift for her"],
+          etsy_tags_original: ["cord necklace", "boho necklace", "gift for her"],
         },
         usage: [],
       },
@@ -713,14 +715,61 @@ test("the description shows its length, and tags for other shops sit apart from 
   await expect(page.getByText(`${description.length}/800`)).toBeVisible();
   await expect(page.getByText("Left out to fit 800 characters: Occasion.")).toBeVisible();
   const tags = page.getByRole("region", { name: "Tags for other shops" });
-  await expect(tags).toContainText("#goldnecklace #cordnecklace #bohojewelry");
+  await expect(tags.getByLabel("Hashtags for Depop, Mercari and Poshmark")).toHaveValue(
+    "#pendantnecklace #cordnecklace #mobwife",
+  );
   await expect(tags).toContainText("Mercari takes the first 3");
   await expect(tags).toContainText("Etsy · 3 of 13");
-  await expect(tags).toContainText("gold cord necklace, boho necklace, gift for her");
+  await expect(tags.getByLabel("Etsy tags")).toHaveValue("cord necklace, boho necklace, gift for her");
   await expect(tags.getByRole("button", { name: "📋 Copy Etsy tags" })).toBeVisible();
   // Never part of what eBay receives.
-  await expect(page.locator("textarea").first()).not.toHaveValue(/#goldnecklace/);
+  await expect(page.locator("textarea").first()).not.toHaveValue(/#pendantnecklace/);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await tags.screenshot({ path: "test-results/other-shops-phone.png" });
+});
+
+test("the seller corrects the tags, the program remembers, the next analysis follows", async ({
+  page,
+}) => {
+  await setup(page);
+  const bodies: any[] = [];
+  await page.route("**/api/analyze", (r) => {
+    bodies.push(r.request().postDataJSON());
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "Silver Tone Engraved Cigarette Case",
+          description: "Silver Tone Engraved Cigarette Case\n\nCondition: Good.",
+          item_type: "Cigarette case",
+          condition: "GOOD",
+          suggested_price: 40,
+          hashtags: ["#cigarettecase", "#engravedcigarettecase", "#oldmoney", "#darkacademia"],
+          hashtags_original: ["#cigarettecase", "#engravedcigarettecase", "#oldmoney", "#darkacademia"],
+          etsy_tags: ["cigarette case"],
+          etsy_tags_original: ["cigarette case"],
+        },
+        usage: [],
+      },
+    });
+  });
+  await draft(page);
+  const tags = page.getByRole("region", { name: "Tags for other shops" });
+  const field = tags.getByLabel("Hashtags for Depop, Mercari and Poshmark");
+  await field.fill("#cigarettecase #engravedcigarettecase #oldmoney #retroglam");
+  await field.blur();
+  await tags.getByLabel("Etsy tags").fill("cigarette case, vintage cigarette case holder");
+  await tags.getByLabel("Etsy tags").blur();
+  await expect(tags.getByRole("alert")).toContainText("is over 20 characters");
+  await tags.getByRole("button", { name: "🧠 Remember my changes" }).click();
+  await expect(tags).toContainText("✓ Remembered");
+  const memory = page.getByRole("region", { name: "Learned tag corrections" });
+  await expect(memory).toContainText("Tag corrections learned from you — 2");
+
+  expect(bodies[0].lessons ?? []).toEqual([]);
+  await page.getByRole("button", { name: "Re-analyze selected photos (replaces this draft)" }).click();
+  await expect.poll(() => bodies.length).toBe(2);
+  expect(bodies[1].lessons.join("\n")).toContain("hashtags: removed #darkacademia; added #retroglam");
+  expect(bodies[1].lessons.join("\n")).toContain("Cigarette case");
 });
