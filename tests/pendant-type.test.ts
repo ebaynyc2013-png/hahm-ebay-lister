@@ -64,3 +64,13 @@ describe("the photo pass is told the same rule", () => {
     expect(src).toContain('For an ordinary decorative pendant that none of those describes, answer "Charm"');
   });
 });
+
+describe("the general rule: not sure of the exact value — the general one", () => {
+  it("is in the photo pass for every category, and keeps label facts out", async () => {
+    const { readFileSync } = await import("fs");
+    const src = readFileSync("lib/ebay/aspectFill.ts", "utf8");
+    expect(src).toContain("NOT SURE WHICH EXACT VALUE? CHOOSE THE GENERAL ONE.");
+    expect(src).toContain("a ring's Type, a bag's Style, a vase's Type");
+    expect(src).toContain("those are never guessed");
+  });
+});
