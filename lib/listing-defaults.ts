@@ -44,3 +44,34 @@ export function applyListingDefaults(
     listing.condition = "EXCELLENT";
   }
 }
+
+// Pendant/Locket Type: eBay's list names special kinds of pendant — a letter,
+// a coin, a medal, a photo locket — and has no plain "Pendant". For an
+// ordinary decorative pendant none of them describes, the seller's answer is
+// Charm (28 Oct 2026). Applied after the photo pass, so a kind the photos
+// show (Coin, Tassel…) is never overwritten, and only to a piece that has a
+// pendant: a plain chain gets nothing.
+const SPECIAL_PENDANT =
+  /\b(?:lockets?|coins?|medals?|medallions?|bar|tassels?|letters?|initials?|alphabet|dog ?tags?|perfume|amulets?|photo|keepsake|floating)\b/i;
+
+export function applyDefaultPendantType(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+  listing: ListingResult,
+): boolean {
+  const field = meta.find((a) => /^pendant\s*\/\s*locket type$/i.test(a.name));
+  if (!field) return false;
+  if (aspects[field.name]?.some((v) => v.trim())) return false;
+  const charm = matchAllowed("Charm", field.values);
+  if (!charm) return false;
+  const said = [
+    listing.title,
+    listing.item_type,
+    ...(aspects.Style ?? []),
+    ...(aspects.Type ?? []),
+  ].join(" ");
+  if (!/\bpendants?\b/i.test(said)) return false;
+  if (SPECIAL_PENDANT.test(`${said} ${listing.description ?? ""}`)) return false;
+  aspects[field.name] = [charm];
+  return true;
+}

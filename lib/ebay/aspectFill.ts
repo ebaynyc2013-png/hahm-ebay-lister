@@ -360,6 +360,7 @@ Rules:
 
 - UPC: for this seller's listings, use "Does Not Apply" whenever UPC is an available eBay aspect.
 - Customized: use "No" whenever Customized is an available eBay aspect.
+- Pendant/Locket Type: give the specific kind when the photos show one (Alphabet/Letter, Amulet, Bar, Coin, Dog Tag, Floating/Keepsake, Medal, Perfume, Photo, Tassel). For an ordinary decorative pendant that none of those describes, answer "Charm" — eBay has no plain "Pendant" value, and Charm is the seller's choice for these. A plain chain with no pendant gets nothing.
 - Personalize or Personalized: use "No" whenever that aspect is available.
 - Signed: when eBay provides a Signed aspect for the category, use "Yes" when the actual item has a visible brand/designer signature, hallmark, stamp or branded maker's mark on the item itself. The brand does not need to be a luxury brand. If the item itself has no such visible signature, hallmark, stamp or maker's mark, use "No". Do not create a Signed aspect for categories where eBay does not provide one.
 - Handmade: do not infer Handmade merely from appearance. Use seller-provided information from a photographed note, a readable label/tag, or other reliable evidence establishing whether the item is handmade.
