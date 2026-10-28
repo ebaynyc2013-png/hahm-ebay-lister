@@ -21,7 +21,7 @@ describe("phrases are used in turn", () => {
   it("offers the never-used ones first, a few of every kind, and every stone line", () => {
     const first = pickPhrases({});
     const rings = first.filter((p) => p.kind === "rings");
-    expect(rings.map((p) => p.id)).toEqual(["rings-1", "rings-2", "rings-3"]);
+    expect(rings.map((p) => p.id)).toEqual(["rings-1", "rings-2", "rings-3", "rings-4", "rings-5", "rings-6"]);
     expect(first.filter((p) => p.kind === "gems")).toHaveLength(8);
     expect(phrasesSchema.safeParse(first).success).toBe(true);
     expect(first.length).toBeLessThanOrEqual(8 * PER_KIND + 8);
@@ -43,7 +43,8 @@ describe("phrases are used in turn", () => {
 
   it("tells the model: the tone, not the facts; stones only when named", () => {
     const [block] = phraseBlocks(pickPhrases({})) as { type: "text"; text: string }[];
-    expect(block.text).toContain("turn of phrase and tone, NOT its facts");
+    expect(block.text).toContain("IN HER WORDS");
+    expect(block.text).toContain("never carry over a fact that is not this item's");
     expect(block.text).toContain('Put its id in "style_phrase_id"');
     expect(block.text).toMatch(/\[gems-\d+\] \(only if the stone is rose quartz, named by a label or the seller's note\)/);
     expect(phraseBlocks([])).toEqual([]);

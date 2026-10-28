@@ -236,8 +236,10 @@ Shoe sizes in the description never carry the word "EU" either: the seller write
 
 Never write where the item was made ("Made in Vietnam", "Made in Thailand") in the description — the seller's rule. The eBay item specifics may still carry the country.
 
-THE OPENING SENTENCE — the seller's phrases. After the title comes ONE short paragraph (one or two sentences, no label) modelled on ONE of the seller's own phrases supplied with the photos: how to wear it, who would love it, what it does for an outfit, what she loves about it. Rules, strictly:
-- Take the TURN OF PHRASE AND THE TONE, never the facts. A phrase that names Tiffany, a collection, a designer, a price, a retail price, a stone, a metal, a karat, a measurement or an era is only a pattern: every fact in your sentence must be true of THIS item from its own evidence. Drop or replace anything else. A plain ring never becomes "Tiffany", a gold-tone piece never becomes "18 karat gold".
+THE OPENING SENTENCE — the seller's phrases. After the title comes ONE short paragraph (one or two sentences, no label): the seller's OWN phrase, supplied with the photos, kept in HER WORDS.
+- Choose the phrase that paints the liveliest TRUE picture of this item — a scene, a feeling, an image ("like having a mini sun sitting on your finger", "Channel your inner Hollywood diva… and wait for the compliments to pour in!", "You would be fooling everyone you see…"). Never a flat instruction ("Wear it long or wrap it and layer it" was rejected by the seller as lifeless).
+- Keep her words as close to the original as you can. Change ONLY what must change to be true of this item — the item word (ring → necklace), the brand, the metal, the stone, a number — and nothing else. Do not paraphrase, shorten into plain advice, or "improve" her sentence.
+- Never carry over a fact that is not true of this item. A phrase that names Tiffany, a collection, a designer, a price, a retail price, a stone, a metal, a karat, a measurement or an era: drop or replace that fact with this item's own, or choose another phrase. A plain ring never becomes "Tiffany", a gold-tone piece never becomes "18 karat gold".
 - The seller's opinions may stay as opinions: "looks a lot more expensive than it cost", "perfect for a date night", "dress up your jeans and tees".
 - A gemstone line (what a stone is believed to do) only for a stone a label or the seller's note names — never for a stone recognised by its look — and always as a belief: "is believed to", "is said to".
 - Put the id of the phrase you used in "style_phrase_id" ("" if none was supplied).
@@ -264,11 +266,11 @@ NEVER write a Keywords section, a list of search words, or hashtags in the descr
 
 The example below shows the SHAPE and the VOICE of a description and nothing else. Its brand, design, measurements and condition belong to that one item. Never carry them onto the item you are describing, and never let a resemblance between the example and your item stand in for evidence.
 
-Example (698 characters):
+Example (747 characters):
 
 Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord 35-40in
 
-One good thing about this necklace is that you don't need much more to complete your look. Throw it on with jeans and a tee, and you're done.
+One good thing about this beautiful necklace is that you don't need much more to complete your look. A simple jeans and t-shirt can be given some extra pizzazz if you throw on this necklace!
 
 Brand: Premier Designs
 

@@ -14,7 +14,7 @@ export const phrasesSchema = z
       text: z.string().max(800),
     }),
   )
-  .max(60);
+  .max(80);
 
 export type PhraseInput = z.infer<typeof phrasesSchema>;
 
@@ -29,7 +29,7 @@ export function phraseBlocks(phrases: PhraseInput | undefined): Anthropic.Conten
     {
       type: "text",
       text: [
-        "THE SELLER'S OWN PHRASES, offered in turn. Pick the ONE that best fits this item and model the opening sentence of the description on it — its turn of phrase and tone, NOT its facts. Put its id in \"style_phrase_id\". Any phrase may be adapted to any item.",
+        "THE SELLER'S OWN PHRASES, offered in turn. Pick the ONE that paints the liveliest true picture of this item and use it as the opening sentence of the description IN HER WORDS — change only what must change to be true of this item (item word, brand, metal, stone, numbers); never carry over a fact that is not this item's. Put its id in \"style_phrase_id\". Any phrase may be adapted to any item.",
         ...lines,
       ].join("\n"),
     },

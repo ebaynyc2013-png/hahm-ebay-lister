@@ -32,7 +32,7 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
     expect(m![2].length).toBe(Number(m![1]));
     expect(m![2].length).toBeLessThanOrEqual(800);
     // The seller's approved example (28 Oct 2026): her voice, then facts.
-    expect(m![2]).toContain("One good thing about this necklace");
+    expect(m![2]).toContain("can be given some extra pizzazz");
     expect(m![2]).toContain("• Length: adjustable 35-40 in");
     expect(m![2]).not.toMatch(/made in/i);
   });
@@ -66,7 +66,10 @@ describe("the seller's voice (28 Oct 2026)", () => {
   const prompt = buildProfiledAnalysisPrompt("auto");
 
   it("takes the turn of phrase from her phrases, never their facts", () => {
-    expect(prompt).toContain("Take the TURN OF PHRASE AND THE TONE, never the facts");
+    expect(prompt).toContain("kept in HER WORDS");
+    expect(prompt).toContain("Change ONLY what must change to be true of this item");
+    expect(prompt).toContain("paints the liveliest TRUE picture");
+    expect(prompt).toContain("Never carry over a fact that is not true of this item");
     expect(prompt).toContain('A plain ring never becomes "Tiffany"');
     expect(prompt).toContain('"looks a lot more expensive than it cost"');
     expect(prompt).toContain("never for a stone recognised by its look");

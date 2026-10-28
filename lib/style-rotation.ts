@@ -17,7 +17,7 @@ const STORE = "workspace";
 const KEY = "phraseuse";
 
 /** How many of each kind go along with an analysis. */
-export const PER_KIND = 3;
+export const PER_KIND = 6;
 
 export type PhraseUses = Record<string, number>;
 

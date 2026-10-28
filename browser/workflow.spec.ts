@@ -800,7 +800,7 @@ test("each listing gets the seller's least-used phrases, and a used one waits it
   });
   await draft(page);
   const firstRings = bodies[0].phrases.filter((p: any) => p.kind === "rings").map((p: any) => p.id);
-  expect(firstRings).toEqual(["rings-1", "rings-2", "rings-3"]);
+  expect(firstRings).toEqual(["rings-1", "rings-2", "rings-3", "rings-4", "rings-5", "rings-6"]);
   expect(bodies[0].phrases.some((p: any) => p.kind === "gems")).toBe(true);
   await page.getByRole("button", { name: "Re-analyze selected photos (replaces this draft)" }).click();
   await expect.poll(() => bodies.length).toBe(2);
