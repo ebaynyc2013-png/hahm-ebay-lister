@@ -158,7 +158,11 @@ export function photoFactProblem(
       return "the label shows no year";
     return s.value
       .split(" | ")
-      .every((v) => normalize(s.quote).includes(normalize(v)))
+      .every(
+        (v) =>
+          normalize(s.quote).includes(normalize(v)) ||
+          measurementInQuote(v, s.quote),
+      )
       ? null
       : "not what the label says";
   }
@@ -208,3 +212,46 @@ export const PHOTO_FACT_SCHEMA = {
   },
   required: ["name", "value", "photoIndices", "basis", "quote"],
 };
+
+// A measurement is the same measurement however it is written: eBay's list
+// says "35 in", the screenshot says "Adjustable 35-40", the note says 35".
+// Word-for-word matching refused the Premier Designs necklace's length (28
+// Oct 2026). So a value that is a number with a unit passes when the label
+// carries that number and does not give it in a different unit.
+const UNIT_OF: [RegExp, string][] = [
+  [/^(?:in|inch|inches|"|”|'')$/i, "in"],
+  [/^(?:cm|centimet(?:er|re)s?)$/i, "cm"],
+  [/^(?:mm|millimet(?:er|re)s?)$/i, "mm"],
+  [/^(?:ft|feet|foot|')$/i, "ft"],
+  [/^(?:g|grams?)$/i, "g"],
+  [/^(?:oz|ounces?)$/i, "oz"],
+];
+const unitOf = (u: string) => UNIT_OF.find(([re]) => re.test(u.trim()))?.[1] ?? "";
+const MEASURE_WORDS =
+  /\b(?:adjustable|adjusts|length|long|measures?|measurements?|chain|cord|drop|width|wide|inseam|pit|waist|hips?|rise|heel|height|tall|diameter|circumference|wrist)\b/i;
+const MEASURE_VALUE = /^\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|”|''|cm|mm|ft|g|oz)?\s*$/i;
+
+export function measurementInQuote(value: string, quote: string): boolean {
+  const m = value.match(MEASURE_VALUE);
+  if (!m) return false;
+  const num = Number(m[1]);
+  const unit = m[2] ? unitOf(m[2]) : "";
+  // Every number in the quote, with the unit written after it (if any). A
+  // range "35-40" counts both ends; the unit after the range covers both.
+  const found: { n: number; unit: string; range: boolean }[] = [];
+  const re = /(\d+(?:\.\d+)?)(?:\s*(?:-|–|to)\s*(\d+(?:\.\d+)?))?\s*(inches|inch|in\b|"|”|''|cm|mm|ft\b|feet|grams?|g\b|oz|ounces?)?/gi;
+  for (const q of String(quote).matchAll(re)) {
+    const u = q[3] ? unitOf(q[3]) : "";
+    found.push({ n: Number(q[1]), unit: u, range: !!q[2] });
+    if (q[2]) found.push({ n: Number(q[2]), unit: u, range: true });
+  }
+  // A bare number with no unit counts only where the text is plainly about
+  // a size — "adjustable 35-40", "length 18" — so "Size 7" or a style
+  // number never becomes 7 inches.
+  const aboutSize = MEASURE_WORDS.test(quote);
+  return found.some(
+    (f) =>
+      f.n === num &&
+      (f.unit ? !unit || f.unit === unit : f.range || aboutSize),
+  );
+}
