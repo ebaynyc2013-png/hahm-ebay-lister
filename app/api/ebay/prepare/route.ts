@@ -1,4 +1,7 @@
-import { applyListingDefaults } from "@/lib/listing-defaults";
+import {
+  applyDefaultPendantType,
+  applyListingDefaults,
+} from "@/lib/listing-defaults";
 import {
   applyDefaultDepartment,
   expectedDepartment,
@@ -151,6 +154,9 @@ const categoryPath =
           // at Department by now. Her rule for whatever is still undecided:
           // Women, where eBay offers it in this category.
           applyDefaultDepartment(aspects, meta);
+          // Same idea for an ordinary pendant: Charm, when nothing more
+          // specific was found (the seller's rule, 28 Oct 2026).
+          applyDefaultPendantType(aspects, meta, listing);
           fillShoeSizes(aspects, meta, listing.size);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
