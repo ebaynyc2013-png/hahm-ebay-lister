@@ -90,3 +90,13 @@ describe("Style instead of Type, without the brand again (28 Oct 2026)", () => {
     expect(prompt).not.toContain("Type: Long pendant necklace");
   });
 });
+
+describe("condition never comes from someone else's listing (28 Oct 2026)", () => {
+  it("tells the model where condition comes from", async () => {
+    const { buildProfiledAnalysisPrompt } = await import("@/lib/prompts");
+    const prompt = buildProfiledAnalysisPrompt("auto");
+    expect(prompt).toContain("WHERE CONDITION COMES FROM");
+    expect(prompt).toContain("NEVER its condition");
+    expect(prompt).toContain("its \"New\" or \"NWT\" is about THEIR item");
+  });
+});

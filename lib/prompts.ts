@@ -122,7 +122,7 @@ WORD ORDER, first to last:
    - necklaces and other items where length or dimensions decide the purchase: "18in", "10x7in"
 8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip").
 9. A second variant of the item word, when buyers search both phrasings ("Jean Dress", "Evening Shoes", "Cocktail Dress").
-10. "Damaged", "For Parts" or "New With Tags" — only when the seller's note or the item itself says so (attached original tags count for New With Tags).
+10. "Damaged", "For Parts" or "New With Tags" — only when the seller's note or the item itself says so (attached original tags count for New With Tags). A screenshot of someone else's listing never does: its "New" or "NWT" is about THEIR item.
 11. Aesthetic tail, last — one or two of the aesthetics you returned in "aesthetics" ("Western", "Preppy", "Office Siren").
 
 NEVER IN THE TITLE:
@@ -207,6 +207,8 @@ Style is a word eBay publishes for each category, not a description you compose.
 CONDITION DESCRIPTION
 
 Write a short, natural, buyer-facing condition description.
+
+WHERE CONDITION COMES FROM — the seller's rule of 28 Oct 2026: ONLY from the photos of this item and the seller's photographed note (she writes "excellent condition" and the like on it). A screenshot of another seller's listing (Poshmark, eBay, Mercari, Etsy…) may tell you the piece's name, collection and measurements — NEVER its condition. "New!", "NWT", "New old stock", "never worn" in someone else's listing describe their item, not this one: do not repeat them in the condition, the description, the title or the condition field.
 
 It should sound like an experienced seller describing the actual item.
 
