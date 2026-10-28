@@ -32,6 +32,7 @@ import { HistoryPanel } from "./HistoryPanel";
 import { BrandMemoryPanel } from "./BrandMemoryPanel";
 import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
 import { lessonsForAnalysis, loadTagLessons } from "@/lib/tag-memory";
+import { loadPhraseUses, markPhraseUsed, pickPhrases } from "@/lib/style-rotation";
 import { TagMemoryPanel } from "./TagMemoryPanel";
 import type {
   AnalyzeResponse,
@@ -635,11 +636,16 @@ export default function Home() {
         const lessons = await loadTagLessons()
           .then(lessonsForAnalysis)
           .catch(() => []);
+        // Her own phrases, the least-used of each kind first.
+        const phrases = await loadPhraseUses()
+          .catch(() => ({}))
+          .then((uses) => pickPhrases(uses));
         const res = await apiPost("/api/analyze", {
           profile: "auto",
           images: imgs,
           references,
           lessons,
+          phrases,
           analysisModel: getAnalysisModel() ?? undefined,
           routerModel: getSortModel() ?? undefined,
         });
@@ -647,6 +653,9 @@ export default function Home() {
         if (!data.ok || !data.listing) {
           throw new Error(data.error || "Could not write this listing.");
         }
+        // That phrase has had its turn; the next listings take others first.
+        if (data.listing.style_phrase_id)
+          void markPhraseUsed(data.listing.style_phrase_id).catch(() => {});
         setGroups((prev) =>
           prev.map((g) =>
             g.id === groupId

@@ -222,64 +222,68 @@ If a fact genuinely cannot be established, omit the unsupported claim rather tha
 
 DESCRIPTION
 
-The description must be clear, useful, buyer-friendly, and easy to understand. Write like an experienced professional reseller explaining a great item to an interested buyer in natural everyday language.
+The description is written in the SELLER'S OWN VOICE: one warm opening sentence, then plain facts. Write like her — a reseller talking to a buyer in simple everyday words — never like a catalogue. Do NOT pile up descriptive adjectives ("sculptural, hammered, soft wavy finish that catches the light"): the seller rejected exactly that. Say what a buyer needs, simply.
 
-LENGTH: the whole description — the title line, every section, every space and line break — must be AT MOST 800 CHARACTERS. eBay shows a description of that length in full on a phone. Choose the facts a buyer needs most and say each once; never pad. Aim for 600–780 characters.
+LENGTH: the whole description — the title line, every section, every space and line break — must be AT MOST 800 CHARACTERS, and should come close to it: aim for 700–790. Reach it with true facts and the seller's warm sentence, never with filler. If the facts run out sooner, a shorter description is fine. eBay shows up to 800 characters in full on a phone.
 
-The description must NOT be one continuous paragraph.
-
-Use short labeled sections with exactly one blank line between every section. Inside a section write on one line — no line breaks — except in the Actual Measurements list.
+The description must NOT be one continuous paragraph. Use short labeled sections with exactly one blank line between every section. Inside a section write on one line — no line breaks — except in the Actual Measurements list.
 
 The FIRST line of the description must be the COMPLETE FINAL TITLE, copied exactly word-for-word and in the same order. Do not shorten it, rewrite it, summarize it, or create a different introductory sentence.
 
 Shoe sizes in the description never carry the word "EU" either: the seller writes "Size: 7M" or "Size: 37", never "EU 37".
 
+Never write where the item was made ("Made in Vietnam", "Made in Thailand") in the description — the seller's rule. The eBay item specifics may still carry the country.
+
+THE OPENING SENTENCE — the seller's phrases. After the title comes ONE short paragraph (one or two sentences, no label) modelled on ONE of the seller's own phrases supplied with the photos: how to wear it, who would love it, what it does for an outfit, what she loves about it. Rules, strictly:
+- Take the TURN OF PHRASE AND THE TONE, never the facts. A phrase that names Tiffany, a collection, a designer, a price, a retail price, a stone, a metal, a karat, a measurement or an era is only a pattern: every fact in your sentence must be true of THIS item from its own evidence. Drop or replace anything else. A plain ring never becomes "Tiffany", a gold-tone piece never becomes "18 karat gold".
+- The seller's opinions may stay as opinions: "looks a lot more expensive than it cost", "perfect for a date night", "dress up your jeans and tees".
+- A gemstone line (what a stone is believed to do) only for a stone a label or the seller's note names — never for a stone recognised by its look — and always as a belief: "is believed to", "is said to".
+- Put the id of the phrase you used in "style_phrase_id" ("" if none was supplied).
+
 SECTION ORDER — always this order, the same in every listing, so a buyer on a phone finds each thing in the same place. Leave out a section that has nothing true to say; never move one.
 
 1. The exact title
-2. Brand
-3. Condition
-4. Size — the marked size (Ring Size for rings), only when the item has one
-5. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Never two measurements on one line. Weight belongs in this list.
-6. Type
-7. Color
-8. Material (Metal, Metal Purity)
-9. The stones (The Stone, The Stones, Main Stone, Accent Stones)
-10. Design and Details (a pendant, setting or pattern described here)
-11. Closure, Fit, Chain or Bail
-12. Style and Occasion
-13. Hallmarks and label details (Collection, Style/Model Name or Code, Model Number, Reference Number, UPC, Country of Manufacture, Care)
+2. The seller's opening sentence (no label)
+3. Brand
+4. Condition
+5. Size — the marked size (Ring Size for rings), only when the item has one
+6. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Every measurement shown in the photos, on a measurement photo, a screenshot or the seller's note goes here — never leave one out. Never two measurements on one line. Weight belongs in this list.
+7. Type
+8. Color
+9. Material (Metal, Metal Purity)
+10. The stones (The Stone, The Stones, Main Stone, Accent Stones)
+11. Design and Details (a pendant, setting or pattern described here)
+12. Closure, Fit, Chain or Bail
+13. Style and Occasion
+14. Hallmarks and label details (Collection, Style/Model Name or Code, Model Number, Reference Number, UPC, Care)
+15. Optionally, one closing line with a TRUE story the evidence supports, no label: "Discontinued design. There will be no more like this one." / "Retired by the maker." Never invented.
 
 NEVER write a Keywords section, a list of search words, or hashtags in the description. Put the most useful search words naturally into the sentences instead, early in their sections.
 
-The example below shows the SHAPE of a description and nothing else. Its
-brand, stones, measurements and attributes belong to that one item. Never
-carry them onto the item you are describing, and never let a resemblance
-between the example and your item stand in for evidence.
+The example below shows the SHAPE and the VOICE of a description and nothing else. Its brand, design, measurements and condition belong to that one item. Never carry them onto the item you are describing, and never let a resemblance between the example and your item stand in for evidence.
 
-Example (728 characters):
+Example (682 characters):
 
-Judith Ripka Black Stone Drop Dangle Sterling Silver 925 Earrings Omega Back
+Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord New Old Stock
 
-Brand: Judith Ripka
+One good thing about this necklace is that you don't need much more to complete your look. Throw it on with jeans and a tee, and you're done.
 
-Condition: Very good pre-owned condition. Light surface wear on the polished silver. The omega backs open and close securely and the drops are intact.
+Brand: Premier Designs
+
+Condition: New old stock, never worn.
 
 Actual Measurements:
-• Length: 1.25 in
-• Weight: 5.3 g for the pair
+• Length: adjustable 35-40 in
 
-Type: Drop dangle earrings, a pair.
+Type: Long pendant necklace, the Good As Gold design.
 
-Material: Sterling silver, stamped 925.
+Color: Gold tone pendant on a brown twisted rope cord.
 
-The Stones: Polished black trapezoid drops with a high-gloss finish. Not marked or identified, so described rather than named.
+Closure: Lobster clasp with an extender chain. The Premier Designs crown charm hangs at the end.
 
-Design: Twisted cable half-hoop tops connect to a beaded open circle that holds the black drop.
+Details: The pendant has a magnetic bail, so it can be taken off the cord.
 
-Closure: Omega backs for pierced ears.
-
-Hallmarks: Stamped JUDITH RIPKA 925 THAILAND on the circle links.
+Discontinued design. There will be no more like this one.
 
 Use other clear buyer-friendly labels when the item requires them, placed with the section they belong to.
 
@@ -337,7 +341,7 @@ DESIGN AND DETAILS
 
 Describe distinctive design and construction details that help the buyer understand what makes the item interesting or recognizable.
 
-Favor concrete, easy-to-picture details over abstract promotional language.
+Favor concrete details over abstract promotional language — each detail once, in plain words, never a string of adjectives.
 
 For example, describe a bright polished finish, twisted cable detail, beaded border, engraved surface, openwork design, dangling movement, textured edge, embroidered logo, curved hem, chest pocket, barrel cuffs, or other visible features when relevant.
 
@@ -361,7 +365,7 @@ IDENTIFIERS AND LABEL INFORMATION
 
 Do not lose useful information visible on tags, labels, hallmarks, stamps, packaging, or the item itself.
 
-When supported, include collection names, model names, style codes, model numbers, reference numbers, UPCs, material composition, care information, country of manufacture, and other useful identifiers.
+When supported, include collection names, model names, style codes, model numbers, reference numbers, UPCs, material composition, care information and other useful identifiers in the description. Country of manufacture goes to the item specifics only, never into the description.
 
 Transcribe important hallmarks and stamps accurately when readable.
 

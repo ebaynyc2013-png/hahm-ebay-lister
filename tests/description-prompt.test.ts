@@ -9,7 +9,14 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
   it("asks for at most 800 characters, in the agreed order, without Keywords", () => {
     expect(prompt).toContain("AT MOST 800 CHARACTERS");
     expect(prompt).not.toContain("1000 words");
-    const order = ["1. The exact title", "2. Brand", "3. Condition", "4. Size", "5. Actual Measurements"];
+    const order = [
+      "1. The exact title",
+      "2. The seller's opening sentence",
+      "3. Brand",
+      "4. Condition",
+      "5. Size",
+      "6. Actual Measurements",
+    ];
     const from = prompt.indexOf("SECTION ORDER");
     const at = order.map((o) => prompt.indexOf(o, from));
     expect(at.every((i) => i > 0)).toBe(true);
@@ -24,9 +31,10 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
     expect(m).not.toBeNull();
     expect(m![2].length).toBe(Number(m![1]));
     expect(m![2].length).toBeLessThanOrEqual(800);
-    expect(m![2]).toContain("• Length: 1.25 in");
-    // The example no longer calls a signed piece Unbranded.
-    expect(m![2]).toContain("Brand: Judith Ripka");
+    // The seller's approved example (28 Oct 2026): her voice, then facts.
+    expect(m![2]).toContain("One good thing about this necklace");
+    expect(m![2]).toContain("• Length: adjustable 35-40 in");
+    expect(m![2]).not.toMatch(/made in/i);
   });
 
   it("asks for hashtags and 13 Etsy tags, outside the description", () => {
@@ -51,5 +59,29 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
     expect(scrubContactInfo(l)).toEqual(["www.coliebloom.com", "coliebloom.com"]);
     expect(l.hashtags).toEqual(["#coliebloom"]);
     expect(l.etsy_tags).toEqual(["resin art"]);
+  });
+});
+
+describe("the seller's voice (28 Oct 2026)", () => {
+  const prompt = buildProfiledAnalysisPrompt("auto");
+
+  it("takes the turn of phrase from her phrases, never their facts", () => {
+    expect(prompt).toContain("Take the TURN OF PHRASE AND THE TONE, never the facts");
+    expect(prompt).toContain('A plain ring never becomes "Tiffany"');
+    expect(prompt).toContain('"looks a lot more expensive than it cost"');
+    expect(prompt).toContain("never for a stone recognised by its look");
+    expect(prompt).toContain("aim for 700–790");
+    expect(prompt).toContain("Do NOT pile up descriptive adjectives");
+  });
+
+  it("never writes where the item was made in the description", () => {
+    expect(prompt).toContain('Never write where the item was made ("Made in Vietnam"');
+    expect(prompt).toContain("Country of manufacture goes to the item specifics only");
+  });
+
+  it("asks which phrase was used, before the description", () => {
+    const keys = Object.keys(AI_LISTING_SCHEMA.properties);
+    expect(keys.indexOf("style_phrase_id")).toBe(keys.indexOf("description") - 1);
+    expect(AI_LISTING_SCHEMA.required).toContain("style_phrase_id");
   });
 });

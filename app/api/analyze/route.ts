@@ -2,6 +2,7 @@ import { scrubContactInfo } from "@/lib/contact-info";
 import { applyMakerMarkRules } from "@/lib/maker-marks";
 import { referenceBlocks, referencesSchema } from "@/lib/brand-references";
 import { lessonBlocks, lessonsSchema } from "@/lib/tag-lessons";
+import { phraseBlocks, phrasesSchema } from "@/lib/style-phrase-blocks";
 import { formatDescription } from "@/lib/description-format";
 import { cleanEtsyTags, cleanHashtags, tagEvidence } from "@/lib/marketplace-tags";
 import { isAestheticHashtag } from "@/lib/aesthetics";
@@ -130,6 +131,9 @@ async function handle(req: NextRequest) {
     // The seller's tag corrections: the same — optional, never fatal.
     const lessons = lessonsSchema.safeParse(body.lessons ?? []);
     body.lessons = lessons.success ? lessons.data : [];
+    // The seller's phrases for the opening sentence: optional, never fatal.
+    const phrases = phrasesSchema.safeParse(body.phrases ?? []);
+    body.phrases = phrases.success ? phrases.data : [];
   } catch {
     return NextResponse.json(
       { ok: false, error: "Invalid request body." },
@@ -217,6 +221,7 @@ async function handle(req: NextRequest) {
                   // After the item's photos, so photo numbers stay the item's.
                   ...referenceBlocks(body.references),
                   ...lessonBlocks(body.lessons),
+                  ...phraseBlocks(body.phrases),
                   {
                     type: "text",
                     text: "Analyze these photos and return the listing JSON now.",
@@ -282,6 +287,9 @@ listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}`
         listing.hashtags = cleanHashtags(listing.hashtags, marks, isAestheticHashtag);
         listing.etsy_tags = cleanEtsyTags(listing.etsy_tags, marks);
         listing.hashtags_original = [...listing.hashtags];
+        // Only an id that was actually offered counts as used.
+        if (!body.phrases?.some((p) => p.id === listing.style_phrase_id))
+          listing.style_phrase_id = "";
         listing.etsy_tags_original = [...listing.etsy_tags];
         // Same principle for the optional storewide markup: applied pre-review,
         // so the price on the card is exactly the price that publishes.

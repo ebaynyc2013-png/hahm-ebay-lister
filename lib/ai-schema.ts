@@ -63,6 +63,8 @@ export const AI_LISTING_SCHEMA = {
     seo_keywords: strings,
     suggested_price: { type: "number" },
     title: { type: "string", maxLength: 80 },
+    // Which of the seller's phrases the opening sentence is modelled on.
+    style_phrase_id: string,
     description: string,
     // For Depop/Mercari and Etsy — shown on the card, never sent to eBay.
     hashtags: strings,
@@ -90,6 +92,7 @@ export const AI_LISTING_SCHEMA = {
     "seo_keywords",
     "suggested_price",
     "title",
+    "style_phrase_id",
     "description",
     "hashtags",
     "etsy_tags",

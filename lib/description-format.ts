@@ -65,7 +65,11 @@ const HASHTAG_LINE = /^(?:#[\p{L}\p{N}_]+[\s,]*)+$/u;
 
 // Left out first when the text is too long — least needed first. Anything
 // not listed is never left out.
-const DROP_ORDER = [11, UNKNOWN_RANK, 9, 10, 6, 5];
+// The seller's opening sentence stays first and is never left out; a true
+// closing line ("Discontinued design…") stays last and goes early.
+const OPENING_RANK = 0.5;
+const CLOSING_RANK = 15;
+const DROP_ORDER = [11, CLOSING_RANK, UNKNOWN_RANK, 9, 10, 6, 5];
 
 
 interface Section {
@@ -131,7 +135,13 @@ export function formatDescription(
       prev.text = `${prev.text}\n${block}`;
       return;
     }
-    sections.push({ label, rank: rankOf(label), text: block, index });
+    let rank = rankOf(label);
+    // The first paragraph after the title, when it is not one of the known
+    // sections, is the seller's warm opening sentence (no label) — even if it
+    // happens to contain a colon. The last unknown paragraph is a closing line.
+    if (index === 0 && rank === UNKNOWN_RANK) rank = OPENING_RANK;
+    else if (index === rest.length - 1 && rank === UNKNOWN_RANK && index > 0) rank = CLOSING_RANK;
+    sections.push({ label: rank === OPENING_RANK || rank === CLOSING_RANK ? "" : label, rank, text: block, index });
   });
   for (const s of sections)
     if (s.rank === 4) s.text = tidyMeasurements(s.text);
@@ -146,7 +156,10 @@ export function formatDescription(
       const last = [...kept].reverse().find((s) => s.rank === rank);
       if (!last) break;
       kept = kept.filter((s) => s !== last);
-      dropped.push(last.label || "an unlabeled paragraph");
+      dropped.push(
+        last.label ||
+          (last.rank === CLOSING_RANK ? "the closing line" : "an unlabeled paragraph"),
+      );
     }
     if (join(kept).length <= limit) break;
   }

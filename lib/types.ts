@@ -73,6 +73,8 @@ export interface ListingResult {
    * against these when she presses Remember, so the program learns from her.
    */
   hashtags_original?: string[];
+  /** Which of the seller's phrases the opening sentence was modelled on. */
+  style_phrase_id?: string;
   etsy_tags_original?: string[];
   item_specifics?: Record<string, string>;
   item_profile?: string;
@@ -93,6 +95,8 @@ export interface AnalyzeRequestBody {
   }[];
   /** The seller's corrections to tags on earlier cards (see tag-memory.ts). */
   lessons?: string[];
+  /** The seller's own phrases, in turn (see style-rotation.ts). */
+  phrases?: { id: string; kind: string; stone?: string; text: string }[];
 }
 
 export interface AnalyzeResponse {

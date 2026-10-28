@@ -773,3 +773,38 @@ test("the seller corrects the tags, the program remembers, the next analysis fol
   expect(bodies[1].lessons.join("\n")).toContain("hashtags: removed #darkacademia; added #retroglam");
   expect(bodies[1].lessons.join("\n")).toContain("Cigarette case");
 });
+
+test("each listing gets the seller's least-used phrases, and a used one waits its turn", async ({
+  page,
+}) => {
+  await setup(page);
+  const bodies: any[] = [];
+  await page.route("**/api/analyze", (r) => {
+    const body = r.request().postDataJSON();
+    bodies.push(body);
+    const ring = body.phrases.find((p: any) => p.kind === "rings");
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "Silver Tone Cocktail Ring Size 7",
+          description: "Silver Tone Cocktail Ring Size 7\n\nBrand: Unbranded",
+          item_type: "Ring",
+          condition: "GOOD",
+          suggested_price: 20,
+          style_phrase_id: ring.id,
+        },
+        usage: [],
+      },
+    });
+  });
+  await draft(page);
+  const firstRings = bodies[0].phrases.filter((p: any) => p.kind === "rings").map((p: any) => p.id);
+  expect(firstRings).toEqual(["rings-1", "rings-2", "rings-3"]);
+  expect(bodies[0].phrases.some((p: any) => p.kind === "gems")).toBe(true);
+  await page.getByRole("button", { name: "Re-analyze selected photos (replaces this draft)" }).click();
+  await expect.poll(() => bodies.length).toBe(2);
+  const secondRings = bodies[1].phrases.filter((p: any) => p.kind === "rings").map((p: any) => p.id);
+  expect(secondRings[0]).toBe("rings-2");
+  expect(secondRings).not.toContain("rings-1");
+});
