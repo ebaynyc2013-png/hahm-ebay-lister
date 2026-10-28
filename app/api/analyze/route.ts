@@ -270,7 +270,7 @@ const descriptionBody = descriptionLines.join("\n").trim();
 listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}` : listing.title;
         // The seller's order and eBay's 800-character phone limit — applied
         // after the final title is in place, since the title line counts.
-        const shaped = formatDescription(listing.description);
+        const shaped = formatDescription(listing.description, undefined, listing.brand ?? "");
         listing.description = shaped.text;
         if (shaped.dropped.length) listing.description_dropped = shaped.dropped;
         // "Gold" and "silver" only with a karat or sterling mark among the

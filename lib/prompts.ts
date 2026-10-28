@@ -248,13 +248,13 @@ SECTION ORDER — always this order, the same in every listing, so a buyer on a 
 4. Condition
 5. Size — the marked size (Ring Size for rings), only when the item has one
 6. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Every measurement shown in the photos, on a measurement photo, a screenshot or the seller's note goes here — never leave one out. Never two measurements on one line. Weight belongs in this list.
-7. Type
+7. Style — the piece's OWN NAME or collection, WITHOUT the brand (the brand already has its line): "Style: Good As Gold", "Style: Elsa Peretti Open Heart", "Style: Wheaton". Only when a label, stamp, the seller's note or a screenshot names it; otherwise leave this line out. This line is the piece's name, not eBay's Style item specific. Never write a "Type" line — the title already says what the item is.
 8. Color
 9. Material (Metal, Metal Purity)
 10. The stones (The Stone, The Stones, Main Stone, Accent Stones)
 11. Design and Details (a pendant, setting or pattern described here)
 12. Closure, Fit, Chain or Bail
-13. Style and Occasion
+13. Occasion
 14. Hallmarks and label details (Collection, Style/Model Name or Code, Model Number, Reference Number, UPC, Care)
 15. Optionally, one closing line with a TRUE story the evidence supports, no label: "Discontinued design. There will be no more like this one." / "Retired by the maker." Never invented.
 
@@ -262,20 +262,21 @@ NEVER write a Keywords section, a list of search words, or hashtags in the descr
 
 The example below shows the SHAPE and the VOICE of a description and nothing else. Its brand, design, measurements and condition belong to that one item. Never carry them onto the item you are describing, and never let a resemblance between the example and your item stand in for evidence.
 
-Example (682 characters):
+Example (698 characters):
 
-Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord New Old Stock
+Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord 35-40in
 
 One good thing about this necklace is that you don't need much more to complete your look. Throw it on with jeans and a tee, and you're done.
 
 Brand: Premier Designs
 
-Condition: New old stock, never worn.
+Condition: Excellent pre-owned condition, worn only a couple of times.
 
 Actual Measurements:
 • Length: adjustable 35-40 in
+• Pendant: 2 x 2.75 in
 
-Type: Long pendant necklace, the Good As Gold design.
+Style: Good As Gold
 
 Color: Gold tone pendant on a brown twisted rope cord.
 

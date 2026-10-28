@@ -68,3 +68,25 @@ describe("the description keeps her opening first and a true closing line last",
     expect(r.text).toContain("You can wear this lovely piece");
   });
 });
+
+describe("Style instead of Type, without the brand again (28 Oct 2026)", () => {
+  it("puts the piece's name where Type stood, drops Type, and never repeats the brand", () => {
+    const r = formatDescription(
+      "T\n\nOne good thing about this necklace is that you don't need much more.\n\nColor: Gold tone.\n\nType: Long pendant necklace.\n\nStyle: Premier Designs Good As Gold\n\nBrand: Premier Designs\n\nActual Measurements:\n• Length: 35-40 in",
+      undefined,
+      "Premier Designs",
+    );
+    expect(r.text).toBe(
+      "T\n\nOne good thing about this necklace is that you don't need much more.\n\nBrand: Premier Designs\n\nActual Measurements:\n• Length: 35-40 in\n\nStyle: Good As Gold\n\nColor: Gold tone.",
+    );
+  });
+
+  it("tells the model the same", async () => {
+    const { buildProfiledAnalysisPrompt } = await import("@/lib/prompts");
+    const prompt = buildProfiledAnalysisPrompt("auto");
+    expect(prompt).toContain("7. Style — the piece's OWN NAME or collection, WITHOUT the brand");
+    expect(prompt).toContain('Never write a "Type" line');
+    expect(prompt).toContain("Style: Good As Gold");
+    expect(prompt).not.toContain("Type: Long pendant necklace");
+  });
+});

@@ -38,7 +38,9 @@ const RANKS: Rank[] = [
     test: /^(?:actual measurements|measurements|dimensions|length|width|height|weight)$/i,
     rank: 4,
   },
-  { test: /^(?:type|item)$/i, rank: 5 },
+  // The piece's own name or collection, where "Type" used to stand — the
+  // seller's rule of 28 Oct 2026 ("Style: Good As Gold").
+  { test: /^(?:style|style name|collection)$/i, rank: 5 },
   { test: /^colou?rs?$/i, rank: 6 },
   { test: /^(?:materials?|fabric|metal|metal purity|metal type)$/i, rank: 7 },
   {
@@ -50,7 +52,7 @@ const RANKS: Rank[] = [
     rank: 9,
   },
   { test: /^(?:closure|clasp|fit|chain or bail|chain|bail|backs?)$/i, rank: 10 },
-  { test: /^(?:style|occasion|aesthetic|styling)$/i, rank: 11 },
+  { test: /^(?:occasion|aesthetic|styling)$/i, rank: 11 },
   {
     test: /^(?:hallmarks?|marks?|markings?|stamps?|labels?|tags?|collection|style\/model name|style\/model code|model|model name|model number|reference number|upc|country of manufacture|made in|care)$/i,
     rank: 13,
@@ -59,8 +61,10 @@ const RANKS: Rank[] = [
 const UNKNOWN_RANK = 12;
 
 // Never part of an eBay description.
+// "Type" too: the title already says what the item is, and the seller does
+// not want the line (28 Oct 2026).
 const NOT_IN_DESCRIPTION =
-  /^(?:keywords?|search terms?|seo|seo keywords|hashtags?|tags for other sites|etsy tags?)$/i;
+  /^(?:keywords?|search terms?|seo|seo keywords|hashtags?|tags for other sites|etsy tags?|type|item type)$/i;
 const HASHTAG_LINE = /^(?:#[\p{L}\p{N}_]+[\s,]*)+$/u;
 
 // Left out first when the text is too long — least needed first. Anything
@@ -108,6 +112,7 @@ export interface FormattedDescription {
 export function formatDescription(
   raw: string,
   limit = DESCRIPTION_LIMIT,
+  brand = "",
 ): FormattedDescription {
   const blocks = String(raw ?? "")
     .replace(/\r\n?/g, "\n")
@@ -145,6 +150,15 @@ export function formatDescription(
   });
   for (const s of sections)
     if (s.rank === 4) s.text = tidyMeasurements(s.text);
+  // "Style: Premier Designs Good As Gold" → "Style: Good As Gold": the brand
+  // has its own line, and repeating it was the seller's complaint.
+  const b = brand.trim();
+  if (b && !/^unbranded$/i.test(b))
+    for (const s of sections)
+      if (s.rank === 5) {
+        const esc = b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        s.text = s.text.replace(new RegExp(`^(\\s*[^:]+:\\s*)${esc}\\s*`, "i"), "$1");
+      }
 
   sections.sort((a, b) => a.rank - b.rank || a.index - b.index);
 
