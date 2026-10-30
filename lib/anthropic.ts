@@ -44,6 +44,40 @@ export class AnthropicAuthError extends Error {
   }
 }
 
+/**
+ * Anthropic's own words for a failure ("Your organization does not have
+ * access to …"), so the seller sees the real cause instead of a guess (30 Oct
+ * 2026: a 403 with no reason left us guessing). Never carries the key.
+ */
+export function anthropicReason(e: unknown): string {
+  if (!e || typeof e !== "object") return "";
+  const body = (e as { error?: unknown }).error as
+    | { message?: unknown; error?: { message?: unknown } }
+    | undefined;
+  let text = "";
+  if (typeof body?.error?.message === "string") text = body.error.message;
+  else if (typeof body?.message === "string") text = body.message;
+  if (!text) {
+    const raw = String((e as { message?: unknown }).message ?? "");
+    const quoted = raw.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    try {
+      text = quoted ? JSON.parse(`"${quoted[1]}"`) : raw.replace(/^\d{3}\s*/, "");
+    } catch {
+      text = raw.replace(/^\d{3}\s*/, "");
+    }
+  }
+  return text
+    .replace(/sk-ant-[A-Za-z0-9_-]+/g, "[key]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 300);
+}
+
+function withReason(message: string, e: unknown): string {
+  const reason = anthropicReason(e);
+  return reason ? `${message} Anthropic says: "${reason}"` : message;
+}
+
 export function anthropicAuthError(e: unknown): AnthropicAuthError | null {
   const status =
     e && typeof e === "object" && "status" in e
@@ -55,17 +89,26 @@ export function anthropicAuthError(e: unknown): AnthropicAuthError | null {
       : "";
   if (status === 401)
     return new AnthropicAuthError(
-      "Anthropic rejected your API key (401). Check that ANTHROPIC_API_KEY is set correctly in your environment variables.",
+      withReason(
+        "Anthropic rejected your API key (401). Check that ANTHROPIC_API_KEY is set correctly in your environment variables.",
+        e,
+      ),
       401
     );
   if (status === 403)
     return new AnthropicAuthError(
-      "Your Anthropic API key isn't permitted to use this model (403). Check the key's access in the Anthropic Console.",
+      withReason(
+        "Anthropic refused this request (403) — something about your API key or account; the reason is below. Check it in the Anthropic Console.",
+        e,
+      ),
       403
     );
   if (status === 402 || /credit balance|too low|billing|payment|insufficient|quota/i.test(message))
     return new AnthropicAuthError(
-      "Your Anthropic account can't cover this request — add credits/billing in the Anthropic Console, then try again.",
+      withReason(
+        "Your Anthropic account can't cover this request — add credits/billing in the Anthropic Console, then try again.",
+        e,
+      ),
       402
     );
   return null;
