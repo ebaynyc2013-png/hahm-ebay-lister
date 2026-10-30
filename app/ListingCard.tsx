@@ -9,6 +9,7 @@ import { draftIssues } from "@/lib/client-review";
 import { useMemo, useState } from "react";
 import { SIZE_REQUIRED_CATEGORIES } from "@/lib/categories";
 import { DESCRIPTION_LIMIT } from "@/lib/description-format";
+import { withCost } from "@/lib/sku";
 import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
@@ -201,6 +202,29 @@ export function ListingCard({
                 disabled={group.postStatus === "posted"}
                 onChange={(e) => onRenameSku(group.id, e.target.value)}
               />
+            </div>
+            {/* What she paid: kept in the SKU (-COG12) so it is never
+                forgotten. Whole dollars; empty takes it off the SKU. */}
+            <div className="stat editable">
+              <label className="k" htmlFor={`cost-${group.id}`}>
+                Cost of goods
+              </label>
+              <div className="price-input">
+                <span aria-hidden="true">$</span>
+                <input
+                  id={`cost-${group.id}`}
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  value={group.cost ?? ""}
+                  disabled={group.postStatus === "posted"}
+                  onChange={(e) => {
+                    const cost = e.target.value === "" ? "" : Number(e.target.value);
+                    onGroupEdit(group.id, { cost, sku: withCost(group.sku, cost) });
+                  }}
+                />
+              </div>
             </div>
             <div
               className={`stat editable${priceMissing ? " needs-attention" : ""}`}

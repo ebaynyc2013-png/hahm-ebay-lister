@@ -22,7 +22,7 @@ import { draftIssues } from "@/lib/client-review";
 import { apiPost } from "@/lib/api-client";
 import { getAnalysisModel, getSortModel } from "@/lib/model-preferences";
 import { resizeImage } from "@/lib/resize";
-import { buildSku } from "@/lib/sku";
+import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
 import { chunkImagesForUpload } from "@/lib/uploadBatches";
 import { EbayConnect } from "./EbayConnect";
 import { ModelSelector } from "./ModelSelector";
@@ -404,31 +404,34 @@ export default function Home() {
     void addFiles(e.dataTransfer.files);
   };
 
+  // ── SKU numbering ───────────────────────────────────────
+  // Today's items are numbered 1, 2, 3… (2026-10-30-1). A second batch the
+  // same day continues after every SKU already in use — on eBay, on this
+  // screen and in History — so no two items ever share a SKU.
+  const nextSkuIndex = async (prefix: string): Promise<number> => {
+    const local = nextIndexFromSkus(
+      [...groupsRef.current, ...history.map((h) => h.group)].map((g) => g.sku),
+      prefix,
+    );
+    let remote = 0;
+    try {
+      const r = await apiPost("/api/ebay/next-sku", { prefix });
+      const d = (await readJson(r)) as { ok?: boolean; nextIndex?: number };
+      if (d.ok && Number.isInteger(d.nextIndex)) remote = d.nextIndex as number;
+    } catch {
+      /* not connected or lookup failed — this device's numbering only */
+    }
+    return Math.max(local, remote);
+  };
+
   // ── Sort ────────────────────────────────────────────────
   const sort = async () => {
     if (photos.length === 0) return;
     setSorting(true);
     setError(null);
     try {
-      // Continue bin lettering after any SKUs already on eBay for this bin.
-      let skuOffset = 0;
-      if (binPrefix.trim()) {
-        try {
-          const r = await apiPost("/api/ebay/next-sku", {
-            prefix: binPrefix.trim(),
-          });
-          const d = (await readJson(r)) as { ok?: boolean; nextIndex?: number };
-          if (
-            d.ok &&
-            Number.isInteger(d.nextIndex) &&
-            (d.nextIndex as number) > 0
-          ) {
-            skuOffset = d.nextIndex as number;
-          }
-        } catch {
-          /* not connected or lookup failed — start at A like before */
-        }
-      }
+      const prefix = skuPrefix(binPrefix);
+      const skuOffset = await nextSkuIndex(prefix);
 
       // Sort in chunks so each request's thumbnail payload stays small.
       type RawGroup = { name: string; photoIds: string[] };
@@ -484,7 +487,7 @@ export default function Home() {
 
       const nextGroups: ItemGroup[] = merged.map((g, i) => ({
         id: newId(),
-        sku: `${buildSku(binPrefix, skuOffset + i).slice(0, 37)}-${newId().replace(/-/g, "").slice(0, 12)}`,
+        sku: buildSku(prefix, skuOffset + i),
         name: g.name,
         photoIds: g.photoIds,
         status: "idle",
@@ -599,16 +602,26 @@ export default function Home() {
   };
 
   const addGroup = () =>
-    setGroups((prev) => [
-      ...prev,
-      {
-        id: newId(),
-        sku: `${buildSku(binPrefix, skuStart + prev.length).slice(0, 37)}-${newId().replace(/-/g, "").slice(0, 12)}`,
-        name: `new-item-${prev.length + 1}`,
-        photoIds: [],
-        status: "idle",
-      },
-    ]);
+    setGroups((prev) => {
+      const prefix = skuPrefix(binPrefix);
+      const next = Math.max(
+        skuStart,
+        nextIndexFromSkus(
+          [...prev, ...history.map((h) => h.group)].map((g) => g.sku),
+          prefix,
+        ),
+      );
+      return [
+        ...prev,
+        {
+          id: newId(),
+          sku: buildSku(prefix, next),
+          name: `new-item-${prev.length + 1}`,
+          photoIds: [],
+          status: "idle",
+        },
+      ];
+    });
 
   // ── Write listings ──────────────────────────────────────
   const writeGroup = useCallback(
@@ -1049,7 +1062,7 @@ export default function Home() {
 
             <div className="field bin-field">
               <label htmlFor="bin">
-                Bin / SKU code{" "}
+                Shelf / bin{" "}
                 <span
                   style={{
                     fontWeight: 400,
@@ -1057,25 +1070,24 @@ export default function Home() {
                     letterSpacing: 0,
                   }}
                 >
-                  (where these items are stored)
+                  (optional — where these items are stored)
                 </span>
               </label>
               <input
                 id="bin"
                 type="text"
-                placeholder="e.g. K75"
+                placeholder="e.g. B12"
                 value={binPrefix}
                 onChange={(e) => setBinPrefix(e.target.value)}
                 autoCapitalize="characters"
               />
-              <span className="field-hint">
-                Each item gets{" "}
-                {binPrefix
-                  ? `${binPrefix.trim()}-A, ${binPrefix.trim()}-B`
-                  : "A, B, C"}
-                … with a unique suffix to prevent collisions across devices. If
-                this bin already has listings on eBay, lettering continues where
-                it left off. You can edit any SKU after sorting.
+              {/* Today's date is the browser's own — the server's may differ. */}
+              <span className="field-hint" suppressHydrationWarning>
+                Each item gets {buildSku(skuPrefix(binPrefix), 0)},{" "}
+                {buildSku(skuPrefix(binPrefix), 1)}… — today&apos;s date and the
+                item&apos;s number that day; a second batch today continues the
+                numbering. Enter the cost of goods on a card and its SKU ends
+                with -COG12. You can edit any SKU after sorting.
               </span>
             </div>
 
@@ -1140,13 +1152,16 @@ export default function Home() {
                 type="button"
                 className="btn btn-ghost"
                 disabled={!photos.length || photos.length > 24 || sorting}
-                onClick={() => {
+                onClick={async () => {
                   const id = newId();
+                  const prefix = skuPrefix(binPrefix);
+                  const start = await nextSkuIndex(prefix);
                   keepInHistory();
+                  setSkuStart(start);
                   setGroups([
                     {
                       id,
-                      sku: `${buildSku(binPrefix, 0).slice(0, 37)}-${id.replace(/-/g, "").slice(0, 12)}`,
+                      sku: buildSku(prefix, start),
                       name: "Single item",
                       photoIds: photos.map((p) => p.id),
                       status: "idle",

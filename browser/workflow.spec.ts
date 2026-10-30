@@ -7,6 +7,9 @@ async function setup(page: Page) {
   await page.route("**/api/ebay/status", (r) =>
     r.fulfill({ json: { connected: true } }),
   );
+  await page.route("**/api/ebay/next-sku", (r) =>
+    r.fulfill({ json: { ok: true, nextIndex: 0, connected: true } }),
+  );
   await page.route("**/api/models", (r) =>
     r.fulfill({ json: { sortModels: [], analysisModels: [] } }),
   );
@@ -807,4 +810,61 @@ test("each listing gets the seller's least-used phrases, and a used one waits it
   const secondRings = bodies[1].phrases.filter((p: any) => p.kind === "rings").map((p: any) => p.id);
   expect(secondRings[0]).toBe("rings-2");
   expect(secondRings).not.toContain("rings-1");
+});
+
+// The seller's SKU (30 Oct 2026): 2026-10-30-1-COG12 — the day the listing
+// was made, its number that day, and what she paid.
+function today() {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+test("SKU: today's date, the item's number that day, and the cost of goods", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await setup(page);
+  const day = today();
+  await expect(page.locator(".bin-field .field-hint")).toContainText(
+    `${day}-1, ${day}-2`,
+  );
+  await draft(page);
+  const sku = page.getByLabel("SKU", { exact: true });
+  await expect(sku).toHaveValue(`${day}-1`);
+
+  const cost = page.getByLabel("Cost of goods", { exact: true });
+  await cost.fill("12");
+  await expect(sku).toHaveValue(`${day}-1-COG12`);
+  await cost.fill("");
+  await expect(sku).toHaveValue(`${day}-1`);
+  await cost.fill("7");
+  await expect(sku).toHaveValue(`${day}-1-COG7`);
+  await expect(page.locator(".sku-tag")).toHaveText(`${day}-1-COG7`);
+
+  // The next item the same day continues the numbering, not starting over.
+  await page.getByRole("button", { name: "← Back to items" }).click();
+  await page.getByRole("button", { name: "← Back to photos" }).click();
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await expect(page.getByLabel("Item SKU / bin code")).toHaveValue(`${day}-2`);
+  expect(errors).toEqual([]);
+});
+
+test("SKU numbering continues after the day's items already on eBay", async ({
+  page,
+}) => {
+  await setup(page);
+  // Registered after setup, so it answers instead of setup's "none yet".
+  await page.route("**/api/ebay/next-sku", (r) =>
+    r.fulfill({ json: { ok: true, nextIndex: 4, connected: true } }),
+  );
+  await page.locator("#bin").fill("B12");
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await expect(page.getByLabel("Item SKU / bin code")).toHaveValue(
+    `B12-${today()}-5`,
+  );
 });

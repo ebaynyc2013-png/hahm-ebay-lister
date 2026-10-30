@@ -158,7 +158,9 @@ export interface CompsSummary {
 
 export interface ItemGroup {
   id: string;
-  sku: string; // bin reference, e.g. "K75-A"
+  sku: string; // "2026-10-30-1-COG12" — see lib/sku.ts
+  /** What the seller paid for the item, in dollars; ends the SKU as -COG12. */
+  cost?: number | "";
   name: string;
   photoIds: string[];
   listing?: ListingResult;

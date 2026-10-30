@@ -6,9 +6,9 @@ import { EBAY_INV_BASE } from "@/lib/ebay/config";
 import { guardApiRequest } from "@/lib/api-guard";
 import { nextIndexFromSkus, sanitizeSku } from "@/lib/sku";
 
-// Where should lettering for a bin continue? Scans the seller's existing
-// inventory SKUs so a second batch from bin K31 starts after the last letter
-// already used (K31-N, K31-O, …) instead of colliding with K31-A.
+// Where should today's numbering continue? Scans the seller's existing
+// inventory SKUs so a second batch on 2026-10-30 starts after the last number
+// already used (2026-10-30-6, -7, …) instead of colliding with 2026-10-30-1.
 
 export const maxDuration = 30;
 
@@ -76,7 +76,7 @@ async function handle(req: NextRequest) {
     });
   } catch (e) {
     console.error("[ebay/next-sku]", e);
-    // Non-fatal for the client — worst case it starts at A like before.
+    // Non-fatal for the client — it then numbers from this device alone.
     return NextResponse.json(
       {
         ok: false,
