@@ -868,3 +868,52 @@ test("SKU numbering continues after the day's items already on eBay", async ({
     `B12-${today()}-5`,
   );
 });
+
+test("Size is chosen from eBay's list on the card, even where eBay calls it free text", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/ebay/prepare", (r) => {
+    const l = r.request().postDataJSON().listing;
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          ...l,
+          category_id: "53159",
+          ebay_condition: "",
+          item_specifics: { ...l.item_specifics, Size: "M" },
+        },
+        preparation: {
+          categoryId: "53159",
+          categoryName: "Tops",
+          aspects: [
+            {
+              name: "Size",
+              required: true,
+              usage: "REQUIRED",
+              mode: "FREE_TEXT",
+              cardinality: "SINGLE",
+              values: ["S", "M", "L"],
+            },
+          ],
+          conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
+          expiresAt: Date.now() + 3600000,
+          signature: "test",
+          issues: [],
+        },
+      },
+    });
+  });
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await page.getByRole("button", { name: /Write.*listing/i }).click();
+  await expect(page.getByText("Tops", { exact: true })).toBeVisible();
+  const size = page.getByRole("combobox", { name: "Size", exact: true });
+  await expect(size).toHaveValue("M");
+  await expect(size.locator("option")).toHaveText(["Unknown — leave empty", "S", "M", "L"]);
+  await size.selectOption("L");
+  await expect(size).toHaveValue("L");
+});

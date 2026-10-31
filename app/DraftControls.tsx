@@ -337,8 +337,12 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
                     .join(", ")}; verify)`
                 : ""}
               {meta?.required ? " *" : ""}
-              {meta?.mode === "SELECTION_ONLY" &&
-              meta.cardinality !== "MULTI" ? (
+              {meta &&
+              meta.cardinality !== "MULTI" &&
+              (meta.mode === "SELECTION_ONLY" ||
+                // Size is chosen from eBay's list too, though eBay calls it
+                // free text (the seller's rule, 31 Oct 2026).
+                (name.toLowerCase() === "size" && meta.values.length > 0)) ? (
                 <select
                   aria-label={name}
                   value={specifics[name] ?? ""}
@@ -349,6 +353,11 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
                   }
                 >
                   <option value="">Unknown — leave empty</option>
+                  {specifics[name] && !meta.values.includes(specifics[name]) && (
+                    <option value={specifics[name]}>
+                      {specifics[name]} — not on eBay&apos;s list
+                    </option>
+                  )}
                   {meta.values.map((v) => (
                     <option key={v}>{v}</option>
                   ))}

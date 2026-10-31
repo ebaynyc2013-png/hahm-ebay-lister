@@ -30,6 +30,7 @@ import {
   sanitizeNumericAspects,
 } from "@/lib/ebay/aspects";
 import { fillShoeSizes } from "@/lib/shoe-sizes";
+import { pickSizeFromList } from "@/lib/clothing-size";
 import { describeFill, fillRecommendedAspects } from "@/lib/ebay/aspectFill";
 import { validateAspects } from "@/lib/ebay/draft";
 import { EBAY_COOKIE, accessTokenFromCookie } from "@/lib/ebay/session";
@@ -158,6 +159,9 @@ const categoryPath =
           // specific was found (the seller's rule, 28 Oct 2026).
           applyDefaultPendantType(aspects, meta, listing);
           fillShoeSizes(aspects, meta, listing.size);
+          // Size from eBay's own list ("M", not "M Medium"), or empty so the
+          // card asks — the seller's rule, 31 Oct 2026.
+          pickSizeFromList(aspects, meta, listing.size);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
           sanitizeNumericAspects(aspects, meta);
