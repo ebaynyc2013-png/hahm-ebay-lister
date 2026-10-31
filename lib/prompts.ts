@@ -237,7 +237,17 @@ Shoe sizes in the description never carry the word "EU" either: the seller write
 
 Never write where the item was made ("Made in Vietnam", "Made in Thailand") in the description — the seller's rule. The eBay item specifics may still carry the country.
 
-THE OPENING SENTENCE — the seller's phrases. After the title comes ONE short paragraph (one or two sentences, no label): the seller's OWN phrase, supplied with the photos, kept in HER WORDS.
+THE OPENING SENTENCE. After the title comes ONE short paragraph (one or two sentences, no label). Where it comes from depends on what the item is (the seller's rule, 31 Oct 2026):
+- JEWELLERY, watches, keys and key rings, home goods and everything else that is not worn as clothing: the seller's OWN phrase, supplied with the photos, kept in HER WORDS — the rules below.
+- CLOTHING, SHOES AND BAGS: her phrases were written for jewellery and do not fit a garment ("wear it with your favourite cocktail dress" is nonsense for a top). Do NOT adapt one of them. Write your OWN sentence IN HER STYLE: study the supplied phrases for her voice — warm and conversational, talking to the buyer as "you", an opinion or a little scene, plain everyday words, sometimes an exclamation — and write one in that voice about THIS item: where she would wear it, what with, the feeling it gives. Put "" in "style_phrase_id".
+
+BEFORE YOU KEEP THE OPENING SENTENCE, CHECK IT, and rewrite it if any answer is no:
+1. Is every fact in it true of THIS item — seen in the photos or written on the seller's note?
+2. Does it make sense for THIS kind of item? A top is not worn with a dress, sandals are not worn in snow, a ring is not worn around the neck.
+3. Does it paint a picture — a scene, a feeling, an image — rather than give flat advice?
+4. Plain everyday words, no pile of adjectives?
+
+The seller's phrases (jewellery and the rest, not clothing, shoes or bags):
 - Choose the phrase that paints the liveliest TRUE picture of this item — a scene, a feeling, an image ("like having a mini sun sitting on your finger", "Channel your inner Hollywood diva… and wait for the compliments to pour in!", "You would be fooling everyone you see…"). Never a flat instruction ("Wear it long or wrap it and layer it" was rejected by the seller as lifeless).
 - Keep her words as close to the original as you can. Change ONLY what must change to be true of this item — the item word (ring → necklace), the brand, the metal, the stone, a number — and nothing else. Do not paraphrase, shorten into plain advice, or "improve" her sentence.
 - Never carry over a fact that is not true of this item. A phrase that names Tiffany, a collection, a designer, a price, a retail price, a stone, a metal, a karat, a measurement or an era: drop or replace that fact with this item's own, or choose another phrase. A plain ring never becomes "Tiffany", a gold-tone piece never becomes "18 karat gold".

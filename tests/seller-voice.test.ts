@@ -101,3 +101,22 @@ describe("condition never comes from someone else's listing (28 Oct 2026)", () =
     expect(prompt).toContain("its \"New\" or \"NWT\" is about THEIR item");
   });
 });
+
+describe("clothing, shoes and bags get a sentence in her style, not a jewellery phrase (31 Oct 2026)", () => {
+  it("tells the AI to write its own for clothing and keep hers for jewellery", async () => {
+    const { phraseBlocks } = await import("@/lib/style-phrase-blocks");
+    const [block] = phraseBlocks([{ id: "r1", kind: "rings", text: "Like a mini sun on your finger." }]) as {
+      text: string;
+    }[];
+    expect(block.text).toContain("For clothing, shoes and bags: adapt none of them");
+    expect(block.text).toContain("IN HER WORDS");
+  });
+
+  it("the description rules: own sentence in her style, then a check before keeping it", async () => {
+    const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
+    const p = String(ANALYSIS_PROMPT);
+    expect(p).toContain("Write your OWN sentence IN HER STYLE");
+    expect(p).toContain("A top is not worn with a dress");
+    expect(p).toContain("BEFORE YOU KEEP THE OPENING SENTENCE, CHECK IT");
+  });
+});

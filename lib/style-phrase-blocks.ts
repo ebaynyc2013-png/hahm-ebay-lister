@@ -29,7 +29,7 @@ export function phraseBlocks(phrases: PhraseInput | undefined): Anthropic.Conten
     {
       type: "text",
       text: [
-        "THE SELLER'S OWN PHRASES, offered in turn. Pick the ONE that paints the liveliest true picture of this item and use it as the opening sentence of the description IN HER WORDS — change only what must change to be true of this item (item word, brand, metal, stone, numbers); never carry over a fact that is not this item's. Put its id in \"style_phrase_id\". Any phrase may be adapted to any item.",
+        "THE SELLER'S OWN PHRASES, offered in turn. For jewellery, watches, keys, home goods and anything else that is not clothing, shoes or a bag: pick the ONE that paints the liveliest true picture of this item and use it as the opening sentence of the description IN HER WORDS — change only what must change to be true of this item (item word, brand, metal, stone, numbers); never carry over a fact that is not this item's. Put its id in \"style_phrase_id\". For clothing, shoes and bags: adapt none of them — they are samples of her voice; write your own sentence in that voice about this item and leave \"style_phrase_id\" empty.",
         ...lines,
       ].join("\n"),
     },
