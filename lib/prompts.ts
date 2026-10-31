@@ -520,6 +520,17 @@ Look for every maker's mark before you name the brand: a stamped or engraved nam
 - A maker's mark is a mark, not decoration: never put it in the title as a feature ("Crown Charm").
 - REFERENCE photos may follow the item's photos: marks the seller has confirmed before, each labelled with its maker. They are not photos of this item — never cite them. Compare details closely; a reference whose details match exactly counts as ONE strong mark, never as the whole answer.`;
 
+// The seller's rules of 31 Oct 2026. Her note decides; dating clues only
+// suggest, on the card, with a box she ticks — a wrong "vintage" comes back
+// as a not-as-described return.
+const VINTAGE_SECTION = `
+
+VINTAGE — "vintage"
+- source "note": the seller's photographed note says vintage. "era" is the era she wrote — "60s", "70s", "80s", "90s", "Y2K" — or "" when she wrote only "vintage". "reasons": "". The title opens with "Vintage" and that era (title rule 1).
+- source "clues": the note says nothing about vintage, but the photos show DATING CLUES on the labels or the construction — a union label (ILGWU, ACTWU, Amalgamated), an old-style care or content label, no care label at all on a garment, an RN or WPL number on an old-looking tag, "Made in USA", "Made in Hong Kong", "Made in Korea" or "British Crown Colony" on an old-style label, a metal zipper marked Talon, Scovill, Conmar or Crown, a label typeface or logo a brand used decades ago, vintage sizing. "era": your best estimate from those clues — "60s", "70s", "80s", "90s" or "Y2K" — or "" when the clues show age but not which decade. "reasons": the clues themselves, short and with the photo — "Photo 3: ILGWU union label; Photo 4: Talon metal zipper". The seller decides on the card: with source "clues", NEVER write Vintage or an era in the title, the description, the specifics, the hashtags or the tags.
+- source "none": neither. "era" and "reasons": "".
+- A look is never a clue. A print, a cut or a colour "from the 70s" is what vintage-style pieces made today look like too; only labels and hardware date a piece. A modern brand's current label is a clue AGAINST vintage.`;
+
 export function buildProfiledAnalysisPrompt(profile: string): string {
   const normalized = normalizeItemProfile(profile);
   const addon = PROFILE_PROMPT_ADDONS[normalized] ?? "";
@@ -528,6 +539,7 @@ export function buildProfiledAnalysisPrompt(profile: string): string {
     AESTHETICS_SECTION +
     CONTACT_SECTION +
     MAKER_MARKS_SECTION +
+    VINTAGE_SECTION +
     addon
   );
 }

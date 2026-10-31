@@ -561,6 +561,20 @@ div.size-warning p {
 .size-warning.maker-marks p + p {
   margin-top: 0.35rem;
 }
+/* A suggestion, not a problem: calm colours. */
+.size-warning.possible-vintage {
+  border-color: #174732;
+  background: #eef6f1;
+  color: #174732;
+}
+.size-warning.possible-vintage label {
+  display: block;
+  cursor: pointer;
+}
+.size-warning.possible-vintage p {
+  margin-top: 0.35rem;
+  opacity: 0.85;
+}
 .size-warning .remembered {
   color: #174732;
 }

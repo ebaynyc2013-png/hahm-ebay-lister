@@ -196,17 +196,27 @@ export function careInQuote(name: string, value: string, quote: string): boolean
 // "Yes" on a Yes/No field when the seller's note or a label says so in its
 // own word: "handmade" on her note is Handmade Yes (31 Oct 2026). The word
 // match above wanted "Yes" itself in the quote, which no note ever has.
-const YES_WORDS: [RegExp, RegExp][] = [
-  [/^hand\s?made$/i, /\b(?:hand[\s-]?made|made\s+by\s+hand)\b/i],
+// "vintage 90s" on her note is Vintage Yes the same way — but "vintage-style"
+// or "vintage inspired" is a look, not an age.
+const YES_WORDS: [RegExp, RegExp, RegExp][] = [
+  [
+    /^hand\s?made$/i,
+    /\b(?:hand[\s-]?made|made\s+by\s+hand)\b/i,
+    /\b(?:not|non|isn'?t|no)[\s-]+(?:hand[\s-]?made|made\s+by\s+hand)\b/i,
+  ],
+  [
+    /^vintage$/i,
+    /\bvintage\b/i,
+    /\b(?:not|non|isn'?t|no)[\s-]+vintage\b|\bvintage[\s-]+(?:style|styled|inspired|look|looking|reproduction|repro)\b/i,
+  ],
 ];
-const YES_NEGATED = /\b(?:not|non|isn'?t|no)[\s-]+(?:hand[\s-]?made|made\s+by\s+hand)\b/i;
 
 export function yesInQuote(name: string, value: string, quote: string): boolean {
   if (!/^yes$/i.test(value.trim())) return false;
   const rule = YES_WORDS.find(([n]) => n.test(name.trim()));
   if (!rule) return false;
   const q = String(quote ?? "");
-  return rule[1].test(q) && !YES_NEGATED.test(q);
+  return rule[1].test(q) && !rule[2].test(q);
 }
 
 // A stone field is one that asks WHICH stone: Main Stone, Secondary Stone,

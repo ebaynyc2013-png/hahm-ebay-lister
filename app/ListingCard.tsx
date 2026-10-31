@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { SIZE_REQUIRED_CATEGORIES } from "@/lib/categories";
 import { DESCRIPTION_LIMIT } from "@/lib/description-format";
 import { withCost } from "@/lib/sku";
+import { confirmVintage, unconfirmVintage, vintageLead } from "@/lib/vintage";
 import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
@@ -426,6 +427,35 @@ export function ListingCard({
                   this one.
                 </p>
               )}
+            </div>
+          )}
+
+          {listing.vintage?.source === "clues" && (
+            <div className="size-warning possible-vintage" role="group" aria-label="Possible vintage">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={Boolean(listing.vintage.confirmed)}
+                  disabled={group.postStatus === "posted"}
+                  onChange={(e) =>
+                    onEdit(
+                      group.id,
+                      e.target.checked
+                        ? confirmVintage(listing, group.preparation?.aspects ?? [])
+                        : unconfirmVintage(listing),
+                    )
+                  }
+                />{" "}
+                <strong>
+                  Possible vintage{listing.vintage.era ? `: ${listing.vintage.era}` : ""}
+                </strong>{" "}
+                — {listing.vintage.reasons}
+              </label>
+              <p>
+                {listing.vintage.confirmed
+                  ? `Added: Vintage = Yes, the era in Theme and Style, and "${vintageLead(listing.vintage.era)}" at the start of the title. Untick to take it all out again.`
+                  : `Your note says nothing about vintage. Tick only if you agree — it adds Vintage = Yes, the era in Theme and Style, and "${vintageLead(listing.vintage.era)}" at the start of the title.`}
+              </p>
             </div>
           )}
 

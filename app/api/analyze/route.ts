@@ -32,6 +32,7 @@ import {
 import { toImageBlock, type ImageBlock } from "@/lib/images";
 import { optimizeTitle } from "@/lib/titleOptimizer";
 import { foreignSizeInDescription } from "@/lib/foreign-size";
+import { vintageFromAnalysis, vintageTitle } from "@/lib/vintage";
 import { applyPriceMarkup, priceMarkupPercent } from "@/lib/pricing";
 import { resolveModel } from "@/lib/models";
 import type { AnalyzeRequestBody, ListingResult } from "@/lib/types";
@@ -243,10 +244,15 @@ async function handle(req: NextRequest) {
         );
         const listing = parseListing({
           ...raw,
+          vintage: vintageFromAnalysis(raw.vintage),
           item_specifics: Object.fromEntries(
             supported.map((s: any) => [s.name, s.value]),
           ),
         });
+        // "vintage 90s" on her note: Vintage Yes now, the era's Theme and
+        // Style at Prepare (eBay's lists), and the title opening with it.
+        if (listing.vintage?.source === "note")
+          listing.item_specifics = { ...listing.item_specifics, Vintage: "Yes" };
         listing.item_profile = profile;
         listing.evidence = Object.fromEntries(
           supported.map((s: any) => [s.name, s.photoIndices]),
@@ -264,6 +270,10 @@ async function handle(req: NextRequest) {
         // Deterministic title cleanup happens HERE, before the seller reviews —
         // the title on the card is exactly the title that publishes.
         listing.title = optimizeTitle(listing);
+        // The prompt already puts "Vintage 90s" first; this is the guarantee,
+        // without rewriting an era she wrote her own way.
+        if (listing.vintage?.source === "note" && !/^vintage\b/i.test(listing.title))
+          listing.title = vintageTitle(listing.title, listing.vintage.era, listing);
         const descriptionLines = (listing.description ?? "").trim().split(/\r?\n/);
 const firstContentIndex = descriptionLines.findIndex((line) => line.trim().length > 0);
 if (firstContentIndex >= 0) descriptionLines.splice(firstContentIndex, 1);

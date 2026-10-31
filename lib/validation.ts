@@ -80,6 +80,21 @@ title: z.string().trim().min(1).max(80),
     .refine((v) => Object.keys(v).length <= 100, "Too many specifics")
     .optional(),
   item_profile: text.optional(),
+  vintage: z
+    .object({
+      source: z.enum(["note", "clues"]),
+      era: z.string().max(40),
+      reasons: z.string().max(300).optional(),
+      confirmed: z.boolean().optional(),
+      before: z
+        .object({
+          title: z.string().max(200),
+          description: z.string().max(15000),
+          specifics: z.record(z.string().max(100), z.string().max(1000).nullable()),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 export const imageSchema = z.object({
   mediaType: z.enum(["image/jpeg", "image/png", "image/webp"]),

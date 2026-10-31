@@ -52,6 +52,19 @@ export const AI_LISTING_SCHEMA = {
     // Named style aesthetics the item genuinely shows — the words buyers
     // browse by. Empty is a normal answer for a plain item.
     aesthetics: strings,
+    // Vintage and its era: from the seller's note, or — when the note says
+    // nothing — dating clues seen on labels and construction, which the
+    // seller confirms on the card before anything changes (31 Oct 2026).
+    vintage: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        source: { type: "string", enum: ["note", "clues", "none"] },
+        era: string,
+        reasons: string,
+      },
+      required: ["source", "era", "reasons"],
+    },
     // Websites, phones, emails, @handles or QR codes readable in the photos —
     // reported here and written nowhere else (eBay hides listings showing them).
     contact_seen: strings,
@@ -86,6 +99,7 @@ export const AI_LISTING_SCHEMA = {
     "measurements",
     "key_features",
     "aesthetics",
+    "vintage",
     "contact_seen",
     "specifics",
     "search_terms",
@@ -108,6 +122,7 @@ export const FACTS_BEFORE_TITLE = [
   "material",
   "condition",
   "aesthetics",
+  "vintage",
   "specifics",
   "search_terms",
 ] as const;

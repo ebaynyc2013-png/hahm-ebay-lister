@@ -33,6 +33,7 @@ import {
 import { fillShoeSizes } from "@/lib/shoe-sizes";
 import { pickSizeFromList } from "@/lib/clothing-size";
 import { womensForeignSize } from "@/lib/foreign-size";
+import { applyVintageAspects, isVintage } from "@/lib/vintage";
 import {
   describeFill,
   fillRecommendedAspects,
@@ -149,6 +150,10 @@ const categoryPath =
           // seller's rule, 31 Oct 2026) — after the photo pass, so her
           // "handmade" still comes through as Yes.
           applyDefaultHandmade(aspects, meta);
+          // Vintage — her note, or her tick on "Possible vintage": Vintage
+          // Yes, the era's Theme and Style, a jewellery Era (31 Oct 2026).
+          if (isVintage(listing))
+            applyVintageAspects(aspects, meta, listing.vintage?.era ?? "");
           if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —

@@ -1,6 +1,7 @@
 import type { AspectMeta } from "./ebay/taxonomy";
 import type { AiUsage } from "./ai-usage";
 import type { ShippingSelection } from "./validation";
+import type { VintageInfo } from "./vintage";
 // Shape of a generated listing. Mirrors the JSON the model returns in the
 // Python script's analyze_photos(), plus the routed profile.
 
@@ -78,6 +79,11 @@ export interface ListingResult {
   etsy_tags_original?: string[];
   item_specifics?: Record<string, string>;
   item_profile?: string;
+  /**
+   * Vintage from the seller's note, or "Possible vintage" from dating clues
+   * in the photos, waiting for her tick (see vintage.ts).
+   */
+  vintage?: VintageInfo;
 }
 
 export interface AnalyzeRequestBody {

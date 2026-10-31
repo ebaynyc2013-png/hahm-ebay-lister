@@ -971,3 +971,73 @@ test("Garment Care is chosen from eBay's three words on the card (31 Oct 2026)",
   await care.selectOption("Machine Washable");
   await expect(care).toHaveValue("Machine Washable");
 });
+
+test("Possible vintage: nothing changes until the seller ticks, and unticking puts it back (31 Oct 2026)", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/analyze", (r) =>
+    r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "GreenHouse Blue Floral Top",
+          description: "GreenHouse Blue Floral Top\n\nBrand: GreenHouse",
+          brand: "GreenHouse",
+          item_type: "Top",
+          condition: "EXCELLENT",
+          suggested_price: 25,
+          item_specifics: { Theme: "Floral", Style: "Boho" },
+          vintage: { source: "clues", era: "90s", reasons: "Photo 3: ILGWU union label", confirmed: false },
+        },
+        usage: [],
+      },
+    }),
+  );
+  await page.route("**/api/ebay/prepare", (r) => {
+    const l = r.request().postDataJSON().listing;
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: { ...l, category_id: "53159", ebay_condition: "" },
+        preparation: {
+          categoryId: "53159",
+          categoryName: "Tops",
+          aspects: [
+            { name: "Vintage", required: false, usage: "RECOMMENDED", mode: "SELECTION_ONLY", cardinality: "SINGLE", values: ["Yes", "No"] },
+            { name: "Theme", required: false, usage: "OPTIONAL", mode: "SELECTION_ONLY", cardinality: "MULTI", values: ["80s", "90s", "Floral", "Retro"] },
+            { name: "Style", required: false, usage: "OPTIONAL", mode: "SELECTION_ONLY", cardinality: "SINGLE", values: ["Boho", "Casual", "Vintage", "Y2k"] },
+          ],
+          conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
+          expiresAt: Date.now() + 3600000,
+          signature: "test",
+          issues: [],
+        },
+      },
+    });
+  });
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await page.getByRole("button", { name: /Write.*listing/i }).click();
+  await expect(page.getByText("Tops", { exact: true })).toBeVisible();
+
+  const box = page.getByRole("group", { name: "Possible vintage" });
+  await expect(box).toContainText("Possible vintage: 90s");
+  await expect(box).toContainText("Photo 3: ILGWU union label");
+  const title = page.locator(".title-input");
+  await expect(title).toHaveValue("GreenHouse Blue Floral Top");
+
+  await box.screenshot({ path: "test-results/possible-vintage.png" });
+  await box.getByRole("checkbox").check();
+  await expect(title).toHaveValue("Vintage 90s GreenHouse Blue Floral Top");
+  await expect(page.getByRole("combobox", { name: "Vintage", exact: true })).toHaveValue("Yes");
+  await expect(page.getByRole("combobox", { name: "Style", exact: true })).toHaveValue("Vintage");
+  await expect(page.getByRole("textbox", { name: "Theme", exact: true })).toHaveValue("90s | Retro | Floral");
+
+  await box.getByRole("checkbox").uncheck();
+  await expect(title).toHaveValue("GreenHouse Blue Floral Top");
+  await expect(page.getByRole("combobox", { name: "Style", exact: true })).toHaveValue("Boho");
+  await expect(page.getByRole("textbox", { name: "Theme", exact: true })).toHaveValue("Floral");
+});
