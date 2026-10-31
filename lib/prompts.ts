@@ -205,15 +205,34 @@ Do not force irrelevant fields merely to fill space.
 
 Style is a word eBay publishes for each category, not a description you compose. In jewelry it names the form of the piece — Stud, Hoop, Huggie, Dangle/Drop, Chandelier, Cuff for earrings; Choker, Collar, Lariat, Y-Drop, Pendant, Station, Layered, Locket for necklaces. In clothing it names aesthetic and era — Casual, Basic, Chic, Bohemian, Beach, Cocktail, Formal, Gothic, Prairie, Pin-Up, 50s, 70s — never the cut, which belongs to Sleeve Type, Silhouette, Neckline, Closure and the garment's length field. Give Style only when one of eBay's own words plainly fits; a phrase of your own will be discarded later, and leaving it out lets a later pass choose from eBay's real list for the chosen category.
 
-CONDITION DESCRIPTION
-
-Write a short, natural, buyer-facing condition description.
+CONDITION — THE GRADE, THE CONDITION NOTES AND THE DESCRIPTION LINE (the seller's rules, 31 Oct 2026)
 
 WHERE CONDITION COMES FROM — the seller's rule of 28 Oct 2026: ONLY from the photos of this item and the seller's photographed note (she writes "excellent condition" and the like on it). A screenshot of another seller's listing (Poshmark, eBay, Mercari, Etsy…) may tell you the piece's name, collection and measurements — NEVER its condition. "New!", "NWT", "New old stock", "never worn" in someone else's listing describe their item, not this one: do not repeat them in the condition, the description, the title or the condition field.
 
-It should sound like an experienced seller describing the actual item.
+THE GRADE ("condition"). Judge it yourself from the photos; a grade written on the seller's note decides. Almost everything she sells is in excellent condition, so start from EXCELLENT — eBay's "Pre-owned Excellent: like-new items that have been previously worn, but with little-to-no signs of wear" — and go lower only for wear you can actually SEE: GOOD ("light signs of wear, with or without visible flaws") or FAIR ("significantly visible flaws, heavy signs of wear"). An intended look — a distressed or faded print, washed denim, a raw hem — is design, not wear. The grade, the condition notes and the description's Condition line always agree.
 
-Include important condition information, functional details, and what is or is not included when relevant.
+THE CONDITION NOTES ("condition_notes"). eBay shows them right beside the price, the first thing a buyer reads, so they are the MOST DETAILED:
+- First line: the grade and a short overall impression — "Excellent pre-owned condition — looks great."
+- Then 3 to 6 lines, each starting with "• ", only to the point:
+  - what is in good shape on THIS item, said specifically: the colours, the print, the trim, the ribbing, the seams and stitching (double stitching where you see it), the lining, the hardware — "Silver ribbed trim intact", "Neat stitching throughout", "All buttons present", "YKK zipper" (only when YKK is readable on the pull);
+  - an intended look that could be taken for wear — "Faded, distressed print is part of the design";
+  - every flaw you see, what it is and where — "Light fading on the front", "Small light spot near the back neckline", "Faint pilling under the arms";
+  - when true, last — "No stains, holes or pulls".
+- How a zipper runs, whether buttons or snaps fasten, whether a clasp closes: ONLY when the seller's note says so ("zip works great", "all buttons ok"). A photo cannot show it; otherwise name only what is visible.
+- Plain everyday words, the way a person talks. Never padding, never a sales pitch ("great condition!"), never the item's design or fabric when it is not about condition, never a feel you cannot know from a photo ("sheer-feeling", "soft to the touch").
+Example, nothing wrong:
+Excellent pre-owned condition — looks great.
+• Faded, distressed print is part of the design
+• Silver ribbed trim intact
+• Neat stitching throughout
+• No stains, holes or pulls
+Example, with flaws:
+Good pre-owned condition — lightly worn.
+• Light fading on the front
+• Small light spot near the back neckline
+• Seams and trim intact
+
+THE DESCRIPTION'S CONDITION LINE is SHORT — the seller's own way of answering "what condition?": "Condition: Pre-owned, excellent, nothing is wrong with it." With a flaw: "Condition: Pre-owned, good, light fading on the front." The details live in the condition notes.
 
 Do not use internal AI-analysis phrases such as:
 "preliminary cosmetic condition"
@@ -260,7 +279,7 @@ SECTION ORDER — always this order, the same in every listing, so a buyer on a 
 1. The exact title
 2. The seller's opening sentence (no label)
 3. Brand
-4. Condition
+4. Condition — one short line, the seller's way: "Condition: Pre-owned, excellent, nothing is wrong with it." (details go in the condition notes)
 5. Size — the marked size (Ring Size for rings), only when the item has one. A European, British or Italian women's size is written as read, "Size: EU 38"; the program completes it to "Size: EU 38 (US 8, Medium)".
 6. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Every measurement shown in the photos, on a measurement photo, a screenshot or the seller's note goes here — never leave one out. Never two measurements on one line. Weight belongs in this list.
 7. Style — the piece's OWN NAME or collection, WITHOUT the brand (the brand already has its line): "Style: Good As Gold", "Style: Elsa Peretti Open Heart", "Style: Wheaton". Only when a label, stamp, the seller's note or a screenshot names it; otherwise leave this line out. This line is the piece's name, not eBay's Style item specific. Never write a "Type" line — the title already says what the item is.
@@ -277,7 +296,7 @@ NEVER write a Keywords section, a list of search words, or hashtags in the descr
 
 The example below shows the SHAPE and the VOICE of a description and nothing else. Its brand, design, measurements and condition belong to that one item. Never carry them onto the item you are describing, and never let a resemblance between the example and your item stand in for evidence.
 
-Example (747 characters):
+Example (738 characters):
 
 Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord 35-40in
 
@@ -285,7 +304,7 @@ One good thing about this beautiful necklace is that you don't need much more to
 
 Brand: Premier Designs
 
-Condition: Excellent pre-owned condition, worn only a couple of times.
+Condition: Pre-owned, excellent, worn only a couple of times.
 
 Actual Measurements:
 • Length: adjustable 35-40 in
@@ -313,7 +332,7 @@ Write the condition like an experienced seller speaking directly and clearly to 
 
 State the overall condition, then mention meaningful visible wear or flaws specifically and naturally. When possible, explain what the flaw is and where it is located.
 
-Mention relevant functional condition when it can be established, such as whether a clasp, hinge, snap, zipper, button, omega back, or other mechanism opens and closes properly.
+Mention relevant functional condition only when the seller's note establishes it, such as whether a clasp, hinge, snap, zipper, button, omega back, or other mechanism opens and closes properly — a photo cannot show it.
 
 Mention what is included or not included when relevant, such as pendant only, no chain, original box, dust bag, tags, or other accessories.
 

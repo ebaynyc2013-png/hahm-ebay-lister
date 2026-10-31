@@ -112,3 +112,16 @@ describe("a sheer or different part goes in the title (the seller, 31 Oct 2026)"
     expect(p).toContain('a "Sheer Back" kind of note is the last of them to go');
   });
 });
+
+describe("condition: the grade, detailed notes beside the price, a short line in the description (31 Oct 2026)", () => {
+  it("tells the AI the seller's three rules", async () => {
+    const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
+    const p = String(ANALYSIS_PROMPT);
+    expect(p).toContain("start from EXCELLENT");
+    expect(p).toContain("they are the MOST DETAILED");
+    expect(p).toContain("• Faded, distressed print is part of the design");
+    expect(p).toContain('"Condition: Pre-owned, excellent, nothing is wrong with it."');
+    expect(p).toContain('ONLY when the seller\'s note says so ("zip works great", "all buttons ok")');
+    expect(p).toContain("Condition: Pre-owned, excellent, worn only a couple of times.");
+  });
+});

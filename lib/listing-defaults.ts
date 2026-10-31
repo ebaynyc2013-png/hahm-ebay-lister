@@ -37,11 +37,26 @@ export function applyListingDefaults(
       delete listing.evidence.Customized;
     }
   }
-  // 2990 is Pre-owned Excellent. 3000 must not be used as a substitute:
-  // in these clothing categories it means Pre-owned Good.
+  // The eBay condition follows the grade the AI gave from the photos (the
+  // seller's rule, 31 Oct 2026: it judges, starting from Excellent, and the
+  // menu, the condition notes and the description always agree). Clothing
+  // categories (those offering 2990): 2990 is Pre-owned Excellent, 3000 is
+  // Pre-owned Good there, 3010 Pre-owned Fair. A choice already made — the
+  // seller's — is never replaced.
   if (!listing.ebay_condition && acceptedIds.has(2990)) {
-    listing.ebay_condition = "PRE_OWNED_EXCELLENT";
-    listing.condition = "EXCELLENT";
+    const byGrade: Record<string, [number, string]> = {
+      EXCELLENT: [2990, "PRE_OWNED_EXCELLENT"],
+      VERY_GOOD: [3000, "USED_EXCELLENT"],
+      GOOD: [3000, "USED_EXCELLENT"],
+      FAIR: [3010, "PRE_OWNED_FAIR"],
+      NEW_WITH_TAGS: [1000, "NEW"],
+      NEW_NO_TAGS: [1500, "NEW_OTHER"],
+    };
+    const [id, value] = byGrade[String(listing.condition || "EXCELLENT")] ?? byGrade.EXCELLENT;
+    if (acceptedIds.has(id)) listing.ebay_condition = value;
+    else if (!listing.condition || listing.condition === "EXCELLENT")
+      listing.ebay_condition = "PRE_OWNED_EXCELLENT";
+    if (!listing.condition) listing.condition = "EXCELLENT";
   }
 }
 

@@ -12,11 +12,11 @@ const meta: AspectMeta[] = [
     cardinality: "SINGLE",
   },
 ];
-it("fills the seller's Regular and exact Pre-owned Excellent defaults", () => {
+it("fills the seller's Regular and Pre-owned Excellent for an excellent piece", () => {
   const l: ListingResult = {
     title: "Shirt",
     description: "",
-    condition: "GOOD",
+    condition: "EXCELLENT",
     evidence: { "Size Type": [1] },
   };
   applyListingDefaults(l, meta, new Set([2990, 3000]));
@@ -24,6 +24,21 @@ it("fills the seller's Regular and exact Pre-owned Excellent defaults", () => {
   expect(l.ebay_condition).toBe("PRE_OWNED_EXCELLENT");
   expect(l.condition).toBe("EXCELLENT");
   expect(l.evidence?.["Size Type"]).toBeUndefined();
+});
+it("the eBay condition follows the AI's grade, so the menu and the texts agree (31 Oct 2026)", () => {
+  const good: ListingResult = { title: "Shirt", description: "", condition: "GOOD" };
+  applyListingDefaults(good, meta, new Set([2990, 3000, 3010]));
+  expect(good.ebay_condition).toBe("USED_EXCELLENT"); // Pre-owned Good in clothing
+  expect(good.condition).toBe("GOOD");
+
+  const fair: ListingResult = { title: "Shirt", description: "", condition: "FAIR" };
+  applyListingDefaults(fair, meta, new Set([2990, 3000, 3010]));
+  expect(fair.ebay_condition).toBe("PRE_OWNED_FAIR");
+
+  const none: ListingResult = { title: "Shirt", description: "" };
+  applyListingDefaults(none, meta, new Set([2990, 3000]));
+  expect(none.ebay_condition).toBe("PRE_OWNED_EXCELLENT");
+  expect(none.condition).toBe("EXCELLENT");
 });
 it("preserves a seller's alternate size and new-condition choice on repeated preparation", () => {
   const l: ListingResult = {
