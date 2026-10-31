@@ -1041,3 +1041,69 @@ test("Possible vintage: nothing changes until the seller ticks, and unticking pu
   await expect(page.getByRole("combobox", { name: "Style", exact: true })).toHaveValue("Boho");
   await expect(page.getByRole("textbox", { name: "Theme", exact: true })).toHaveValue("Floral");
 });
+
+test("changing the grade on the card moves eBay's menu and both condition texts with it (31 Oct 2026)", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/analyze", (r) =>
+    r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          title: "GreenHouse Blue Floral Top",
+          description: "GreenHouse Blue Floral Top\n\nCondition: Pre-owned, good, small spot on the left cuff.",
+          brand: "GreenHouse",
+          item_type: "Top",
+          condition: "GOOD",
+          condition_notes: "Good pre-owned condition — lightly worn.\n• Small spot on the left cuff\n• Seams intact",
+          suggested_price: 25,
+        },
+        usage: [],
+      },
+    }),
+  );
+  await page.route("**/api/ebay/prepare", (r) => {
+    const l = r.request().postDataJSON().listing;
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: { ...l, category_id: "53159", ebay_condition: "USED_EXCELLENT" },
+        preparation: {
+          categoryId: "53159",
+          categoryName: "Tops",
+          aspects: [],
+          conditions: [
+            { value: "NEW", label: "NEW (1000)" },
+            { value: "PRE_OWNED_EXCELLENT", label: "Pre-owned Excellent (2990)" },
+            { value: "USED_EXCELLENT", label: "Pre-owned Good (3000)" },
+            { value: "PRE_OWNED_FAIR", label: "PRE OWNED FAIR (3010)" },
+          ],
+          expiresAt: Date.now() + 3600000,
+          signature: "test",
+          issues: [],
+        },
+      },
+    });
+  });
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await page.getByRole("button", { name: /Write.*listing/i }).click();
+  await expect(page.getByText("Tops", { exact: true })).toBeVisible();
+
+  const ebay = page.getByLabel("eBay condition", { exact: true });
+  await expect(ebay).toHaveValue("USED_EXCELLENT");
+  await page.getByLabel("Condition", { exact: true }).selectOption("EXCELLENT");
+  await expect(ebay).toHaveValue("PRE_OWNED_EXCELLENT");
+  const description = page.locator(".result-field textarea").first();
+  await expect(description).toHaveValue(/Condition: Pre-owned, excellent, nothing is wrong with it\./);
+  const notes = page.getByLabel("Condition / testing notes");
+  await expect(notes).toHaveValue(/^Excellent pre-owned condition — looks great\.\n• Small spot on the left cuff/);
+  await expect(page.getByText("Choose an eBay condition.")).toHaveCount(0);
+
+  await ebay.selectOption("PRE_OWNED_FAIR");
+  await expect(page.getByLabel("Condition", { exact: true })).toHaveValue("FAIR");
+  await expect(description).toHaveValue(/Condition: Pre-owned, fair, small spot on the left cuff\./);
+});

@@ -6,6 +6,7 @@ import { applyShippingDefaults } from "@/lib/shipping-defaults";
 import { requestText } from "@/lib/text-dialog";
 import { apiPost } from "@/lib/api-client";
 import { draftIssues } from "@/lib/client-review";
+import { gradeChange, gradeForEbayCondition } from "@/lib/condition-sync";
 // Fields eBay calls free text but whose answer is one of eBay's own words.
 const PICK_FROM_LIST = new Set(["size", "garment care"]);
 interface Props {
@@ -294,16 +295,14 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
           <select
             aria-label="eBay condition"
             value={l.ebay_condition ?? ""}
-            onChange={(e) =>
-              edit({
-                ebay_condition: e.target.value,
-                condition: e.target.value.startsWith("NEW")
-                  ? "NEW_WITH_TAGS"
-                  : e.target.value === "FOR_PARTS_OR_NOT_WORKING"
-                    ? "FOR_PARTS_OR_NOT_WORKING"
-                    : "GOOD",
-              })
-            }
+            onChange={(e) => {
+              // The grade and both texts follow her choice in eBay's menu —
+              // Pre-owned Excellent is Excellent, not Good (31 Oct 2026).
+              const accepted = g.preparation!.conditions.map((c) => c.value);
+              if (!e.target.value) return edit({ ebay_condition: "" });
+              const grade = gradeForEbayCondition(e.target.value, accepted);
+              edit({ ...gradeChange(l, grade, accepted), ebay_condition: e.target.value });
+            }}
           >
             <option value="">Choose condition</option>
             {g.preparation.conditions.map((c) => (

@@ -11,6 +11,7 @@ import { SIZE_REQUIRED_CATEGORIES } from "@/lib/categories";
 import { DESCRIPTION_LIMIT } from "@/lib/description-format";
 import { withCost } from "@/lib/sku";
 import { confirmVintage, unconfirmVintage, vintageLead } from "@/lib/vintage";
+import { gradeChange } from "@/lib/condition-sync";
 import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
@@ -281,10 +282,16 @@ export function ListingCard({
                 id={`cond-${group.id}`}
                 value={listing.condition ?? "GOOD"}
                 onChange={(e) =>
-                  onEdit(group.id, {
-                    condition: e.target.value,
-                    ebay_condition: "",
-                  })
+                  // eBay's menu, the description's Condition line and the
+                  // notes' first line follow the grade (31 Oct 2026).
+                  onEdit(
+                    group.id,
+                    gradeChange(
+                      listing,
+                      e.target.value,
+                      (group.preparation?.conditions ?? []).map((c) => c.value),
+                    ),
+                  )
                 }
               >
                 {/* Keep an unexpected model value selectable rather than losing it. */}
