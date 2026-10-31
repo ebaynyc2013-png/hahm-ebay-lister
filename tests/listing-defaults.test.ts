@@ -91,3 +91,40 @@ it("adds no Customized where eBay does not ask, or offers no No", () => {
   applyListingDefaults(b, [customized(["Yes"])], new Set());
   expect(b.item_specifics?.Customized).toBeUndefined();
 });
+
+const field = (name: string, values: string[], mode: AspectMeta["mode"] = "SELECTION_ONLY"): AspectMeta => ({
+  name,
+  values,
+  mode,
+  required: false,
+  usage: "OPTIONAL",
+  cardinality: "SINGLE",
+});
+it("answers Personalize No and Unit Quantity 1 wherever eBay asks (31 Oct 2026)", () => {
+  const l: ListingResult = { title: "Top", description: "", evidence: { Personalize: [2] } };
+  applyListingDefaults(
+    l,
+    [field("Personalize", ["Yes", "No"]), field("Unit Quantity", [], "FREE_TEXT")],
+    new Set(),
+  );
+  expect(l.item_specifics?.Personalize).toBe("No");
+  expect(l.item_specifics?.["Unit Quantity"]).toBe("1");
+  expect(l.evidence?.Personalize).toBeUndefined();
+});
+it("keeps Personalize and Unit Quantity the seller already gave, and adds none eBay does not ask", () => {
+  const l: ListingResult = {
+    title: "Ring",
+    description: "",
+    item_specifics: { Personalized: "Yes", "Unit Quantity": "2" },
+  };
+  applyListingDefaults(
+    l,
+    [field("Personalized", ["Yes", "No"]), field("Unit Quantity", [], "FREE_TEXT")],
+    new Set(),
+  );
+  expect(l.item_specifics?.Personalized).toBe("Yes");
+  expect(l.item_specifics?.["Unit Quantity"]).toBe("2");
+  const none: ListingResult = { title: "Vase", description: "" };
+  applyListingDefaults(none, [], new Set());
+  expect(none.item_specifics).toBeUndefined();
+});

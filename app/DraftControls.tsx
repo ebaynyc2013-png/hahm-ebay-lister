@@ -6,6 +6,8 @@ import { applyShippingDefaults } from "@/lib/shipping-defaults";
 import { requestText } from "@/lib/text-dialog";
 import { apiPost } from "@/lib/api-client";
 import { draftIssues } from "@/lib/client-review";
+// Fields eBay calls free text but whose answer is one of eBay's own words.
+const PICK_FROM_LIST = new Set(["size", "garment care"]);
 interface Props {
   group: ItemGroup;
   photoById: (id: string) => Photo | undefined;
@@ -340,9 +342,10 @@ export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
               {meta &&
               meta.cardinality !== "MULTI" &&
               (meta.mode === "SELECTION_ONLY" ||
-                // Size is chosen from eBay's list too, though eBay calls it
-                // free text (the seller's rule, 31 Oct 2026).
-                (name.toLowerCase() === "size" && meta.values.length > 0)) ? (
+                // Size and Garment Care are chosen from eBay's list too,
+                // though eBay calls them free text (the seller's rule,
+                // 31 Oct 2026).
+                (PICK_FROM_LIST.has(name.toLowerCase()) && meta.values.length > 0)) ? (
                 <select
                   aria-label={name}
                   value={specifics[name] ?? ""}

@@ -26,17 +26,17 @@ export function applyListingDefaults(
   }
   // Customized: the seller's standing answer is No — she almost never has a
   // customized piece, and changes it by hand when she does (27 Oct 2026).
-  // Only where eBay asks the question and offers "No" as an answer. The photo
-  // pass cannot supply it: whether a thing was customized is not visible.
-  const customized = meta.find((a) => a.name === "Customized");
-  const no = customized ? matchAllowed("No", customized.values) : null;
-  if (customized && no && !listing.item_specifics?.Customized?.trim()) {
-    listing.item_specifics = { ...listing.item_specifics, Customized: no };
-    if (listing.evidence) {
-      listing.evidence = { ...listing.evidence };
-      delete listing.evidence.Customized;
-    }
-  }
+  // Personalize: No as well — she never sells a personalized piece (31 Oct
+  // 2026). Only where eBay asks the question and offers "No" as an answer.
+  // The photo pass cannot supply either: neither is visible, and its check
+  // refused the "No" it was asked to give.
+  answerNo(listing, meta, /^customi[sz]ed$/i);
+  answerNo(listing, meta, /^personali[sz]ed?$/i);
+  // Unit Quantity: always 1 — she sells one item per listing (31 Oct 2026).
+  // eBay gives no list for it; the photo check refuses a number from a look.
+  const unitQuantity = meta.find((a) => /^unit quantity$/i.test(a.name));
+  if (unitQuantity && !listing.item_specifics?.[unitQuantity.name]?.trim())
+    setDefault(listing, unitQuantity.name, "1");
   // The eBay condition follows the grade the AI gave from the photos (the
   // seller's rule, 31 Oct 2026: it judges, starting from Excellent, and the
   // menu, the condition notes and the description always agree). Clothing
@@ -58,6 +58,40 @@ export function applyListingDefaults(
       listing.ebay_condition = "PRE_OWNED_EXCELLENT";
     if (!listing.condition) listing.condition = "EXCELLENT";
   }
+}
+
+function setDefault(listing: ListingResult, name: string, value: string): void {
+  listing.item_specifics = { ...listing.item_specifics, [name]: value };
+  if (listing.evidence) {
+    listing.evidence = { ...listing.evidence };
+    delete listing.evidence[name];
+  }
+}
+
+function answerNo(listing: ListingResult, meta: AspectMeta[], name: RegExp): void {
+  const field = meta.find((a) => name.test(a.name));
+  const no = field ? matchAllowed("No", field.values) : null;
+  if (field && no && !listing.item_specifics?.[field.name]?.trim())
+    setDefault(listing, field.name, no);
+}
+
+/**
+ * Handmade: No unless the seller's note or a label says the piece is
+ * handmade (31 Oct 2026 — one handmade piece in about 400). Applied after the
+ * photo pass, so "handmade" on her note still comes through as Yes; only a
+ * field still empty then gets No. Returns whether it filled the field.
+ */
+export function applyDefaultHandmade(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+): boolean {
+  const field = meta.find((a) => /^hand\s?made$/i.test(a.name));
+  if (!field) return false;
+  if (aspects[field.name]?.some((v) => v.trim())) return false;
+  const no = matchAllowed("No", field.values);
+  if (!no) return false;
+  aspects[field.name] = [no];
+  return true;
 }
 
 // Pendant/Locket Type: eBay's list names special kinds of pendant — a letter,

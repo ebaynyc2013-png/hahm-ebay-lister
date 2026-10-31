@@ -55,7 +55,7 @@ const visible = new Set([
 // the fill prompt already forbids inferring those. Lab grading: clarity and
 // cut come off a certificate.
 const notFromAppearance =
-  /\b(material|materials|metal|purity|stone|gemstone|karat|carat|plated?|plating|vintage|antique|era|year|age|origin|manufacture|manufactured|sourced|country|handmade|signed|customized|customised|personalize|personalise|personalized|wholesale|warranty|certif\w*|authentic\w*|grade|clarity|treatment|creation|cut)\b/i;
+  /\b(material|materials|metal|purity|stone|gemstone|karat|carat|plated?|plating|vintage|antique|era|year|age|origin|manufacture|manufactured|sourced|country|handmade|signed|customized|customised|personalize|personalise|personalized|wholesale|warranty|care|certif\w*|authentic\w*|grade|clarity|treatment|creation|cut)\b/i;
 
 // "Fabric type" is not among them, though "material" is, and the difference is
 // the whole point: eBay's Material is fibre content — Cotton, Linen, Wool —
@@ -156,6 +156,8 @@ export function photoFactProblem(
       !/manufactured|made in \d{4}/i.test(s.quote)
     )
       return "the label shows no year";
+    if (careInQuote(s.name, s.value, s.quote)) return null;
+    if (yesInQuote(s.name, s.value, s.quote)) return null;
     return s.value
       .split(" | ")
       .every(
@@ -171,6 +173,40 @@ export function photoFactProblem(
   return visible.has(s.name.toLowerCase()) || choosableFromPhoto(aspect)
     ? null
     : "needs a label or your note, not just a look";
+}
+
+// Garment Care in eBay's three words (the seller's rule, 31 Oct 2026: chosen
+// from eBay's list, like Size). A care label never says "Hand Wash Only"; it
+// says "hand wash cold, lay flat to dry". So eBay's word passes when the label
+// carries its instruction, and is never taken from the look of the garment.
+const CARE: [RegExp, RegExp][] = [
+  [/^hand wash/i, /\bhand[\s-]?wash/i],
+  [/^machine wash/i, /\bmachine[\s-]?wash/i],
+  [/^dry clean/i, /\bdry[\s-]?clean/i],
+];
+const CARE_NEGATED = /\b(?:do\s+not|don'?t|never|no)\s+(?:hand[\s-]?wash|machine[\s-]?wash|dry[\s-]?clean)/gi;
+
+export function careInQuote(name: string, value: string, quote: string): boolean {
+  if (!/^garment care$/i.test(name.trim())) return false;
+  const rule = CARE.find(([v]) => v.test(value.trim()));
+  if (!rule) return false;
+  return rule[1].test(String(quote ?? "").replace(CARE_NEGATED, " "));
+}
+
+// "Yes" on a Yes/No field when the seller's note or a label says so in its
+// own word: "handmade" on her note is Handmade Yes (31 Oct 2026). The word
+// match above wanted "Yes" itself in the quote, which no note ever has.
+const YES_WORDS: [RegExp, RegExp][] = [
+  [/^hand\s?made$/i, /\b(?:hand[\s-]?made|made\s+by\s+hand)\b/i],
+];
+const YES_NEGATED = /\b(?:not|non|isn'?t|no)[\s-]+(?:hand[\s-]?made|made\s+by\s+hand)\b/i;
+
+export function yesInQuote(name: string, value: string, quote: string): boolean {
+  if (!/^yes$/i.test(value.trim())) return false;
+  const rule = YES_WORDS.find(([n]) => n.test(name.trim()));
+  if (!rule) return false;
+  const q = String(quote ?? "");
+  return rule[1].test(q) && !YES_NEGATED.test(q);
 }
 
 // A stone field is one that asks WHICH stone: Main Stone, Secondary Stone,

@@ -917,3 +917,57 @@ test("Size is chosen from eBay's list on the card, even where eBay calls it free
   await size.selectOption("L");
   await expect(size).toHaveValue("L");
 });
+
+test("Garment Care is chosen from eBay's three words on the card (31 Oct 2026)", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/ebay/prepare", (r) => {
+    const l = r.request().postDataJSON().listing;
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: {
+          ...l,
+          category_id: "53159",
+          ebay_condition: "",
+          item_specifics: { ...l.item_specifics, "Garment Care": "Hand Wash Only" },
+        },
+        preparation: {
+          categoryId: "53159",
+          categoryName: "Tops",
+          aspects: [
+            {
+              name: "Garment Care",
+              required: false,
+              usage: "OPTIONAL",
+              mode: "FREE_TEXT",
+              cardinality: "SINGLE",
+              values: ["Dry Clean Only", "Hand Wash Only", "Machine Washable"],
+            },
+          ],
+          conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
+          expiresAt: Date.now() + 3600000,
+          signature: "test",
+          issues: [],
+        },
+      },
+    });
+  });
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await page.getByRole("button", { name: /Write.*listing/i }).click();
+  await expect(page.getByText("Tops", { exact: true })).toBeVisible();
+  const care = page.getByRole("combobox", { name: "Garment Care", exact: true });
+  await expect(care).toHaveValue("Hand Wash Only");
+  await expect(care.locator("option")).toHaveText([
+    "Unknown — leave empty",
+    "Dry Clean Only",
+    "Hand Wash Only",
+    "Machine Washable",
+  ]);
+  await care.selectOption("Machine Washable");
+  await expect(care).toHaveValue("Machine Washable");
+});

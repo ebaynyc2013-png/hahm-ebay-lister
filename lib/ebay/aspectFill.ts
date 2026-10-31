@@ -255,6 +255,28 @@ export function describeFill(r: FillReport): string {
   return `ran (${how}), filled ${r.added}: ${r.changed.join(", ")}${r.refused ? ` (${r.refused} refused)` : ""}${why}`;
 }
 
+/**
+ * The report without refusals the seller's own defaults settled anyway: the
+ * photo pass refused Handmade "No" for want of a note, then her standing
+ * answer put No there. Listing that as refused would say the field is empty
+ * when it is not.
+ */
+export function withoutSettledRefusals(
+  r: FillReport,
+  aspects: Record<string, string[]>,
+): FillReport {
+  const has = (w: RefusedWord) =>
+    Object.entries(aspects).some(
+      ([k, vs]) =>
+        k.toLowerCase() === w.aspect.toLowerCase() &&
+        vs.some((v) => v.trim().toLowerCase() === w.value.trim().toLowerCase()),
+    );
+  const kept = (r.refusedWords ?? []).filter((w) => !has(w));
+  const settled = (r.refusedWords ?? []).length - kept.length;
+  if (!settled) return r;
+  return { ...r, refusedWords: kept, refused: Math.max(0, r.refused - settled) };
+}
+
 export async function fillRecommendedAspects(
   listing: ListingResult,
   aspects: Record<string, string[]>,
@@ -365,7 +387,8 @@ Rules:
 - Pendant/Locket Type: give the specific kind when the photos show one (Alphabet/Letter, Amulet, Bar, Coin, Dog Tag, Floating/Keepsake, Medal, Perfume, Photo, Tassel). For an ordinary decorative pendant that none of those describes, answer "Charm" — eBay has no plain "Pendant" value, and Charm is the seller's choice for these. A plain chain with no pendant gets nothing.
 - Personalize or Personalized: use "No" whenever that aspect is available.
 - Signed: when eBay provides a Signed aspect for the category, use "Yes" when the actual item has a visible brand/designer signature, hallmark, stamp or branded maker's mark on the item itself. The brand does not need to be a luxury brand. If the item itself has no such visible signature, hallmark, stamp or maker's mark, use "No". Do not create a Signed aspect for categories where eBay does not provide one.
-- Handmade: do not infer Handmade merely from appearance. Use seller-provided information from a photographed note, a readable label/tag, or other reliable evidence establishing whether the item is handmade.
+- Handmade: do not infer Handmade merely from appearance. Answer "Yes" only when the seller's photographed note or a readable label/tag says the item is handmade — basis label, quoting those words ("handmade"). Otherwise omit Handmade: the app answers No for this seller.
+- Garment Care: when a care label is readable, choose eBay's word for its washing instruction — "hand wash…" is Hand Wash Only, "machine wash…" is Machine Washable, "dry clean…" is Dry Clean Only — with basis label, quoting the label's own words. Never from the look of the garment; with no readable care label, omit it.
 - Vintage and Antique are age-related facts. Do not classify an item as Vintage or Antique merely because its design looks old, retro, Art Deco, Victorian-inspired or vintage-style. Use Vintage or Antique when supported by seller-provided information, readable dating/markings, or other reliable evidence establishing the item's age or period. A vintage-inspired appearance may instead support an appropriate Style or Theme when eBay provides that value.
 - Style: what eBay means by Style changes completely from one category to the next, and the list supplied above for this category is its definition — read that list before answering. In clothing, Style is aesthetic, era and mood: Casual, Basic, Chic, Modern, Bohemian, Beach, Cocktail, Formal, Clubwear, Gothic, Nautical, Peasant, Prairie, Pin-Up, Flapper, 50s, 70s. It is never the cut — sleeves belong to Sleeve Type, overall shape to Silhouette, the neck to Neckline, the fastening to Closure and the hem to Dress Length, so a phrase like "puff sleeve button front" is not a Style and belongs in none of them. In jewellery, Style is the form of the piece: Stud, Hoop, Huggie, Dangle/Drop, Chandelier, Climber, Cuff, Tassel for earrings; Choker, Collar, Lariat, Y-Drop, Pendant, Station, Layered, Bib, Locket, Tennis, Charm for necklaces. Style is usually required and usually accepts several values, and it is one of the fields buyers browse most — so give it several. A blue denim shirt dress is Casual, Shirt Dress and Western together, and naming only one of the three hides it from buyers browsing the other two. List every supplied value that honestly describes the item.
 - Department: when eBay asks for it, decide it from the item itself — its cut, construction and sizing system — or from the seller's photographed note, which says "men's" or "women's" whenever the photos cannot. A size letter alone (S, M, L) never establishes a department. When neither the item nor the note settles it, omit Department: the app then applies the seller's own default.

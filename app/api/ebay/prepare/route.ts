@@ -1,4 +1,5 @@
 import {
+  applyDefaultHandmade,
   applyDefaultPendantType,
   applyListingDefaults,
 } from "@/lib/listing-defaults";
@@ -32,7 +33,11 @@ import {
 import { fillShoeSizes } from "@/lib/shoe-sizes";
 import { pickSizeFromList } from "@/lib/clothing-size";
 import { womensForeignSize } from "@/lib/foreign-size";
-import { describeFill, fillRecommendedAspects } from "@/lib/ebay/aspectFill";
+import {
+  describeFill,
+  fillRecommendedAspects,
+  withoutSettledRefusals,
+} from "@/lib/ebay/aspectFill";
 import { validateAspects } from "@/lib/ebay/draft";
 import { EBAY_COOKIE, accessTokenFromCookie } from "@/lib/ebay/session";
 import { signReview } from "@/lib/review";
@@ -129,18 +134,22 @@ const categoryPath =
           // and says nothing when it fails, which leaves the seller unable to
           // tell a considered "nothing to add" from a field never looked at.
           let fill = "not run — photo analysis was switched off for this run";
+          let fillReport: Awaited<ReturnType<typeof fillRecommendedAspects>> | null = null;
           if (body.enrich === true) {
-            fill = describeFill(
-              await fillRecommendedAspects(
-                listing,
-                aspects,
-                meta,
-                "draft",
-                images,
-              ),
+            fillReport = await fillRecommendedAspects(
+              listing,
+              aspects,
+              meta,
+              "draft",
+              images,
             );
             reconcileAspects(aspects, meta, listing, listing.category || "");
           }
+          // Handmade: No unless the note or a label said handmade (the
+          // seller's rule, 31 Oct 2026) — after the photo pass, so her
+          // "handmade" still comes through as Yes.
+          applyDefaultHandmade(aspects, meta);
+          if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —
           // and it is not silent: validateAspects below reports a missing
