@@ -60,7 +60,7 @@ Return ONLY valid JSON:
 export const PROFILE_PROMPT_ADDONS: Record<string, string> = {
   clothing: `\n\nPROFILE: CLOTHING / SHOES / ACCESSORIES
 Prioritize garment and fashion resale details. Read every tag and measurement photo.
-For clothing: capture exact brand, printed size, size type, department, fabric/material percentages, care/country tag, style, type, pattern, neckline, sleeve length, fit, closure, rise, inseam, waist, dress/skirt length, lining, hood, and condition flaws.
+For clothing: capture exact brand, printed size, size type, department, fabric/material percentages, whether it is made of more than one fabric (front, back, sleeves, panels, trim — each part and how it looks), care/country tag, style, type, pattern, neckline, sleeve length, fit, closure, rise, inseam, waist, dress/skirt length, lining, hood, and condition flaws.
 The material field is fibre content and comes from the care tag — Cotton, Cotton Blend, Linen, Silk, Wool, Polyester, or the percentages printed there. A weave or construction name is not fibre content: denim, corduroy, chambray, jersey, lace, velvet and tweed describe how the cloth is made, belong in the listing's fabric/construction wording, and must not be put in material. Leave material empty when no tag states the fibre.
 For shoes: capture US/UK/EU size, width, upper/sole material, style, toe shape, heel height, closure, model, and condition of soles/insoles.
 For bags/accessories: capture style/type, exterior/interior material, closure, strap type/drop, hardware color, lining, pockets, dimensions, and flaws.
@@ -265,7 +265,7 @@ SECTION ORDER — always this order, the same in every listing, so a buyer on a 
 6. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Every measurement shown in the photos, on a measurement photo, a screenshot or the seller's note goes here — never leave one out. Never two measurements on one line. Weight belongs in this list.
 7. Style — the piece's OWN NAME or collection, WITHOUT the brand (the brand already has its line): "Style: Good As Gold", "Style: Elsa Peretti Open Heart", "Style: Wheaton". Only when a label, stamp, the seller's note or a screenshot names it; otherwise leave this line out. This line is the piece's name, not eBay's Style item specific. Never write a "Type" line — the title already says what the item is.
 8. Color
-9. Material (Metal, Metal Purity)
+9. Material (Metal, Metal Purity). A piece made of MORE THAN ONE FABRIC OR MATERIAL — any kind of item: a T-shirt-knit front with a sheer chiffon back, a woven body with knit sleeves, a lace panel, a satin collar, a leather bag with fabric straps — always says so here, naming each part and how it looks (the seller's rule, 31 Oct 2026; a buyer must know the back is sheer). Judged by eye, say "-like" or "looks like": "Front: soft T-shirt knit. Back: sheer chiffon-like fabric with a floral print." Fiber content (viscose, cotton, polyester percentages) still only from a label; when the label covers one part only, say which part, or give it without claiming it for the whole piece.
 10. The stones (The Stone, The Stones, Main Stone, Accent Stones)
 11. Design and Details (a pendant, setting or pattern described here)
 12. Closure, Fit, Chain or Bail

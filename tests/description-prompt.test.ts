@@ -88,3 +88,17 @@ describe("the seller's voice (28 Oct 2026)", () => {
     expect(AI_LISTING_SCHEMA.required).toContain("style_phrase_id");
   });
 });
+
+describe("a piece made of more than one fabric says so (the seller, 31 Oct 2026)", () => {
+  it("names each part in the description, hedged when judged by eye", async () => {
+    const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
+    const p = String(ANALYSIS_PROMPT);
+    expect(p).toContain("MORE THAN ONE FABRIC OR MATERIAL");
+    expect(p).toContain("Back: sheer chiffon-like fabric");
+    expect(p).toContain("Fiber content (viscose, cotton, polyester percentages) still only from a label");
+    const { PROFILE_PROMPT_ADDONS } = await import("@/lib/prompts");
+    expect(Object.values(PROFILE_PROMPT_ADDONS).join("\n")).toContain(
+      "whether it is made of more than one fabric",
+    );
+  });
+});
