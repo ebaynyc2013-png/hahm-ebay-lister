@@ -2,6 +2,7 @@ import type { ListingResult } from "@/lib/types";
 import { NOT_IN_TITLE } from "@/lib/aesthetics";
 import { shoeSizesInTitle } from "@/lib/title-shoe-size";
 import { teeInTitle } from "@/lib/title-tee";
+import { foreignSizeInTitle } from "@/lib/foreign-size";
 
 export const EBAY_TITLE_LIMIT = 80;
 
@@ -13,8 +14,8 @@ const Q = "['’]"; // straight or curly apostrophe
  * The prompt already tells the model all of this; this is the guarantee. It
  * only ever REMOVES these exact words — it never reorders or rewrites, because
  * every other word in a title is the seller's to keep. (The only additions the
- * optimizer makes are a shoe's second size, from eBay's chart, and "Tee"
- * beside "T-Shirt".)
+ * optimizer makes are a shoe's second size and a European clothing size's
+ * letter and word, both from eBay's charts, and "Tee" beside "T-Shirt".)
  *
  *   - gender words: she never spends title space on them
  *   - condition wording, except "Damaged", "For Parts" and "New With Tags",
@@ -54,8 +55,9 @@ export function optimizeTitle(listing: ListingResult): string {
   const normalized = String(listing.title || "").replace(/\s+/g, " ").trim();
   const stripped = stripNeverInTitle(normalized, listing.brand) || normalized;
   // The one thing this adds: a shoe's second size, read off eBay's chart.
-  const title = teeInTitle(
-    shoeSizesInTitle(stripped, listing, EBAY_TITLE_LIMIT),
+  const title = foreignSizeInTitle(
+    teeInTitle(shoeSizesInTitle(stripped, listing, EBAY_TITLE_LIMIT), EBAY_TITLE_LIMIT),
+    listing,
     EBAY_TITLE_LIMIT,
   );
 

@@ -1,5 +1,6 @@
 import { matchAllowed } from "@/lib/ebay/aspects";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
+import type { ForeignSize } from "@/lib/foreign-size";
 
 /**
  * eBay's Size field takes eBay's own word, chosen from its list — the
@@ -79,9 +80,19 @@ export function pickSizeFromList(
   aspects: Record<string, string[]>,
   meta: AspectMeta[],
   listingSize?: unknown,
+  foreign?: ForeignSize | null,
 ): void {
   const a = meta.find((m) => m.name.toLowerCase() === "size");
   if (!a || !a.values.length) return;
+  // A European, British or Italian women's size, converted from eBay's chart:
+  // the letter (the seller's choice, 31 Oct 2026), else the US number, else
+  // nothing — never the bare European number, which eBay would read as US.
+  if (foreign) {
+    const chosen = onList(foreign.letter, a.values) ?? onList(foreign.us, a.values);
+    if (chosen) aspects[a.name] = [chosen];
+    else delete aspects[a.name];
+    return;
+  }
   const current = aspects[a.name]?.[0] ?? "";
   const source = current.trim() ? current : String(listingSize ?? "");
   if (!source.trim()) return;

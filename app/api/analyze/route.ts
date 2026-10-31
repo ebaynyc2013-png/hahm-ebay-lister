@@ -31,6 +31,7 @@ import {
 } from "@/lib/prompts";
 import { toImageBlock, type ImageBlock } from "@/lib/images";
 import { optimizeTitle } from "@/lib/titleOptimizer";
+import { foreignSizeInDescription } from "@/lib/foreign-size";
 import { applyPriceMarkup, priceMarkupPercent } from "@/lib/pricing";
 import { resolveModel } from "@/lib/models";
 import type { AnalyzeRequestBody, ListingResult } from "@/lib/types";
@@ -270,6 +271,9 @@ const descriptionBody = descriptionLines.join("\n").trim();
 listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}` : listing.title;
         // The seller's order and eBay's 800-character phone limit — applied
         // after the final title is in place, since the title line counts.
+        // A European, British or Italian women's size: "Size: EU 38 (US 8,
+        // Medium)", from eBay's chart (the seller, 31 Oct 2026).
+        listing.description = foreignSizeInDescription(listing.description, listing);
         const shaped = formatDescription(listing.description, undefined, listing.brand ?? "");
         listing.description = shaped.text;
         if (shaped.dropped.length) listing.description_dropped = shaped.dropped;
