@@ -102,3 +102,13 @@ describe("a piece made of more than one fabric says so (the seller, 31 Oct 2026)
     );
   });
 });
+
+describe("a sheer or different part goes in the title (the seller, 31 Oct 2026)", () => {
+  it("by what it looks like, never a fabric the label does not give", async () => {
+    const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
+    const p = String(ANALYSIS_PROMPT);
+    expect(p).toContain('"Sheer Back", "Sheer Sleeves", "Lace Panel", "Mesh Inset"');
+    expect(p).toContain('"Chiffon Back" only when a label or the seller\'s note says chiffon');
+    expect(p).toContain('a "Sheer Back" kind of note is the last of them to go');
+  });
+});

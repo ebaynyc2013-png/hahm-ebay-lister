@@ -121,7 +121,7 @@ WORD ORDER, first to last:
    - shoes: BOTH the US and the European size, US first, with NO word "EU" between them — the program writes the final form, "6.5 37" or "7M 37.5". Write the size exactly as you read it, with its marker — "EU 37" from a European insole, "US 6.5" from an American one; the program uses that marker to know which system it is, then removes the word "EU". Never convert it yourself: the program adds the other size from eBay's official chart. A US size stamped with a width letter ("7M", "8.5W") is written as stamped. Because the program ADDS the other size (up to 5 characters, e.g. " 37.5"), keep a shoe title to 75 characters or fewer, trimming in the order below; otherwise there is no room for it and the title goes out with one size only.
    - rings and numeric apparel: "Size 8", "Size 32"
    - necklaces and other items where length or dimensions decide the purchase: "18in", "10x7in"
-8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip").
+8. Construction details buyers search for: sleeve, neckline, closure, heel and similar ("Short Sleeve", "Button Front", "Zip"). FIRST among them, for any kind of item: a part a buyer must know about before buying because it differs from the rest — a sheer or see-through back, sleeves or panel, a lace or mesh insert — named by what it LOOKS like: "Sheer Back", "Sheer Sleeves", "Lace Panel", "Mesh Inset" (the seller's rule, 31 Oct 2026). Never a fabric name the label does not give: "Chiffon Back" only when a label or the seller's note says chiffon.
 9. A second variant of the item word, when buyers search both phrasings ("Jean Dress", "Evening Shoes", "Cocktail Dress").
 10. "Damaged", "For Parts" or "New With Tags" — only when the seller's note or the item itself says so (attached original tags count for New With Tags). A screenshot of someone else's listing never does: its "New" or "NWT" is about THEIR item.
 11. Aesthetic tail, last — one or two of the aesthetics you returned in "aesthetics" ("Western", "Preppy", "Office Siren").
@@ -134,7 +134,7 @@ NEVER IN THE TITLE:
 WHEN THE TITLE IS OVER 80 CHARACTERS, remove in this order, one step at a time, and stop as soon as it fits:
 1. a word that appears twice — remove the repeat and keep the first: "Denim Jacket Jeans Jacket" becomes "Denim Jacket Jeans", and a second "Silver" goes while the first stays. The second variant of the item word is NOT removed for being a variant; only a repeated word is.
 2. the word "Size" itself — keep the size value
-3. the construction detail words (slot 8)
+3. the construction detail words (slot 8) — a "Sheer Back" kind of note is the last of them to go
 4. the aesthetic tail (slot 11)
 5. the full size word, keeping the abbreviation ("L Large" becomes "L")
 Never remove the brand, the item word, the size value, the second variant of the item word, the vintage and era from the note, or "Damaged" / "For Parts" / "New With Tags".
