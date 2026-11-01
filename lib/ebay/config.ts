@@ -20,7 +20,10 @@ export const EBAY_INV_BASE = "https://api.ebay.com/sell/inventory/v1";
 export const EBAY_ACC_BASE = "https://api.ebay.com/sell/account/v1";
 export const EBAY_META_BASE = "https://api.ebay.com/sell/metadata/v1";
 export const EBAY_TAX_BASE = "https://api.ebay.com/commerce/taxonomy/v1";
-export const EBAY_TRADING = "https://api.ebay.com/ws/api.dll";
+// eBay's Media API — photo uploads. It replaced the Trading API's
+// UploadSiteHostedPictures, which eBay decommissioned on 30 September 2026
+// (every photo upload failed from then on; found 1 Nov 2026).
+export const EBAY_MEDIA_BASE = "https://apim.ebay.com/commerce/media/v1_beta";
 export const EBAY_MARKETPLACE_ID = process.env.EBAY_MARKETPLACE_ID || "EBAY_US";
 export const EBAY_CATEGORY_TREE_ID = process.env.EBAY_CATEGORY_TREE_ID || "0";
 export const EBAY_CURRENCY = process.env.EBAY_CURRENCY || "USD";

@@ -886,12 +886,14 @@ export default function Home() {
               ok?: boolean;
               error?: string;
               urls?: string[];
+              errors?: string[];
             };
             if (!d.ok)
               throw new Error(d.error || "Could not upload photos to eBay.");
             if (!Array.isArray(d.urls) || d.urls.length !== batch.length)
               throw new Error(
-                "Some selected photos failed to upload. Nothing was published. Retry the upload.",
+                "Some selected photos failed to upload. Nothing was published. Retry the upload." +
+                  (d.errors?.length ? ` ${d.errors.slice(0, 3).join(" · ")}` : ""),
               );
             imageUrls.push(...d.urls);
             break;
