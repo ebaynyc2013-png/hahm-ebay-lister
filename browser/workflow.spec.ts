@@ -1239,3 +1239,39 @@ test("Allow offers is on by default; the minimum offer goes to eBay and must be 
   await expect(page.getByText(/Posted to eBay/)).toBeVisible();
   expect(sent).toEqual({ allow: true, minimum: 150 });
 });
+
+test("an empty Theme asks the seller to choose, with eBay's style words as examples (1 Nov 2026)", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/ebay/prepare", (r) => {
+    const l = r.request().postDataJSON().listing;
+    return r.fulfill({
+      json: {
+        ok: true,
+        listing: { ...l, category_id: "63863", ebay_condition: "" },
+        preparation: {
+          categoryId: "63863",
+          categoryName: "Pants",
+          aspects: [
+            { name: "Theme", required: false, usage: "RECOMMENDED", mode: "FREE_TEXT", cardinality: "MULTI", values: ["Flower", "Preppy", "Retro", "Skull"] },
+          ],
+          conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
+          expiresAt: Date.now() + 3600000,
+          signature: "test",
+          issues: [],
+        },
+      },
+    });
+  });
+  await page.locator("input[type=file]").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: png },
+  ]);
+  await page.getByRole("button", { name: "These photos are one item" }).click();
+  await page.getByRole("button", { name: /Write.*listing/i }).click();
+  await expect(page.getByText("Pants", { exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Theme", exact: true })).toHaveAttribute(
+    "placeholder",
+    "Nothing fits — choose yourself, e.g. Preppy | Retro",
+  );
+});

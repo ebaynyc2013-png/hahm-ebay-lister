@@ -372,9 +372,11 @@ export function DraftControls({ group: g, photoById, onGroupEdit, accountKey = 0
                   aria-label={name}
                   value={specifics[name] ?? ""}
                   placeholder={
-                    meta?.cardinality === "MULTI"
-                      ? "Separate multiple values with |"
-                      : "Unknown — leave empty"
+                    /^theme$/i.test(name) && meta?.values.length
+                      ? `Nothing fits — choose yourself, e.g. ${meta.values.filter((v) => /^(?:Preppy|Retro|Bohemian|Grunge|Western|Classic)$/i.test(v)).slice(0, 3).join(" | ") || meta.values.slice(0, 3).join(" | ")}`
+                      : meta?.cardinality === "MULTI"
+                        ? "Separate multiple values with |"
+                        : "Unknown — leave empty"
                   }
                   onChange={(e) =>
                     edit({
