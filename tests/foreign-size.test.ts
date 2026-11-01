@@ -22,8 +22,8 @@ describe("European, British and Italian women's sizes from eBay's chart", () => 
     expect(parseForeignSize("IT 44")).toMatchObject({ us: "8", letter: "M" });
     expect(parseForeignSize("EU 36")).toMatchObject({ us: "6", letter: "S", word: "Small" });
     expect(parseForeignSize("EU 42")).toMatchObject({ us: "12", letter: "L", word: "Large" });
-    expect(parseForeignSize("EU 32")).toMatchObject({ us: "2", letter: "XS", word: "Extra Small" });
-    expect(parseForeignSize("EU 46")).toMatchObject({ us: "16", letter: "XL", word: "Extra Large" });
+    expect(parseForeignSize("EU 32")).toMatchObject({ us: "2", letter: "XS", word: "X-Small" });
+    expect(parseForeignSize("EU 46")).toMatchObject({ us: "16", letter: "XL", word: "X-Large" });
     expect(parseForeignSize("EU 50")).toMatchObject({ us: "20", letter: "2XL", word: "2XL" });
   });
 

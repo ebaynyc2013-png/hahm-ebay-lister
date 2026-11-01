@@ -46,9 +46,9 @@ describe("Italian houses: a bare number is an Italian size", () => {
     expect(italianSizeFix(l, "36")).toBe(true);
     expect(l.size).toBe("IT 36");
     expect(foreignSizeInTitle(l.title, l)).toBe(
-      "Prada Black Straight Leg Dress Pants IT 36 XS Extra Small Side Trim Trousers",
+      "Prada Black Straight Leg Dress Pants IT 36 XS X-Small Side Trim Trousers",
     );
-    expect(foreignSizeInDescription(l.description, l)).toContain("Size: IT 36 (US 0, Extra Small)");
+    expect(foreignSizeInDescription(l.description, l)).toContain("Size: IT 36 (US 0, X-Small)");
   });
   it("a label that says EU stays EU; other brands stay EU", () => {
     const marked: ListingResult = { title: "t", description: "", brand: "Prada", item_type: "Pants", size: "EU 36" };
@@ -99,5 +99,24 @@ describe("eBay permissions", () => {
     expect(EBAY_SCOPES).not.toContain("sell.fulfillment");
     expect(EBAY_SCOPES).toContain("sell.inventory");
     expect(EBAY_SCOPES).toContain("sell.account");
+  });
+});
+
+import { xWords } from "@/lib/titleOptimizer";
+import { foreignSizeLine, parseForeignSize } from "@/lib/foreign-size";
+
+describe("X-Small and X-Large, as tags spell them (1 Nov 2026)", () => {
+  it("in the title, whatever the model wrote", () => {
+    expect(xWords("Zara Black Blazer XS Extra Small Office Siren")).toBe("Zara Black Blazer XS X-Small Office Siren");
+    expect(xWords("Coat XL Extra Large Wool")).toBe("Coat XL X-Large Wool");
+    expect(xWords("Top M Medium")).toBe("Top M Medium");
+  });
+  it("in the description's Size line for a European or Italian size", () => {
+    expect(foreignSizeLine(parseForeignSize("IT 36")!)).toBe("Size: IT 36 (US 0, X-Small)");
+    expect(foreignSizeLine(parseForeignSize("EU 46")!)).toBe("Size: EU 46 (US 16, X-Large)");
+  });
+  it("a title with the old words is still recognised and rewritten", () => {
+    const l: ListingResult = { title: "", description: "", brand: "Zara", item_type: "Dress", size: "EU 46" };
+    expect(foreignSizeInTitle("Zara Red Dress EU 46 XL Extra Large Midi", l)).toBe("Zara Red Dress EU 46 XL X-Large Midi");
   });
 });

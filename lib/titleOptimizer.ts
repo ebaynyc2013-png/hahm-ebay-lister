@@ -51,9 +51,19 @@ export function stripNeverInTitle(title: string, brand = ""): string {
   return out.replace(/\s{2,}/g, " ").trim();
 }
 
+/**
+ * "XS X-Small", "XL X-Large" — the seller's spelling, as on tags (1 Nov 2026),
+ * wherever the model still wrote "Extra Small" or "Extra Large" after the letter.
+ */
+export function xWords(title: string): string {
+  return title
+    .replace(/\bXS\s+Extra\s+Small\b/gi, "XS X-Small")
+    .replace(/\bXL\s+Extra\s+Large\b/gi, "XL X-Large");
+}
+
 export function optimizeTitle(listing: ListingResult): string {
   const normalized = String(listing.title || "").replace(/\s+/g, " ").trim();
-  const stripped = stripNeverInTitle(normalized, listing.brand) || normalized;
+  const stripped = xWords(stripNeverInTitle(normalized, listing.brand) || normalized);
   // The one thing this adds: a shoe's second size, read off eBay's chart.
   const title = foreignSizeInTitle(
     teeInTitle(shoeSizesInTitle(stripped, listing, EBAY_TITLE_LIMIT), EBAY_TITLE_LIMIT),

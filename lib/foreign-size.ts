@@ -34,14 +34,15 @@ const CHART: { letter: string; us: string; uk: string; eu: string; it: string }[
   { letter: "2XL", us: "22", uk: "24", eu: "52", it: "58" },
 ];
 
-// The seller writes the letter, then the word: "M Medium", "XL Extra Large".
+// The seller writes the letter, then the word: "M Medium", "XL X-Large" —
+// X-Small and X-Large as tags spell them, not "Extra Small" (1 Nov 2026).
 // XXS and 2XL have no agreed word yet, so they stand alone.
 const WORD: Record<string, string> = {
-  XS: "Extra Small",
+  XS: "X-Small",
   S: "Small",
   M: "Medium",
   L: "Large",
-  XL: "Extra Large",
+  XL: "X-Large",
 };
 
 const CLOTHING =
@@ -96,7 +97,7 @@ export function womensForeignSize(l: ListingResult): ForeignSize | null {
 }
 
 const LETTERS = String.raw`(?:XXS|2XS|XS|S|M|L|XL|XXL|2XL)`;
-const WORDS = String.raw`(?:(?:Extra\s+)?(?:Small|Medium|Large))`;
+const WORDS = String.raw`(?:(?:Extra\s+|X-)?(?:Small|Medium|Large))`;
 
 /**
  * "EU 38" in the title becomes "EU 38 M Medium". When that does not fit in

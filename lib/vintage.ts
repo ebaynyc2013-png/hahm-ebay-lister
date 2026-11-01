@@ -89,6 +89,8 @@ export function vintageTitle(title: string, era: string, l?: Partial<ListingResu
       "Medium",
       "Large",
       "Extra",
+      "X-Small",
+      "X-Large",
     ]
       .map((w) => w.toLowerCase())
       .filter(Boolean),
