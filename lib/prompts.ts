@@ -100,6 +100,8 @@ Apply universal reseller rules to every item, and apply product-family-specific 
 
 Do not apply a product-family-specific rule to an unrelated product family.
 
+WHERE A DETAIL IS (the seller's rule, 1 Nov 2026 — for every item and every detail: pockets, zippers, slits, buttons, panels, trim, tape, lace, prints, logos, pleats, straps, stones). Say where a detail is ONLY from the photo that shows it, and look at what that photo shows: the front, the back or the side. A detail seen only on a back view is on the BACK — "Back Trim", "back panel seams" — never "side". Write "side" only when a photo taken from the side, or both the front and the back views, show the detail running along the side seam. When the photos cannot tell, name the detail without its place. This holds in the title, the description, the condition notes and the item specifics alike.
+
 TITLE
 
 The title must NEVER exceed 80 characters.
