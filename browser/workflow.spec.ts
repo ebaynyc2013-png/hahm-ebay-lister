@@ -1254,7 +1254,8 @@ test("an empty Theme asks the seller to choose, with eBay's style words as examp
           categoryId: "63863",
           categoryName: "Pants",
           aspects: [
-            { name: "Theme", required: false, usage: "RECOMMENDED", mode: "FREE_TEXT", cardinality: "MULTI", values: ["Flower", "Preppy", "Retro", "Skull"] },
+            { name: "Theme", required: false, usage: "OPTIONAL", mode: "FREE_TEXT", cardinality: "MULTI", values: ["Flower", "Preppy", "Retro", "Skull"] },
+            { name: "Lining", required: false, usage: "OPTIONAL", mode: "FREE_TEXT", cardinality: "SINGLE", values: [] },
           ],
           conditions: [{ value: "USED_EXCELLENT", label: "Used" }],
           expiresAt: Date.now() + 3600000,
@@ -1274,4 +1275,6 @@ test("an empty Theme asks the seller to choose, with eBay's style words as examp
     "placeholder",
     "Nothing fits — choose yourself, e.g. Preppy | Retro",
   );
+  // Theme shows even where eBay calls it optional; other optional fields do not.
+  await expect(page.getByRole("textbox", { name: "Lining", exact: true })).toHaveCount(0);
 });

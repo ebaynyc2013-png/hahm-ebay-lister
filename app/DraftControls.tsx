@@ -68,7 +68,9 @@ export function DraftControls({ group: g, photoById, onGroupEdit, accountKey = 0
   const names = [
     ...new Set([
       ...(g.preparation?.aspects ?? [])
-        .filter((a) => a.required || a.usage === "RECOMMENDED")
+        // Theme always shows, optional or not: it is always filled (the
+        // seller's rule, 1 Nov 2026), so an empty one must be seen.
+        .filter((a) => a.required || a.usage === "RECOMMENDED" || /^theme$/i.test(a.name))
         .map((a) => a.name),
       ...Object.keys(specifics),
     ]),
