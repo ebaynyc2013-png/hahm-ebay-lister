@@ -32,7 +32,9 @@ export const EBAY_SCOPES = [
   "https://api.ebay.com/oauth/api_scope",
   "https://api.ebay.com/oauth/api_scope/sell.inventory",
   "https://api.ebay.com/oauth/api_scope/sell.account",
-  "https://api.ebay.com/oauth/api_scope/sell.fulfillment",
+  // No sell.fulfillment: it reads orders — buyers' names and addresses — and
+  // the program never used it (removed 1 Nov 2026, the seller's go). A
+  // connection made with it still works: a refresh may ask for fewer scopes.
 ].join(" ");
 
 export interface EbayCreds {
