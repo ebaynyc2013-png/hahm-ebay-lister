@@ -876,6 +876,23 @@ div.size-warning p {
   margin-left: 0;
 }
 
+.offer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.2rem;
+  margin-top: 0.35rem;
+}
+.offer-minimum input {
+  width: 6.5rem;
+  margin-left: 0.3rem;
+}
+.offer-note {
+  display: block;
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
 .post-account {
   font-size: 0.82rem;
   color: var(--color-ink-soft);

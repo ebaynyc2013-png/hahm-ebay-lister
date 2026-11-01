@@ -209,6 +209,10 @@ export interface ItemGroup {
   scheduledFor?: string;
   /** The seller's name for the eBay account it was posted to ("Jewelry"). */
   postedAccount?: string;
+  /** "Allow offers" — on unless she turns it off (1 Nov 2026). */
+  allowOffers?: boolean;
+  /** "Minimum offer amount": eBay declines lower offers. Empty = none. */
+  minOffer?: number | "";
 }
 
 /** The eBay account posts go to now; `key` changes on every switch. */

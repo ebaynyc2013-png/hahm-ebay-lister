@@ -602,6 +602,42 @@ export function ListingCard({
                 and accept eBay&apos;s suggested item specifics before it goes
                 live
               </label>
+              <div className="offer-row">
+                <label className="post-hint">
+                  <input
+                    type="checkbox"
+                    checked={group.allowOffers !== false}
+                    disabled={group.postStatus === "posting"}
+                    onChange={(e) =>
+                      onGroupEdit(group.id, { allowOffers: e.target.checked })
+                    }
+                  />{" "}
+                  Allow offers
+                </label>
+                {group.allowOffers !== false && (
+                  <label className="post-hint offer-minimum">
+                    Minimum offer amount $
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      aria-label="Minimum offer amount"
+                      placeholder="none"
+                      value={group.minOffer ?? ""}
+                      disabled={group.postStatus === "posting"}
+                      onChange={(e) =>
+                        onGroupEdit(group.id, {
+                          minOffer: e.target.value === "" ? "" : Number(e.target.value),
+                        })
+                      }
+                    />
+                    <span className="offer-note">
+                      eBay declines lower offers for you
+                    </span>
+                  </label>
+                )}
+              </div>
               {ebayAccount?.label && (
                 <p className="post-account">
                   Posts to eBay account <strong>{ebayAccount.label}</strong> — switch

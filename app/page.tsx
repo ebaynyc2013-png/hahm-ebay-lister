@@ -25,6 +25,7 @@ import { resizeImage } from "@/lib/resize";
 import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
 import { chunkImagesForUpload } from "@/lib/uploadBatches";
 import { ACCOUNT_CHANGED, EbayConnect } from "./EbayConnect";
+import { offerChoice } from "@/lib/offers";
 
 // The active eBay account's slot, remembered on this device (not secret).
 const ACCOUNT_KEY = "listing-writer:ebay-account";
@@ -1011,6 +1012,7 @@ export default function Home() {
             review: group.preparation,
             expectedPhotoCount: group.photoIds.length,
             scheduled: group.scheduleStart === true,
+            offers: offerChoice(group),
           });
           // Wait out rate limits / transient platform errors instead of dying
           // mid-batch with "try again later".

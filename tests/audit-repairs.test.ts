@@ -25,6 +25,7 @@ vi.mock("@/lib/ebay/taxonomy", () => ({
   ]),
   acceptedConditionIds: vi.fn(async () => new Set([3000])),
   suggestLeafCategories: vi.fn(async () => []),
+  bestOfferPolicy: vi.fn(async () => ({ supported: true, autoDecline: true })),
 }));
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -273,6 +274,8 @@ describe("publication preserves reviewed facts", () => {
     expect(offer.categoryId).toBe("625");
     expect(offer.pricingSummary.price.value).toBe("200.00");
     expect(offer.includeCatalogProductDetails).toBe(false);
+    // "Allow offers" is on unless she turns it off (1 Nov 2026).
+    expect(offer.listingPolicies.bestOfferTerms).toEqual({ bestOfferEnabled: true });
   });
   it("does not try other condition grades when eBay rejects publication", async () => {
     const i = input();

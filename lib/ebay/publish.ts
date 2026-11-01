@@ -18,6 +18,7 @@ import {
   suggestLeafCategories,
   categoryAspects,
   acceptedConditionIds,
+  bestOfferPolicy,
   type AspectMeta,
 } from "./taxonomy";
 import {
@@ -1030,6 +1031,9 @@ export interface PublishInput {
   imageUrls?: string[];
   // Start the listing SCHEDULE_DELAY_HOURS from now instead of at once.
   scheduled?: boolean;
+  // "Allow offers" (on unless allow is false) and the "Minimum offer amount" —
+  // offers below it are declined by eBay (1 Nov 2026).
+  offers?: { allow?: boolean; minimum?: number | string | null };
 }
 
 /**
@@ -1220,6 +1224,51 @@ export async function uploadPhotos(
   return { urls, errors };
 }
 
+/**
+ * eBay's bestOfferTerms for the seller's choice — or none — and what to tell
+ * her when eBay's category rules change it: no offers at all in a category
+ * that does not take them, no minimum where eBay has no auto-decline. A
+ * minimum at or above the price is refused before anything is written.
+ */
+export function offerTerms(
+  allow: boolean,
+  minimumRaw: unknown,
+  price: number,
+  policy: { supported: boolean; autoDecline: boolean } | null,
+): {
+  terms?: { bestOfferEnabled: true; autoDeclinePrice?: { value: string; currency: string } };
+  warnings: string[];
+} {
+  if (!allow) return { warnings: [] };
+  if (policy && !policy.supported)
+    return {
+      warnings: ["eBay does not take offers in this category — posted without Allow offers."],
+    };
+  const n = Number(minimumRaw);
+  const minimum =
+    minimumRaw !== "" && minimumRaw != null && Number.isFinite(n) && n > 0
+      ? Math.round(n * 100) / 100
+      : null;
+  if (minimum !== null && minimum >= price)
+    throw new Error(
+      `Minimum offer amount ($${minimum.toFixed(2)}) must be less than the price ($${price.toFixed(2)}).`,
+    );
+  if (minimum !== null && policy && !policy.autoDecline)
+    return {
+      terms: { bestOfferEnabled: true },
+      warnings: ["eBay has no minimum offer in this category — offers are on, without a minimum."],
+    };
+  return {
+    terms: {
+      bestOfferEnabled: true,
+      ...(minimum !== null
+        ? { autoDeclinePrice: { value: minimum.toFixed(2), currency: EBAY_CURRENCY } }
+        : {}),
+    },
+    warnings: [],
+  };
+}
+
 export async function publishListing(
   accessToken: string,
   input: PublishInput,
@@ -1248,11 +1297,19 @@ export async function publishListing(
     throw new Error(
       "Every selected photo must upload before publication. Retry the failed uploads.",
     );
-  const [meta, accepted, options] = await Promise.all([
+  const wantOffers = input.offers?.allow !== false;
+  const [meta, accepted, options, offerPolicy] = await Promise.all([
     categoryAspects(catId),
     acceptedConditionIds(catId, accessToken),
     fetchAccountOptions(accessToken),
+    wantOffers ? bestOfferPolicy(catId, accessToken) : Promise.resolve(null),
   ]);
+  const { terms: bestOfferTerms, warnings: offerWarnings } = offerTerms(
+    wantOffers,
+    input.offers?.minimum,
+    price,
+    offerPolicy,
+  );
   if (!meta.length || !accepted.size)
     throw new Error(
       "eBay category metadata is unavailable. Your draft is saved; retry later.",
@@ -1348,6 +1405,9 @@ export async function publishListing(
       fulfillmentPolicyId: shipping.fulfillmentPolicyId,
       paymentPolicyId: shipping.paymentPolicyId,
       returnPolicyId: shipping.returnPolicyId,
+      // Left out when offers are off: the offer is replaced whole on a
+      // retry, so turning offers off really turns them off.
+      ...(bestOfferTerms ? { bestOfferTerms } : {}),
     },
     includeCatalogProductDetails: false,
   };
@@ -1446,6 +1506,7 @@ export async function publishListing(
         sku,
         ...live,
         ...(startAt ? { scheduledFor: startAt } : {}),
+        ...(offerWarnings.length ? { warnings: offerWarnings } : {}),
       };
     throw error;
   }
@@ -1456,6 +1517,7 @@ export async function publishListing(
       offerId,
       listingId: String(published.json.listingId),
       ...(startAt ? { scheduledFor: startAt } : {}),
+      ...(offerWarnings.length ? { warnings: offerWarnings } : {}),
     };
   const live = await findPublishedOffer(accessToken, sku);
   if (live)
@@ -1464,6 +1526,7 @@ export async function publishListing(
       sku,
       ...live,
       ...(startAt ? { scheduledFor: startAt } : {}),
+      ...(offerWarnings.length ? { warnings: offerWarnings } : {}),
     };
   return {
     success: false,

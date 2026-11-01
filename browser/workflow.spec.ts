@@ -1212,3 +1212,30 @@ test("adding an account: name it, sign in on eBay with that account, paste the a
   expect(connectLabel).toBe("Clothing");
   await expect(page.getByRole("combobox", { name: "eBay account", exact: true })).toHaveValue("2");
 });
+
+test("Allow offers is on by default; the minimum offer goes to eBay and must be under the price (1 Nov 2026)", async ({
+  page,
+}) => {
+  await setup(page);
+  let sent: unknown = null;
+  await page.route("**/api/ebay/upload-photos", (r) => {
+    const n = r.request().postDataJSON().images.length;
+    return r.fulfill({ json: { ok: true, urls: Array.from({ length: n }, (_, i) => `https://i.ebayimg.com/p${i}.jpg`) } });
+  });
+  await page.route("**/api/ebay/publish", (r) => {
+    sent = r.request().postDataJSON().offers;
+    return r.fulfill({ json: { success: true, listingId: "1234567890" } });
+  });
+  await draft(page);
+  await shipping(page);
+  const allow = page.getByRole("checkbox", { name: "Allow offers" });
+  await expect(allow).toBeChecked();
+  const minimum = page.getByLabel("Minimum offer amount");
+  await minimum.fill("250");
+  await expect(page.getByText(/Minimum offer amount \(\$250\.00\) must be less than the price/).first()).toBeVisible();
+  await minimum.fill("150");
+  await page.locator(".post-row").first().screenshot({ path: "test-results/offers.png" });
+  await page.getByRole("button", { name: "🚀 Post this to eBay" }).click();
+  await expect(page.getByText(/Posted to eBay/)).toBeVisible();
+  expect(sent).toEqual({ allow: true, minimum: 150 });
+});

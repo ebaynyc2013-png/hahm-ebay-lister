@@ -2,6 +2,7 @@ import type { ItemGroup } from "./types";
 import { shippingSchema, skuSchema } from "./validation";
 import { validateAspects } from "./ebay/draft";
 import { brandNeedsConfirmation } from "./maker-marks";
+import { offerChoice, offerProblem } from "./offers";
 export function draftIssues(g: ItemGroup): string[] {
   const l = g.listing;
   if (!l) return ["Generate a draft first."];
@@ -45,5 +46,7 @@ export function draftIssues(g: ItemGroup): string[] {
     );
   if (!g.photoIds.length || g.photoIds.length > 24)
     issues.push("Select 1–24 photos for this item.");
+  const offer = offerProblem(offerChoice(g), l.suggested_price);
+  if (offer) issues.push(offer);
   return issues;
 }

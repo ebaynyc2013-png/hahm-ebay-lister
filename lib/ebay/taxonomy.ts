@@ -273,3 +273,43 @@ export async function acceptedConditionIds(
     return new Set();
   }
 }
+
+/**
+ * Whether eBay lets this category take offers, and a minimum offer (eBay's
+ * auto-decline), from the Metadata API's negotiated-price policies — "if a
+ * category is returned in this container, it supports Best Offer". Null when
+ * eBay could not be asked: then the seller's choice is sent as it is and eBay
+ * itself says yes or no.
+ */
+export async function bestOfferPolicy(
+  categoryId: string,
+  userToken?: string,
+): Promise<{ supported: boolean; autoDecline: boolean } | null> {
+  if (!categoryId) return null;
+  try {
+    const token = userToken || (await appToken());
+    const url =
+      `${EBAY_META_BASE}/marketplace/${EBAY_MARKETPLACE_ID}` +
+      `/get_negotiated_price_policies?filter=categoryIds:%7B${encodeURIComponent(categoryId)}%7D`;
+    const resp = await boundedFetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Accept-Language": "en-US",
+      },
+    });
+    if (!resp.ok) {
+      console.warn(`[ebay/taxonomy] offer policy unavailable for category ${categoryId} (HTTP ${resp.status})`);
+      return null;
+    }
+    const data = await resp.json().catch(() => null);
+    const policies: { categoryId?: string; bestOfferAutoDeclineEnabled?: boolean }[] =
+      data?.negotiatedPricePolicies ?? [];
+    const p = policies.find((x) => String(x?.categoryId) === String(categoryId));
+    if (!p) return { supported: false, autoDecline: false };
+    return { supported: true, autoDecline: p.bestOfferAutoDeclineEnabled !== false };
+  } catch (e) {
+    console.warn(`[ebay/taxonomy] offer policy failed for category ${categoryId}: ${(e as Error).message}`);
+    return null;
+  }
+}
