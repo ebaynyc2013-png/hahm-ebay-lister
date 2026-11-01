@@ -81,3 +81,36 @@ describe("the photo pass says which words it refused and why", () => {
     expect(r.note).toContain("filled 1: Features");
   });
 });
+
+describe("fields her note answers are filled though no photo was cited (1 Nov 2026)", () => {
+  it("the Prada trousers: Inseam, Waist Size, Rise and Leg Style go in", async () => {
+    const pants = [
+      { ...aspect("Inseam", ["Regular", "Short", "Tall", "26 in", "27 in", "28 in"], "SINGLE") },
+      { ...aspect("Waist Size", ["27 in", "28 in", "29 in"], "SINGLE") },
+      { ...aspect("Rise", ["Low (6.5-8.5 in)", "Mid (8.5-10.5 in)", "High (Greater than 10.5 in)"], "SINGLE") },
+      { ...aspect("Leg Style", ["Bootcut", "Skinny", "Straight", "Wide-Leg"], "SINGLE") },
+    ];
+    reply = {
+      facts: [
+        fact("Inseam", "27 in", { photoIndices: [], basis: "label", quote: "inseam 27in" }),
+        fact("Waist Size", "28 in", { photoIndices: [], basis: "label", quote: "waist 14in" }),
+        fact("Rise", "Mid (8.5-10.5 in)", { photoIndices: [] }),
+        fact("Leg Style", "Straight", { photoIndices: [] }),
+        fact("Inseam", "30 in", { photoIndices: [] }), // not what the note says
+      ],
+    };
+    const aspects: Record<string, string[]> = {};
+    const listing = {
+      title: "Prada Black Straight Leg Dress Pants",
+      description: "Actual Measurements:\n• Waist: 14 in\n• Inseam: 27 in\n• Rise: 9 in\n\nDesign: Straight leg cut.",
+    };
+    const r = await fillRecommendedAspects(listing, aspects, pants, "SKU", photos);
+    expect(aspects).toEqual({
+      Inseam: ["27 in"],
+      "Waist Size": ["28 in"],
+      Rise: ["Mid (8.5-10.5 in)"],
+      "Leg Style": ["Straight"],
+    });
+    expect(r.refusedWords.map((w) => `${w.aspect} ${w.value}`)).toEqual(["Inseam 30 in"]);
+  });
+});

@@ -175,3 +175,28 @@ export function excellentWithoutFlaw(l: ListingResult): boolean {
   delete l.ebay_condition;
   return true;
 }
+
+/**
+ * The condition notes as a buyer should read them beside the price: about
+ * condition only (1 Nov 2026 — "No care tags present (as noted by seller)"
+ * came out on the Prada trousers). Where a fact came from, and lines about
+ * care or content labels, are taken out; the Label line in the description
+ * already says it.
+ */
+export function tidyConditionNotes(notes: string | undefined): string {
+  if (!notes) return notes ?? "";
+  return notes
+    .replace(/\s*\((?:as\s+)?(?:noted|stated|mentioned|written|per|according to)\b[^)]*\)/gi, "")
+    .split("\n")
+    .filter(
+      (line) =>
+        !(
+          /^\s*•/.test(line) &&
+          /\b(?:care|content|fabric|fiber|fibre)\s+(?:tags?|labels?)\b/i.test(line)
+        ),
+    )
+    .join("\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
+

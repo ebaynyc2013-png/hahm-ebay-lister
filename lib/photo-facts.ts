@@ -76,7 +76,7 @@ export interface AspectShape {
   values: string[];
 }
 
-function choosableFromPhoto(aspect?: AspectShape): boolean {
+export function choosableFromPhoto(aspect?: AspectShape): boolean {
   // What matters is whether eBay supplied the vocabulary, not which flag it
   // set beside it. eBay's own listing form shows Dress Length as a menu of
   // Short, Knee Length, Midi and Long while its Taxonomy API returns the field

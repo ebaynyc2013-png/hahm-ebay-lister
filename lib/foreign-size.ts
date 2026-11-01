@@ -136,3 +136,49 @@ export function foreignSizeInDescription(description: string, l: ListingResult):
   else blocks.push(line);
   return blocks.join("\n\n");
 }
+
+// Italian houses label women's clothing in Italian sizes: a bare "36" on a
+// Prada label is IT 36 (US 0, XS), not EU 36 (US 6, S) — the seller's Prada
+// trousers, 1 Nov 2026. A size the label itself marks "EU" stays EU.
+const ITALIAN_BRANDS = [
+  "prada", "miu miu", "gucci", "giorgio armani", "emporio armani", "armani collezioni", "armani",
+  "max mara", "maxmara", "weekend max mara", "sportmax", "max&co", "marella", "pennyblack",
+  "dolce & gabbana", "dolce and gabbana", "dolce&gabbana", "d&g", "versace", "versace jeans",
+  "versace jeans couture", "valentino", "red valentino", "fendi", "moschino", "love moschino",
+  "boutique moschino", "etro", "marni", "msgm", "missoni", "m missoni", "bottega veneta",
+  "salvatore ferragamo", "ferragamo", "roberto cavalli", "just cavalli", "blumarine",
+  "alberta ferretti", "philosophy di lorenzo serafini", "pinko", "liu jo", "patrizia pepe",
+  "twinset", "twin-set", "elisabetta franchi", "brunello cucinelli", "loro piana",
+  "ermanno scervino", "ermanno firenze", "fabiana filippi", "peserico", "aspesi", "herno",
+  "dsquared2", "msgm", "n°21", "no 21", "golden goose", "stella jean", "trussardi",
+];
+
+export function isItalianBrand(brand: unknown): boolean {
+  const b = String(brand ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+  if (!b) return false;
+  return ITALIAN_BRANDS.some((x) => b === x || b.startsWith(`${x} `));
+}
+
+/**
+ * The size the model marked "EU" is Italian when the brand is Italian and the
+ * label carried only the number. Fixes the size, the title and the
+ * description before they are converted, so the letter, the US size and
+ * eBay's Size field all follow the Italian chart. Returns whether it changed.
+ */
+export function italianSizeFix(l: ListingResult, labelSize: unknown): boolean {
+  if (!isItalianBrand(l.brand) || !isWomensClothing(l)) return false;
+  // The label itself said EU (or UK, FR…): that is what it is.
+  if (/\b(?:EU|EUR|UK|FR|DE|US)\b/i.test(String(labelSize ?? ""))) return false;
+  const bare = String(labelSize ?? "").trim().match(/^(\d{2})$/)?.[1];
+  const marked = String(l.size ?? "").trim().match(/^(?:EU|EUR)\s?(\d{2})$/i)?.[1];
+  const n = marked ?? (/^\d{2}$/.test(String(l.size ?? "").trim()) ? String(l.size).trim() : undefined);
+  if (!n || (bare && bare !== n)) return false;
+  if (!bare && !marked) return false;
+  const eu = new RegExp(String.raw`\b(?:EU|EUR)\s?${n}\b`, "gi");
+  l.size = `IT ${n}`;
+  l.title = String(l.title ?? "").replace(eu, `IT ${n}`);
+  l.description = String(l.description ?? "").replace(eu, `IT ${n}`);
+  if (l.item_specifics?.Size) l.item_specifics = { ...l.item_specifics, Size: `IT ${n}` };
+  return true;
+}
+

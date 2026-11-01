@@ -31,9 +31,9 @@ import {
 } from "@/lib/prompts";
 import { toImageBlock, type ImageBlock } from "@/lib/images";
 import { optimizeTitle } from "@/lib/titleOptimizer";
-import { foreignSizeInDescription } from "@/lib/foreign-size";
+import { foreignSizeInDescription, italianSizeFix } from "@/lib/foreign-size";
 import { vintageFromAnalysis, vintageTitle } from "@/lib/vintage";
-import { excellentWithoutFlaw } from "@/lib/condition-sync";
+import { excellentWithoutFlaw, tidyConditionNotes } from "@/lib/condition-sync";
 import { applyPriceMarkup, priceMarkupPercent } from "@/lib/pricing";
 import { resolveModel } from "@/lib/models";
 import type { AnalyzeRequestBody, ListingResult } from "@/lib/types";
@@ -250,10 +250,14 @@ async function handle(req: NextRequest) {
             supported.map((s: any) => [s.name, s.value]),
           ),
         });
+        // A bare number on an Italian label is an Italian size (Prada 36 is
+        // IT 36 = US 0, XS — 1 Nov 2026), before the size is converted.
+        italianSizeFix(listing, listing.item_specifics?.Size);
         // A grade below Excellent with no flaw named in the notes is
         // Excellent — the seller's rule (31 Oct 2026); the notes' first line
         // and the description's Condition line follow.
         excellentWithoutFlaw(listing);
+        listing.condition_notes = tidyConditionNotes(listing.condition_notes);
         // "vintage 90s" on her note: Vintage Yes now, the era's Theme and
         // Style at Prepare (eBay's lists), and the title opening with it.
         if (listing.vintage?.source === "note")
