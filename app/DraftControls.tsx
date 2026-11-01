@@ -13,21 +13,24 @@ interface Props {
   group: ItemGroup;
   photoById: (id: string) => Photo | undefined;
   onGroupEdit: (id: string, patch: Partial<ItemGroup>) => void;
+  /** Changes when the seller switches eBay accounts: policies reload. */
+  accountKey?: number;
 }
-export function DraftControls({ group: g, photoById, onGroupEdit }: Props) {
+export function DraftControls({ group: g, photoById, onGroupEdit, accountKey = 0 }: Props) {
   const [busy, setBusy] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [options, setOptions] = useState<AccountOptions>();
   const [error, setError] = useState("");
   const latest = useRef(g);
   latest.current = g;
-  const defaultsRequested = useRef(false);
+  // Once per card and eBay account: another account has other policies.
+  const defaultsRequested = useRef<number | null>(null);
   useEffect(() => {
-    if (g.listing && !defaultsRequested.current) {
-      defaultsRequested.current = true;
+    if (g.listing && defaultsRequested.current !== accountKey) {
+      defaultsRequested.current = accountKey;
       void loadOptions();
     }
-  }, [Boolean(g.listing)]);
+  }, [Boolean(g.listing), accountKey]);
   if (!g.listing) return null;
   const l = g.listing;
   const edit = (patch: Partial<typeof l>) => {

@@ -207,6 +207,15 @@ export interface ItemGroup {
   scheduleStart?: boolean;
   /** When a delayed listing goes live (ISO time), as eBay was told. */
   scheduledFor?: string;
+  /** The seller's name for the eBay account it was posted to ("Jewelry"). */
+  postedAccount?: string;
+}
+
+/** The eBay account posts go to now; `key` changes on every switch. */
+export interface EbayAccountInfo {
+  label: string;
+  slot: number | null;
+  key: number;
 }
 
 /** One category the seller can pick on the card. */

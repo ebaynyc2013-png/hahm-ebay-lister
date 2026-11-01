@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guardApiRequest } from "@/lib/api-guard";
-import { accessTokenFromCookie, EBAY_COOKIE } from "@/lib/ebay/session";
+import { accessTokenFromCookie } from "@/lib/ebay/session";
+import { activeSealed } from "@/lib/ebay/accounts";
 import { fetchAccountOptions } from "@/lib/ebay/publish";
 import { withDeadline } from "@/lib/network";
 export async function POST(req: NextRequest) {
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
   return withDeadline(25_000, async () => {
     try {
       const token = await accessTokenFromCookie(
-        req.cookies.get(EBAY_COOKIE)?.value,
+        activeSealed(req.cookies),
       );
       if (!token)
         return NextResponse.json(

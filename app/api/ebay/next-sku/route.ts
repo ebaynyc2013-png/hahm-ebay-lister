@@ -1,7 +1,8 @@
 import { withDeadline } from "@/lib/network";
 import { boundedFetch } from "@/lib/network";
 import { NextRequest, NextResponse } from "next/server";
-import { EBAY_COOKIE, accessTokenFromCookie } from "@/lib/ebay/session";
+import { accessTokenFromCookie } from "@/lib/ebay/session";
+import { activeSealed } from "@/lib/ebay/accounts";
 import { EBAY_INV_BASE } from "@/lib/ebay/config";
 import { guardApiRequest } from "@/lib/api-guard";
 import { nextIndexFromSkus, sanitizeSku } from "@/lib/sku";
@@ -36,7 +37,7 @@ async function handle(req: NextRequest) {
   let accessToken: string | null = null;
   try {
     accessToken = await accessTokenFromCookie(
-      req.cookies.get(EBAY_COOKIE)?.value,
+      activeSealed(req.cookies),
     );
   } catch {
     /* not connected — treated below */

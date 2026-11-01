@@ -2,11 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiPost } from "@/lib/api-client";
+import { requestText } from "@/lib/text-dialog";
 
+interface Account {
+  slot: number;
+  label: string;
+  active: boolean;
+}
 interface Status {
   configured: boolean;
   connected: boolean;
+  accounts?: Account[];
+  activeLabel?: string;
 }
+
+/** Told to the work screen, so cards reload the new account's policies. */
+export const ACCOUNT_CHANGED = "ebay-account-changed";
+const announce = () => window.dispatchEvent(new CustomEvent(ACCOUNT_CHANGED));
 
 export function EbayConnect() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -16,6 +28,8 @@ export function EbayConnect() {
   const [busy, setBusy] = useState(false);
   const [authorizeUrl, setAuthorizeUrl] = useState("");
   const [pasteValue, setPasteValue] = useState("");
+  // Connecting one more account, under the name she typed ("Clothing").
+  const [adding, setAdding] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -43,22 +57,74 @@ export function EbayConnect() {
     if (e) window.history.replaceState({}, "", window.location.pathname);
   }, [refresh]);
 
+  const active = status?.accounts?.find((a) => a.active);
+
   const disconnect = async () => {
     setBusy(true);
     try {
-      await apiPost("/api/ebay/disconnect", {});
+      await apiPost("/api/ebay/disconnect", active ? { slot: active.slot } : {});
       await refresh();
-      setNotice({ ok: true, msg: "Disconnected from eBay." });
+      announce();
+      setNotice({
+        ok: true,
+        msg: active ? `Disconnected ${active.label} from this program.` : "Disconnected from eBay.",
+      });
     } finally {
       setBusy(false);
     }
   };
 
-  const startConnect = async () => {
+  const switchTo = async (slot: number) => {
     setBusy(true);
     setNotice(null);
     try {
-      const r = await apiPost("/api/ebay/auth", {});
+      const r = await apiPost("/api/ebay/accounts", { action: "switch", slot });
+      const d = (await r.json()) as { ok: boolean; label?: string; error?: string };
+      if (!d.ok) throw new Error(d.error || "Couldn't switch the eBay account.");
+      await refresh();
+      announce();
+      setNotice({ ok: true, msg: `Now posting to ${d.label}.` });
+    } catch (e) {
+      setNotice({ ok: false, msg: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const rename = async () => {
+    if (!active) return;
+    const label = await requestText(`New name for the eBay account "${active.label}"`);
+    if (!label?.trim()) return;
+    setBusy(true);
+    try {
+      const r = await apiPost("/api/ebay/accounts", { action: "rename", slot: active.slot, label });
+      const d = (await r.json()) as { ok: boolean; error?: string };
+      if (!d.ok) throw new Error(d.error || "Couldn't rename the account.");
+      await refresh();
+      announce();
+    } catch (e) {
+      setNotice({ ok: false, msg: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const addAccount = async () => {
+    const label = await requestText(
+      "Name for the eBay account you are adding — for example Jewelry or Clothing",
+    );
+    if (!label?.trim()) return;
+    setAdding(label.trim());
+    setAuthorizeUrl("");
+    setPasteValue("");
+    await startConnect(label.trim());
+  };
+
+  const startConnect = async (label?: string) => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const r = await apiPost("/api/ebay/auth", label ? { label } : {});
       const data = (await r.json()) as {
         ok: boolean;
         url?: string;
@@ -79,12 +145,21 @@ export function EbayConnect() {
     setBusy(true);
     setNotice(null);
     try {
-      const r = await apiPost("/api/ebay/connect", { url: pasteValue.trim() });
-      const data = (await r.json()) as { ok: boolean; error?: string };
+      const r = await apiPost("/api/ebay/connect", {
+        url: pasteValue.trim(),
+        ...(adding ? { label: adding } : {}),
+      });
+      const data = (await r.json()) as { ok: boolean; label?: string; error?: string };
       if (!data.ok) throw new Error(data.error || "Couldn't connect.");
       setPasteValue("");
+      setAdding(null);
+      setAuthorizeUrl("");
       await refresh();
-      setNotice({ ok: true, msg: "eBay account connected!" });
+      announce();
+      setNotice({
+        ok: true,
+        msg: data.label ? `eBay account ${data.label} connected — now posting to it.` : "eBay account connected!",
+      });
     } catch (e) {
       setNotice({ ok: false, msg: (e as Error).message });
     } finally {
@@ -99,31 +174,93 @@ export function EbayConnect() {
   return (
     <div className={`ebay-bar${status.connected ? " connected" : ""}`}>
       <span className="ebay-dot" aria-hidden="true" />
-      {status.connected ? (
+      {status.connected && !adding ? (
         <>
-          <span className="ebay-label">eBay account connected</span>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={disconnect}
-            disabled={busy}
-          >
-            Disconnect
-          </button>
+          {status.accounts?.length ? (
+            <label className="ebay-label ebay-account">
+              Posting to eBay account{" "}
+              <select
+                aria-label="eBay account"
+                value={active?.slot ?? ""}
+                disabled={busy}
+                onChange={(e) => void switchTo(Number(e.target.value))}
+              >
+                {status.accounts.map((a) => (
+                  <option key={a.slot} value={a.slot}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <span className="ebay-label">eBay account connected</span>
+          )}
+          <span className="ebay-actions">
+            {active && (
+              <button type="button" className="btn-ghost" onClick={rename} disabled={busy}>
+                Rename
+              </button>
+            )}
+            <button type="button" className="btn-ghost" onClick={addAccount} disabled={busy}>
+              + Add account
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={disconnect}
+              disabled={busy}
+            >
+              Disconnect
+            </button>
+          </span>
         </>
       ) : (
         <>
           <span className="ebay-label">
-            <strong>Step 1:</strong> authorize on eBay
+            <strong>Step 1:</strong>{" "}
+            {adding ? (
+              <>
+                sign in on eBay with the account for <strong>{adding}</strong>
+              </>
+            ) : (
+              "authorize on eBay"
+            )}
           </span>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={startConnect}
-            disabled={busy}
-          >
-            Open eBay ↗
-          </button>
+          {adding ? (
+            <>
+              {!authorizeUrl && (
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => void startConnect(adding)}
+                  disabled={busy}
+                >
+                  Open eBay ↗
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => {
+                  setAdding(null);
+                  setAuthorizeUrl("");
+                  setPasteValue("");
+                }}
+                disabled={busy}
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => void startConnect()}
+              disabled={busy}
+            >
+              Open eBay ↗
+            </button>
+          )}
           {authorizeUrl && (
             <a href={authorizeUrl} target="_blank" rel="noopener noreferrer">
               Continue to eBay ↗

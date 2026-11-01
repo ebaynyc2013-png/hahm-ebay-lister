@@ -40,7 +40,8 @@ import {
   withoutSettledRefusals,
 } from "@/lib/ebay/aspectFill";
 import { validateAspects } from "@/lib/ebay/draft";
-import { EBAY_COOKIE, accessTokenFromCookie } from "@/lib/ebay/session";
+import { accessTokenFromCookie } from "@/lib/ebay/session";
+import { activeSealed } from "@/lib/ebay/accounts";
 import { signReview } from "@/lib/review";
 import { withDeadline } from "@/lib/network";
 import { collectUsage, currentUsage } from "@/lib/ai-usage";
@@ -82,7 +83,7 @@ const categoryPath =
   listing.category_path ||
   "";
           const token = await accessTokenFromCookie(
-            req.cookies.get(EBAY_COOKIE)?.value,
+            activeSealed(req.cookies),
           );
           const [meta, ids] = await Promise.all([
             categoryAspects(id),

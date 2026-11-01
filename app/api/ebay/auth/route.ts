@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { guardApiRequest } from "@/lib/api-guard";
 import { buildAuthorizeUrl } from "@/lib/ebay/oauth";
 import { EBAY_STATE_COOKIE } from "@/lib/ebay/session";
+import { LABEL_COOKIE, cleanLabel } from "@/lib/ebay/accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +25,27 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
 
   try {
+    // The name she gives the account she is about to connect ("Clothing"),
+    // kept until eBay sends her back.
+    let label = "";
+    try {
+      label = cleanLabel((await req.json())?.label);
+    } catch {
+      /* no body: an unnamed account */
+    }
     const state = crypto.randomUUID();
     const url = buildAuthorizeUrl(state);
     const res = NextResponse.json({ ok: true, url });
     setStateCookie(res, state);
+    if (label)
+      res.cookies.set(LABEL_COOKIE, label, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 600,
+      });
+    else res.cookies.delete(LABEL_COOKIE);
     return res;
   } catch (e) {
     return NextResponse.json(

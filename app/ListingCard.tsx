@@ -12,7 +12,7 @@ import { DESCRIPTION_LIMIT } from "@/lib/description-format";
 import { withCost } from "@/lib/sku";
 import { confirmVintage, unconfirmVintage, vintageLead } from "@/lib/vintage";
 import { gradeChange } from "@/lib/condition-sync";
-import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
+import type { EbayAccountInfo, ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
 
@@ -43,6 +43,7 @@ interface ListingCardProps {
   group: ItemGroup;
   photoById: (id: string) => Photo | undefined;
   ebayConnected: boolean;
+  ebayAccount?: EbayAccountInfo;
   onGroupEdit: (id: string, patch: Partial<ItemGroup>) => void;
   onEdit: (groupId: string, patch: Partial<ListingResult>) => void;
   onRenameSku: (groupId: string, sku: string) => void;
@@ -54,6 +55,7 @@ export function ListingCard({
   group,
   photoById,
   ebayConnected,
+  ebayAccount,
   onEdit,
   onGroupEdit,
   onRenameSku,
@@ -534,6 +536,7 @@ export function ListingCard({
             group={group}
             photoById={photoById}
             onGroupEdit={onGroupEdit}
+            accountKey={ebayAccount?.key ?? 0}
           />
           {/* eBay posting */}
           {group.postStatus === "posted" ? (
@@ -543,7 +546,7 @@ export function ListingCard({
                   ? `✅ Scheduled on eBay — goes live ${new Date(
                       group.scheduledFor,
                     ).toLocaleString()}. Open it on eBay and use Revise to accept eBay's suggested item specifics before then.`
-                  : "✅ Posted to eBay"}
+                  : `✅ Posted to eBay${group.postedAccount ? ` (${group.postedAccount})` : ""}`}
                 {group.listingId ? (
                   <>
                     {" "}
@@ -599,6 +602,12 @@ export function ListingCard({
                 and accept eBay&apos;s suggested item specifics before it goes
                 live
               </label>
+              {ebayAccount?.label && (
+                <p className="post-account">
+                  Posts to eBay account <strong>{ebayAccount.label}</strong> — switch
+                  accounts at the top of the page.
+                </p>
+              )}
               {group.postStatus === "error" && group.postError && (
                 <p className="post-result err">⚠️ {group.postError}</p>
               )}

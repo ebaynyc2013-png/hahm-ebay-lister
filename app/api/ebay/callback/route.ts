@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimitRequest } from "@/lib/api-guard";
 import { exchangeCode } from "@/lib/ebay/oauth";
-import {
-  EBAY_COOKIE,
-  EBAY_COOKIE_MAX_AGE,
-  EBAY_STATE_COOKIE,
-  connectionFromToken,
-  sealConnection,
-} from "@/lib/ebay/session";
+import { EBAY_STATE_COOKIE, connectionFromToken } from "@/lib/ebay/session";
+import { LABEL_COOKIE, saveAccount } from "@/lib/ebay/accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -40,18 +35,17 @@ export async function GET(req: NextRequest) {
     if (!token.refresh_token) {
       throw new Error("eBay did not return a refresh token.");
     }
-    const sealed = await sealConnection(
-      connectionFromToken(token.refresh_token, token.refresh_token_expires_in)
-    );
     const res = NextResponse.redirect(appUrl(req, "/?ebay=connected"));
-    res.cookies.set(EBAY_COOKIE, sealed, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: EBAY_COOKIE_MAX_AGE,
-    });
+    // Kept beside any other connected account, under the name she gave it,
+    // and made the active one.
+    await saveAccount(
+      req.cookies,
+      res,
+      connectionFromToken(token.refresh_token, token.refresh_token_expires_in),
+      req.cookies.get(LABEL_COOKIE)?.value,
+    );
     res.cookies.delete(EBAY_STATE_COOKIE);
+    res.cookies.delete(LABEL_COOKIE);
     return res;
   } catch (e) {
     const msg = encodeURIComponent((e as Error).message);

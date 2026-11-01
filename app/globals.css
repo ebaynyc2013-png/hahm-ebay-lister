@@ -859,6 +859,29 @@ div.size-warning p {
   margin-left: auto;
 }
 
+.ebay-account select {
+  margin-left: 0.35rem;
+  font: inherit;
+  font-weight: 600;
+}
+
+.ebay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.ebay-actions .btn-ghost {
+  margin-left: 0;
+}
+
+.post-account {
+  font-size: 0.82rem;
+  color: var(--color-ink-soft);
+  margin: 0.25rem 0 0;
+}
+
 .ebay-notice {
   flex-basis: 100%;
   font-size: 0.82rem;

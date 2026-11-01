@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeCode } from "@/lib/ebay/oauth";
 import { guardApiRequest } from "@/lib/api-guard";
-import {
-  EBAY_COOKIE,
-  EBAY_COOKIE_MAX_AGE,
-  connectionFromToken,
-  sealConnection,
-} from "@/lib/ebay/session";
+import { connectionFromToken } from "@/lib/ebay/session";
+import { LABEL_COOKIE, saveAccount } from "@/lib/ebay/accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +32,7 @@ export async function POST(req: NextRequest) {
   const denied = guardApiRequest(req);
   if (denied) return denied;
 
-  let body: { url?: string; code?: string };
+  let body: { url?: string; code?: string; label?: string };
   try {
     body = await req.json();
   } catch {
@@ -56,18 +52,18 @@ export async function POST(req: NextRequest) {
     if (!token.refresh_token) {
       throw new Error("eBay didn't return a refresh token (the code may have expired — try again).");
     }
-    const sealed = await sealConnection(
-      connectionFromToken(token.refresh_token, token.refresh_token_expires_in)
-    );
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(EBAY_COOKIE, sealed, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: EBAY_COOKIE_MAX_AGE,
-    });
-    return res;
+    // Kept beside any other connected account and made the active one.
+    const saved = await saveAccount(
+      req.cookies,
+      res,
+      connectionFromToken(token.refresh_token, token.refresh_token_expires_in),
+      body.label ?? req.cookies.get(LABEL_COOKIE)?.value,
+    );
+    res.cookies.delete(LABEL_COOKIE);
+    const out = NextResponse.json({ ok: true, label: saved.label });
+    for (const c of res.cookies.getAll()) out.cookies.set(c);
+    return out;
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: (e as Error).message },

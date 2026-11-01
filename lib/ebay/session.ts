@@ -11,9 +11,11 @@ export const EBAY_STATE_COOKIE = "ebay_oauth_state";
 // Browsers cap persistent cookies at ~400 days; eBay refresh tokens last ~18mo.
 export const EBAY_COOKIE_MAX_AGE = 400 * 24 * 60 * 60;
 
-interface Connection {
+export interface Connection {
   refreshToken: string;
   refreshExpiresAt: number; // epoch ms
+  /** The seller's own name for the account: "Jewelry", "Clothing". */
+  label?: string;
 }
 
 async function aesKey(): Promise<CryptoKey> {

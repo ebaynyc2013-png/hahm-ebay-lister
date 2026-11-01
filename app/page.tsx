@@ -24,7 +24,10 @@ import { getAnalysisModel, getSortModel } from "@/lib/model-preferences";
 import { resizeImage } from "@/lib/resize";
 import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
 import { chunkImagesForUpload } from "@/lib/uploadBatches";
-import { EbayConnect } from "./EbayConnect";
+import { ACCOUNT_CHANGED, EbayConnect } from "./EbayConnect";
+
+// The active eBay account's slot, remembered on this device (not secret).
+const ACCOUNT_KEY = "listing-writer:ebay-account";
 import { ModelSelector } from "./ModelSelector";
 import { ReviewBoard } from "./ReviewBoard";
 import { ListingsView } from "./ListingsView";
@@ -37,6 +40,7 @@ import { TagMemoryPanel } from "./TagMemoryPanel";
 import type {
   AnalyzeResponse,
   CompsSummary,
+  EbayAccountInfo,
   ItemGroup,
   ListingResult,
   Photo,
@@ -124,6 +128,15 @@ export default function Home() {
   const [skuStart, setSkuStart] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [ebayConnected, setEbayConnected] = useState(false);
+  // Which eBay account posts go to (1 Nov 2026: jewelry and clothing on
+  // different accounts). `key` changes on a switch so cards reload policies.
+  const [ebayAccount, setEbayAccount] = useState<EbayAccountInfo>({
+    label: "",
+    slot: null,
+    key: 0,
+  });
+  const ebayAccountRef = useRef(ebayAccount);
+  ebayAccountRef.current = ebayAccount;
   const [restored, setRestored] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Loading saved work…");
   const [readOnly, setReadOnly] = useState(false);
@@ -354,12 +367,65 @@ export default function Home() {
     const check = () =>
       fetch("/api/ebay/status", { cache: "no-store" })
         .then((r) => r.json())
-        .then((d) => setEbayConnected(Boolean(d.connected)))
+        .then((d) => {
+          setEbayConnected(Boolean(d.connected));
+          const active = (d.accounts ?? []).find(
+            (a: { active?: boolean }) => a.active,
+          ) as { slot: number; label: string } | undefined;
+          const slot = active?.slot ?? null;
+          // Remembered across visits: a switch made elsewhere (or a newly
+          // connected account) still clears the other account's policies.
+          let before: string | null = null;
+          try {
+            before = localStorage.getItem(ACCOUNT_KEY);
+            if (slot !== null) localStorage.setItem(ACCOUNT_KEY, String(slot));
+          } catch {
+            /* storage unavailable: compare within this visit only */
+          }
+          const prev = ebayAccountRef.current;
+          const changed =
+            slot !== null &&
+            ((prev.slot !== null && prev.slot !== slot) ||
+              (prev.slot === null && before !== null && before !== String(slot)));
+          if (changed) {
+            // Policies and the shipping origin belong to one eBay account;
+            // the new account's are loaded by each card.
+            setGroups((gs) =>
+              gs.map((g) =>
+                g.postStatus === "posted" || !g.shipping
+                  ? g
+                  : {
+                      ...g,
+                      shipping: {
+                        ...g.shipping,
+                        fulfillmentPolicyId: undefined,
+                        paymentPolicyId: undefined,
+                        returnPolicyId: undefined,
+                        locationKey: undefined,
+                      },
+                    },
+              ),
+            );
+          }
+          setEbayAccount((a) =>
+            a.slot === slot && a.label === (d.activeLabel ?? "")
+              ? a
+              : {
+                  label: d.activeLabel ?? "",
+                  slot,
+                  key: changed ? a.key + 1 : a.key,
+                },
+          );
+        })
         .catch(() => setEbayConnected(false));
     check();
     const onFocus = () => check();
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    window.addEventListener(ACCOUNT_CHANGED, onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener(ACCOUNT_CHANGED, onFocus);
+    };
   }, []);
 
   // ── Upload ──────────────────────────────────────────────
@@ -974,6 +1040,7 @@ export default function Home() {
               ? {
                   ...g,
                   postStatus: "posted",
+                  postedAccount: ebayAccountRef.current.label || undefined,
                   listingId: data!.listingId,
                   scheduledFor: data!.scheduledFor,
                   postWarnings: allWarnings.length ? allWarnings : undefined,
@@ -1232,6 +1299,7 @@ export default function Home() {
           groups={usableGroups}
           photoById={photoById}
           ebayConnected={ebayConnected}
+          ebayAccount={ebayAccount}
           onEdit={editListing}
           onGroupEdit={editGroup}
           onRenameSku={renameSku}

@@ -3,12 +3,13 @@
 import { draftIssues } from "@/lib/client-review";
 import { ListingCard } from "./ListingCard";
 import { downloadFile, listingsToCsv, listingsToJson } from "@/lib/export";
-import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
+import type { EbayAccountInfo, ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 interface ListingsViewProps {
   groups: ItemGroup[];
   photoById: (id: string) => Photo | undefined;
   ebayConnected: boolean;
+  ebayAccount?: EbayAccountInfo;
   onGroupEdit: (id: string, patch: Partial<ItemGroup>) => void;
   onEdit: (groupId: string, patch: Partial<ListingResult>) => void;
   onRenameSku: (groupId: string, sku: string) => void;
@@ -22,6 +23,7 @@ export function ListingsView({
   groups,
   photoById,
   ebayConnected,
+  ebayAccount,
   onEdit,
   onGroupEdit,
   onRenameSku,
@@ -61,6 +63,12 @@ export function ListingsView({
             {posted > 0
               ? `${posted} posted · ${readyToPost} left`
               : "Connected to eBay — post a single item to test first, or post them all."}
+            {ebayAccount?.label ? (
+              <>
+                {" "}
+                Posting to <strong>{ebayAccount.label}</strong>.
+              </>
+            ) : null}
           </span>
           <button
             type="button"
@@ -86,6 +94,7 @@ export function ListingsView({
             group={group}
             photoById={photoById}
             ebayConnected={ebayConnected}
+            ebayAccount={ebayAccount}
             onEdit={onEdit}
             onGroupEdit={onGroupEdit}
             onRenameSku={onRenameSku}

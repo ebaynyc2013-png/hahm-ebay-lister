@@ -30,6 +30,10 @@ export function buildAuthorizeUrl(state: string): string {
     response_type: "code",
     scope: EBAY_SCOPES,
     state,
+    // eBay asks for the sign-in even when the browser is already signed in to
+    // eBay — so the seller can choose WHICH of her accounts to connect
+    // (jewelry on one, clothing on another; 1 Nov 2026).
+    prompt: "login",
   });
   return `${EBAY_OAUTH_URL}?${params.toString()}`;
 }

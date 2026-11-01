@@ -1107,3 +1107,108 @@ test("changing the grade on the card moves eBay's menu and both condition texts 
   await expect(page.getByLabel("Condition", { exact: true })).toHaveValue("FAIR");
   await expect(description).toHaveValue(/Condition: Pre-owned, fair, small spot on the left cuff\./);
 });
+
+test("two eBay accounts: the bar shows which one posts, switching reloads that account's policies (1 Nov 2026)", async ({
+  page,
+}) => {
+  let active = 1;
+  const status = () => ({
+    configured: true,
+    connected: true,
+    accounts: [
+      { slot: 1, label: "Jewelry", active: active === 1 },
+      { slot: 2, label: "Clothing", active: active === 2 },
+    ],
+    activeLabel: active === 1 ? "Jewelry" : "Clothing",
+  });
+  await setup(page);
+  await page.route("**/api/ebay/status", (r) => r.fulfill({ json: status() }));
+  await page.route("**/api/ebay/accounts", (r) => {
+    const body = r.request().postDataJSON();
+    if (body.action === "switch") active = body.slot;
+    return r.fulfill({ json: { ok: true, label: active === 1 ? "Jewelry" : "Clothing" } });
+  });
+  // Each account has its own policies.
+  await page.route("**/api/ebay/options", (r) =>
+    r.fulfill({
+      json: {
+        ok: true,
+        options:
+          active === 1
+            ? {
+                fulfillment: [{ id: "ship-j", name: "USPS Ground Advantage ($7.95), 2 day handling" }],
+                payment: [{ id: "pay-j", name: "Managed Payments" }],
+                returns: [{ id: "ret-j", name: "Returns Accepted,Seller,30 Days,Money Back#1" }],
+                locations: [{ id: "loc-j", name: "Hustle at Home Mom HQ" }],
+              }
+            : {
+                fulfillment: [{ id: "ship-c", name: "USPS Ground Advantage ($7.95), 2 day handling" }],
+                payment: [{ id: "pay-c", name: "Managed Payments" }],
+                returns: [{ id: "ret-c", name: "Returns Accepted,Seller,30 Days,Money Back#1" }],
+                locations: [{ id: "loc-c", name: "Hustle at Home Mom HQ" }],
+              },
+      },
+    }),
+  );
+  await page.reload();
+  const picker = page.getByRole("combobox", { name: "eBay account", exact: true });
+  await expect(picker).toHaveValue("1");
+  await expect(picker.locator("option")).toHaveText(["Jewelry", "Clothing"]);
+  await page.locator(".ebay-bar").screenshot({ path: "test-results/ebay-accounts.png" });
+  await draft(page);
+  await expect(page.getByText("Posts to eBay account Jewelry")).toBeVisible();
+  const shipping = page.getByLabel("Shipping policy", { exact: true });
+  await expect(shipping).toHaveValue("ship-j");
+
+  await picker.selectOption("2");
+  await expect(picker).toHaveValue("2");
+  await expect(page.getByText("Posts to eBay account Clothing")).toBeVisible();
+  await expect(shipping).toHaveValue("ship-c");
+});
+
+test("adding an account: name it, sign in on eBay with that account, paste the address back (1 Nov 2026)", async ({
+  page,
+}) => {
+  let accounts = [{ slot: 1, label: "Jewelry", active: true }];
+  await setup(page);
+  await page.route("**/api/ebay/status", (r) =>
+    r.fulfill({
+      json: {
+        configured: true,
+        connected: true,
+        accounts,
+        activeLabel: accounts.find((a) => a.active)?.label,
+      },
+    }),
+  );
+  let authLabel = "";
+  await page.route("**/api/ebay/auth", (r) => {
+    authLabel = r.request().postDataJSON()?.label ?? "";
+    return r.fulfill({ json: { ok: true, url: "https://auth.ebay.com/oauth2/authorize?prompt=login" } });
+  });
+  let connectLabel = "";
+  await page.route("**/api/ebay/connect", (r) => {
+    connectLabel = r.request().postDataJSON()?.label ?? "";
+    accounts = [
+      { slot: 1, label: "Jewelry", active: false },
+      { slot: 2, label: "Clothing", active: true },
+    ];
+    return r.fulfill({ json: { ok: true, label: "Clothing" } });
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "+ Add account" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.locator("input").fill("Clothing");
+  await dialog.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByText("sign in on eBay with the account for Clothing")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue to eBay" })).toHaveAttribute(
+    "href",
+    /prompt=login/,
+  );
+  expect(authLabel).toBe("Clothing");
+  await page.locator("#ebay-paste").fill("https://auth2.ebay.com/oauth2/ThirdPartyAuthSucessFailure?isAuthSuccessful=true&code=v%5E1.1abc");
+  await page.getByRole("button", { name: "Finish connecting" }).click();
+  await expect(page.getByText("eBay account Clothing connected — now posting to it.")).toBeVisible();
+  expect(connectLabel).toBe("Clothing");
+  await expect(page.getByRole("combobox", { name: "eBay account", exact: true })).toHaveValue("2");
+});
