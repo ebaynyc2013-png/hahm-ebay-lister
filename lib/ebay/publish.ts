@@ -12,7 +12,7 @@ import {
   EBAY_CURRENCY,
   EBAY_INV_BASE,
   EBAY_MARKETPLACE_ID,
-  EBAY_TRADING,
+  EBAY_MEDIA_BASE,
 } from "./config";
 import {
   suggestLeafCategories,
@@ -902,45 +902,54 @@ function updateOfferBody(
 
 // ── Photo upload to eBay Picture Services (Trading API, XML) ──────────────────
 
-async function uploadPhoto(
+/**
+ * One photo to eBay Picture Services through the Media API
+ * (createImageFromFile). Returns eBay's picture address, or eBay's own reason
+ * for refusing it — the old call threw the reason away, so a refusal showed
+ * only as "some photos failed to upload".
+ */
+export async function uploadPhoto(
   accessToken: string,
   base64: string,
   mediaType: string,
   name: string,
-): Promise<string | null> {
-  const xml = `<?xml version="1.0" encoding="utf-8"?>
-<UploadSiteHostedPicturesRequest xmlns="urn:ebay:apis:eBLBaseComponents">
-  <PictureName>${name.slice(0, 50)}</PictureName>
-  <PictureUploadPolicy>ClearAndNew</PictureUploadPolicy>
-</UploadSiteHostedPicturesRequest>`;
-
+): Promise<{ url: string } | { error: string }> {
   const data = base64.includes(",") ? base64.split(",")[1] : base64;
   const bytes = Buffer.from(data, "base64");
   const form = new FormData();
   form.append(
-    "XML Payload",
-    new Blob([xml], { type: "text/xml;charset=utf-8" }),
-    "payload.xml",
-  );
-  form.append(
     "image",
     new Blob([new Uint8Array(bytes)], { type: mediaType }),
-    name,
+    name.slice(0, 50),
   );
-
-  const resp = await boundedFetch(EBAY_TRADING, {
-    method: "POST",
-    headers: {
-      "X-EBAY-API-SITEID": "0",
-      "X-EBAY-API-COMPATIBILITY-LEVEL": "967",
-      "X-EBAY-API-CALL-NAME": "UploadSiteHostedPictures",
-      "X-EBAY-API-IAF-TOKEN": accessToken,
-    },
-    body: form,
-  });
+  let resp: Response;
+  try {
+    resp = await boundedFetch(`${EBAY_MEDIA_BASE}/image/create_image_from_file`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+      body: form,
+    });
+  } catch (e) {
+    return { error: `could not reach eBay (${(e as Error).message})` };
+  }
   const text = await resp.text();
-  const m = text.match(/<FullURL>([^<]+)<\/FullURL>/);
-  return m ? m[1] : null;
+  let body: {
+    imageUrl?: string;
+    errors?: { errorId?: number; message?: string; longMessage?: string }[];
+  } = {};
+  try {
+    body = JSON.parse(text);
+  } catch {
+    /* not JSON — reported below */
+  }
+  if (resp.ok && body.imageUrl) return { url: body.imageUrl };
+  const e = body.errors?.[0];
+  const reason =
+    e?.longMessage || e?.message || text.replace(/\s+/g, " ").trim().slice(0, 200) || "no reason given";
+  return { error: `eBay said (HTTP ${resp.status}${e?.errorId ? `, error ${e.errorId}` : ""}): ${reason}` };
 }
 
 // ── Policies & location ──────────────────────────────────────────────────────
@@ -1182,8 +1191,10 @@ export async function uploadPhotos(
   // Photo numbering offset, so batched uploads name photos K72-O-1 … K72-O-12
   // across batches instead of restarting at 1 in each.
   nameOffset = 0,
-): Promise<string[]> {
-  const results: (string | null)[] = new Array(images.length).fill(null);
+): Promise<{ urls: string[]; errors: string[] }> {
+  const results: ({ url: string } | { error: string } | null)[] = new Array(
+    images.length,
+  ).fill(null);
   let cursor = 0;
   const workers = Array.from(
     { length: Math.min(4, images.length) },
@@ -1200,7 +1211,13 @@ export async function uploadPhotos(
     },
   );
   await Promise.all(workers);
-  return results.filter((u): u is string => Boolean(u));
+  const urls: string[] = [];
+  const errors: string[] = [];
+  results.forEach((r, i) => {
+    if (r && "url" in r) urls.push(r.url);
+    else errors.push(`Photo ${nameOffset + i + 1}: ${r && "error" in r ? r.error : "not uploaded"}`);
+  });
+  return { urls, errors };
 }
 
 export async function publishListing(

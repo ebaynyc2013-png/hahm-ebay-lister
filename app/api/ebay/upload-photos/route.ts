@@ -5,8 +5,8 @@ import { activeSealed } from "@/lib/ebay/accounts";
 import { guardApiRequest } from "@/lib/api-guard";
 import { uploadPhotos } from "@/lib/ebay/publish";
 
-// Uploads ONE small batch of photos to eBay Picture Services and returns the
-// hosted URLs. The client splits a listing's photos into batches sized well
+// Uploads ONE small batch of photos to eBay Picture Services (eBay's Media
+// API since 1 Nov 2026) and returns the hosted URLs. The client splits a listing's photos into batches sized well
 // under Vercel's 4.5 MB body limit (lib/uploadBatches.ts), then publishes with
 // the URLs — so the posting flow can never 413 no matter how photo-heavy an
 // item is.
@@ -95,12 +95,16 @@ async function handle(req: NextRequest) {
       : 0;
 
   try {
-    const urls = await uploadPhotos(accessToken, images, sku, startIndex);
-    // Report partial results so the client blocks publication until all photos upload.
+    const { urls, errors } = await uploadPhotos(accessToken, images, sku, startIndex);
+    if (errors.length)
+      console.warn(`[ebay/upload-photos] sku=${sku}: ${errors.join(" | ")}`);
+    // Report partial results so the client blocks publication until all
+    // photos upload — with eBay's own reason for each one refused.
     return NextResponse.json({
       ok: true,
       urls,
       failed: images.length - urls.length,
+      errors,
     });
   } catch (e) {
     console.error(`[ebay/upload-photos] unhandled error sku=${sku}:`, e);
