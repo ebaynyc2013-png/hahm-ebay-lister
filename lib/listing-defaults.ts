@@ -85,7 +85,28 @@ export function applyDefaultHandmade(
   aspects: Record<string, string[]>,
   meta: { name: string; values: string[] }[],
 ): boolean {
-  const field = meta.find((a) => /^hand\s?made$/i.test(a.name));
+  return applyDefaultNo(aspects, meta, /^hand\s?made$/i);
+}
+
+/**
+ * Vintage: No unless her note says vintage or she ticks "Possible vintage"
+ * (1 Nov 2026 — eBay's own suggestions offered "Vintage: No" for a modern
+ * top). Applied after the photo pass and after her vintage, so only a field
+ * still empty then gets No.
+ */
+export function applyDefaultVintage(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+): boolean {
+  return applyDefaultNo(aspects, meta, /^vintage$/i);
+}
+
+function applyDefaultNo(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+  name: RegExp,
+): boolean {
+  const field = meta.find((a) => name.test(a.name.trim()));
   if (!field) return false;
   if (aspects[field.name]?.some((v) => v.trim())) return false;
   const no = matchAllowed("No", field.values);

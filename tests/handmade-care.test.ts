@@ -70,3 +70,34 @@ it("a refusal the seller's default settled anyway is not reported as refused", (
     'ran (9 photos), filled 1: Style (1 refused). Refused: Vintage "No" — needs a label or your note, not just a look.',
   );
 });
+
+// 1 Nov 2026: eBay's own suggestions for the GreenHouse top were
+// "Garment Care: Machine Washable" (from a washtub-30 symbol) and "Vintage: No".
+import { applyDefaultVintage } from "@/lib/listing-defaults";
+
+it("Garment Care from care symbols the model describes", () => {
+  expect(photoFactProblem(fact("Garment Care", "Machine Washable", "symbol: washtub 30, iron one dot"), 3, care)).toBeNull();
+  expect(photoFactProblem(fact("Garment Care", "Hand Wash Only", "symbol: hand in washtub"), 3, care)).toBeNull();
+  expect(photoFactProblem(fact("Garment Care", "Dry Clean Only", "symbol: circle P, crossed-out washtub"), 3, care)).toBeNull();
+  expect(photoFactProblem(fact("Garment Care", "Dry Clean Only", "symbols: circle F"), 3, care)).toBeNull();
+});
+it("a symbol that says something else is refused", () => {
+  // The GreenHouse top: a plain washtub, read as hand wash.
+  expect(photoFactProblem(fact("Garment Care", "Hand Wash Only", "symbol: washtub 30"), 3, care)).not.toBeNull();
+  expect(photoFactProblem(fact("Garment Care", "Machine Washable", "symbol: hand in washtub"), 3, care)).not.toBeNull();
+  // A washtub not crossed out can be washed, dry-clean circle or not.
+  expect(photoFactProblem(fact("Garment Care", "Dry Clean Only", "symbol: washtub 30, circle P"), 3, care)).not.toBeNull();
+  expect(photoFactProblem(fact("Garment Care", "Machine Washable", "symbol: crossed-out washtub, circle P"), 3, care)).not.toBeNull();
+  // Without the word "symbol" it is a quote of words, and the words must be there.
+  expect(photoFactProblem(fact("Garment Care", "Machine Washable", "washtub"), 3, care)).not.toBeNull();
+});
+it("Vintage is No unless it is vintage", () => {
+  const vintage = { name: "Vintage", values: ["Yes", "No"] };
+  const a: Record<string, string[]> = {};
+  expect(applyDefaultVintage(a, [vintage])).toBe(true);
+  expect(a.Vintage).toEqual(["No"]);
+  const b: Record<string, string[]> = { Vintage: ["Yes"] };
+  expect(applyDefaultVintage(b, [vintage])).toBe(false);
+  expect(b.Vintage).toEqual(["Yes"]);
+  expect(applyDefaultVintage({}, [])).toBe(false);
+});

@@ -1,6 +1,7 @@
 import {
   applyDefaultHandmade,
   applyDefaultPendantType,
+  applyDefaultVintage,
   applyListingDefaults,
 } from "@/lib/listing-defaults";
 import {
@@ -155,6 +156,8 @@ const categoryPath =
           // Yes, the era's Theme and Style, a jewellery Era (31 Oct 2026).
           if (isVintage(listing))
             applyVintageAspects(aspects, meta, listing.vintage?.era ?? "");
+          // Otherwise Vintage is No (1 Nov 2026), like Handmade.
+          else applyDefaultVintage(aspects, meta);
           if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —

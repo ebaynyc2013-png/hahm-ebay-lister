@@ -190,7 +190,29 @@ export function careInQuote(name: string, value: string, quote: string): boolean
   if (!/^garment care$/i.test(name.trim())) return false;
   const rule = CARE.find(([v]) => v.test(value.trim()));
   if (!rule) return false;
-  return rule[1].test(String(quote ?? "").replace(CARE_NEGATED, " "));
+  const q = String(quote ?? "");
+  return rule[1].test(q.replace(CARE_NEGATED, " ")) || careSymbolSays(value, q);
+}
+
+// Care labels often carry symbols and no words (1 Nov 2026: a washtub with 30
+// was the only instruction on the GreenHouse top; eBay's own suggestion read
+// it as Machine Washable). The model describes the symbols it sees in the
+// quote, starting with "symbol": "symbol: washtub 30", "symbol: hand in
+// washtub", "symbol: circle P, crossed-out washtub". A washtub means machine
+// wash; a hand in it, hand wash; a dry-clean circle with the washtub crossed
+// out, dry clean only.
+export function careSymbolSays(value: string, quote: string): boolean {
+  const q = quote.toLowerCase();
+  if (!/\bsymbols?\b/.test(q)) return false;
+  const tub = /\b(?:wash[\s-]?tub|tub|basin)\b/.test(q);
+  const hand = /\bhand\b/.test(q);
+  const tubCrossed = /\b(?:crossed[\s-]?(?:out)?|cross(?:ed)? through|struck)\s+(?:wash[\s-]?tub|tub|basin)\b|\b(?:wash[\s-]?tub|tub|basin)\s+crossed\b|\bdo not wash\b/.test(q);
+  const circle = /\bcircle\b/.test(q);
+  const v = value.trim().toLowerCase();
+  if (v.startsWith("hand wash")) return tub && hand && !tubCrossed;
+  if (v.startsWith("machine wash")) return tub && !hand && !tubCrossed;
+  if (v.startsWith("dry clean")) return circle && (!tub || tubCrossed);
+  return false;
 }
 
 // "Yes" on a Yes/No field when the seller's note or a label says so in its

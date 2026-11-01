@@ -164,3 +164,19 @@ describe("Vintage Yes from the seller's note", () => {
     ).not.toBeNull();
   });
 });
+
+describe("ticking after Prepare set Vintage = No", () => {
+  it("unticking puts No back", () => {
+    const prepared: ListingResult = {
+      title: "Top",
+      description: "Top",
+      item_specifics: { Vintage: "No", Style: "Basic" },
+      vintage: { source: "clues", era: "80s", reasons: "Photo 2: ILGWU label", confirmed: false },
+    };
+    const ticked = { ...prepared, ...confirmVintage(prepared, tops) };
+    expect(ticked.item_specifics?.Vintage).toBe("Yes");
+    const back = { ...ticked, ...unconfirmVintage(ticked) };
+    expect(back.item_specifics?.Vintage).toBe("No");
+    expect(back.item_specifics?.Style).toBe("Basic");
+  });
+});
