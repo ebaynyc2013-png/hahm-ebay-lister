@@ -34,6 +34,7 @@ import { optimizeTitle } from "@/lib/titleOptimizer";
 import { foreignSizeInDescription, italianSizeFix } from "@/lib/foreign-size";
 import { vintageFromAnalysis, vintageTitle } from "@/lib/vintage";
 import { excellentWithoutFlaw, tidyConditionNotes } from "@/lib/condition-sync";
+import { fixDetailPlaces } from "@/lib/detail-places";
 import { applyPriceMarkup, priceMarkupPercent } from "@/lib/pricing";
 import { resolveModel } from "@/lib/models";
 import type { AnalyzeRequestBody, ListingResult } from "@/lib/types";
@@ -253,6 +254,8 @@ async function handle(req: NextRequest) {
         // A bare number on an Italian label is an Italian size (Prada 36 is
         // IT 36 = US 0, XS — 1 Nov 2026), before the size is converted.
         italianSizeFix(listing, listing.item_specifics?.Size);
+        // Where a detail is: from the photos it is seen on (1 Nov 2026).
+        fixDetailPlaces(listing, raw.photo_views, raw.detail_places);
         // A grade below Excellent with no flaw named in the notes is
         // Excellent — the seller's rule (31 Oct 2026); the notes' first line
         // and the description's Condition line follow.

@@ -116,10 +116,43 @@ export function foreignSizeInTitle(title: string, l: ListingResult, limit = 80):
   if (!marked.test(title)) return title;
   const letterWord = f.word === f.letter ? f.letter : `${f.letter} ${f.word}`;
   const tidy = (s: string) => s.replace(/\s{2,}/g, " ").trim();
-  const full = tidy(title.replace(marked, `${f.system} ${f.value} ${letterWord}`));
-  if (full.length <= limit) return full;
-  const short = tidy(title.replace(marked, letterWord));
-  return short.length <= limit ? short : title;
+  const fit = (t: string): string | null => {
+    const full = tidy(t.replace(marked, `${f.system} ${f.value} ${letterWord}`));
+    if (full.length <= limit) return full;
+    const short = tidy(t.replace(marked, letterWord));
+    return short.length <= limit ? short : null;
+  };
+  const first = fit(title);
+  if (first) return first;
+  // The American size matters more than the aesthetic tail ("Office Siren"):
+  // when it does not fit, the tail goes, one aesthetic at a time, from the end
+  // (the seller's go, 1 Nov 2026 — "IT 36" alone went out without "XS X-Small").
+  let t = title;
+  for (const tail of aestheticTail(t, l)) {
+    t = tidy(t.slice(0, t.length - tail.length));
+    const fitted = fit(t);
+    if (fitted) return fitted;
+  }
+  return title;
+}
+
+/** The aesthetics at the end of the title, last first ("Office Siren", "Boho"). */
+function aestheticTail(title: string, l: ListingResult): string[] {
+  const names = [...(l.aesthetics ?? [])]
+    .map((a) => String(a ?? "").trim())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  const out: string[] = [];
+  let t = title.trim();
+  for (let guard = 0; guard < 4; guard++) {
+    const hit = names.find((n) => t.toLowerCase().endsWith(` ${n.toLowerCase()}`));
+    if (!hit) break;
+    const tail = t.slice(t.length - hit.length);
+    out.push(` ${tail}`);
+    t = t.slice(0, t.length - hit.length).trim();
+  }
+  // Each entry is cut from what is left after the ones before it.
+  return out;
 }
 
 /** "Size: EU 38 (US 8, Medium)" — in place of whatever Size line was written. */

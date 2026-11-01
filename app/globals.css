@@ -880,8 +880,16 @@ div.size-warning p {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem 1.2rem;
-  margin-top: 0.35rem;
+  gap: 0.3rem 0.9rem;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--color-ink-soft);
+}
+.offer-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
 }
 .offer-minimum input {
   width: 6.5rem;

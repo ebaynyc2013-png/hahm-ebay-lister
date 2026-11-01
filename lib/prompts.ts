@@ -101,6 +101,8 @@ Apply universal reseller rules to every item, and apply product-family-specific 
 Do not apply a product-family-specific rule to an unrelated product family.
 
 WHERE A DETAIL IS (the seller's rule, 1 Nov 2026 — for every item and every detail: pockets, zippers, slits, buttons, panels, trim, tape, lace, prints, logos, pleats, straps, stones). Say where a detail is ONLY from the photo that shows it, and look at what that photo shows: the front, the back or the side. A detail seen only on a back view is on the BACK — "Back Trim", "back panel seams" — never "side". Write "side" only when a photo taken from the side, or both the front and the back views, show the detail running along the side seam. When the photos cannot tell, name the detail without its place. This holds in the title, the description, the condition notes and the item specifics alike.
+- "photo_views": for EVERY photo, which side of the item it shows — "front", "back", "side" (taken from the side), "detail" (a close-up), "label", "note" (the seller's note or a screenshot) or "other". Look at each photo on its own: a garment with its pockets, fly or neckline facing the camera is the front; with back pockets, a back zip or the back of the collar facing it is the back.
+- "detail_places": for every detail whose place you name anywhere (a trim, tape, pocket, zip, slit, panel, print, logo…), the detail, the place you give it, and the photos it is seen on. A detail seen only on back views has place "back"; the program corrects a "side" that no side view shows.
 
 TITLE
 

@@ -1227,6 +1227,9 @@ test("Allow offers is on by default; the minimum offer goes to eBay and must be 
     return r.fulfill({ json: { success: true, listingId: "1234567890" } });
   });
   await draft(page);
+  // Right under the price, where the seller looks (1 Nov 2026).
+  await expect(page.locator(".stat .offer-row").getByRole("checkbox", { name: "Allow offers" })).toBeVisible();
+  await page.locator(".stat").filter({ has: page.locator(".price-input") }).last().screenshot({ path: "test-results/offers-under-price.png" });
   await shipping(page);
   const allow = page.getByRole("checkbox", { name: "Allow offers" });
   await expect(allow).toBeChecked();
@@ -1234,7 +1237,6 @@ test("Allow offers is on by default; the minimum offer goes to eBay and must be 
   await minimum.fill("250");
   await expect(page.getByText(/Minimum offer amount \(\$250\.00\) must be less than the price/).first()).toBeVisible();
   await minimum.fill("150");
-  await page.locator(".post-row").first().screenshot({ path: "test-results/offers.png" });
   await page.getByRole("button", { name: "🚀 Post this to eBay" }).click();
   await expect(page.getByText(/Posted to eBay/)).toBeVisible();
   expect(sent).toEqual({ allow: true, minimum: 150 });

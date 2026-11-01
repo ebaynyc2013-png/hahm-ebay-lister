@@ -52,6 +52,35 @@ export const AI_LISTING_SCHEMA = {
     // Named style aesthetics the item genuinely shows — the words buyers
     // browse by. Empty is a normal answer for a plain item.
     aesthetics: strings,
+    // Which side of the item each photo shows, and where each detail named in
+    // the listing is — written before the title, so the place of a detail
+    // comes from the photos that show it (1 Nov 2026: tape on the back panels
+    // went out as "Side Trim"). The program checks one against the other.
+    photo_views: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          photo: { type: "integer" },
+          view: { type: "string", enum: ["front", "back", "side", "detail", "label", "note", "other"] },
+        },
+        required: ["photo", "view"],
+      },
+    },
+    detail_places: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          detail: string,
+          place: { type: "string", enum: ["front", "back", "side", "unknown"] },
+          photos: { type: "array", items: { type: "integer" } },
+        },
+        required: ["detail", "place", "photos"],
+      },
+    },
     // Vintage and its era: from the seller's note, or — when the note says
     // nothing — dating clues seen on labels and construction, which the
     // seller confirms on the card before anything changes (31 Oct 2026).
@@ -99,6 +128,8 @@ export const AI_LISTING_SCHEMA = {
     "measurements",
     "key_features",
     "aesthetics",
+    "photo_views",
+    "detail_places",
     "vintage",
     "contact_seen",
     "specifics",
@@ -122,6 +153,8 @@ export const FACTS_BEFORE_TITLE = [
   "material",
   "condition",
   "aesthetics",
+  "photo_views",
+  "detail_places",
   "vintage",
   "specifics",
   "search_terms",
