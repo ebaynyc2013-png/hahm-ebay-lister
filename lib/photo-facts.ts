@@ -163,7 +163,8 @@ export function photoFactProblem(
       .every(
         (v) =>
           normalize(s.quote).includes(normalize(v)) ||
-          measurementInQuote(v, s.quote),
+          measurementInQuote(v, s.quote) ||
+          hallmarkInQuote(s.name, v, s.quote),
       )
       ? null
       : "not what the label says";
@@ -239,6 +240,57 @@ export function yesInQuote(name: string, value: string, quote: string): boolean 
   if (!rule) return false;
   const q = String(quote ?? "");
   return rule[1].test(q) && !rule[2].test(q);
+}
+
+// A metal stamp says the metal in the trade's own shorthand, never in eBay's
+// words (6 Nov 2026: a cross stamped "STERLING" had Metal "Sterling Silver"
+// and Metal Purity "925" refused as "not what the label says", and the seller
+// typed them in by hand). The standard marks, read as the trade reads them:
+// STERLING / STER / 925 / .925 — sterling silver, 925; 10K, 14K, 18K… and
+// their fineness 417, 585, 750… — gold of that karat. What colour the gold is
+// stays with the photo. Plated or filled marks (GF, GP, HGE, 1/20, vermeil…)
+// never stand for solid gold, and a plated sterling piece answers only its
+// base metal and purity.
+const METAL_FIELD = /\bmetal\b|^material$/i;
+const PURITY_FIELD = /\bpurity\b|\bfineness\b/i;
+const STERLING_MARK = /\bsterling\b|\bster\b|(?<![\d/])\.?925\b/i;
+const PLATED_MARK =
+  /\b(?:g\.?f|g\.?p|gep|hge|hgp|rgp|kgp|filled|plated?|plating|electroplated?|vermeil|clad|overlay|rolled)\b|\b\d+\/\d+\b/i;
+const KARAT_FINENESS: Record<string, string> = {
+  "375": "9",
+  "417": "10",
+  "585": "14",
+  "750": "18",
+  "916": "22",
+  "917": "22",
+};
+function karatsIn(quote: string): string[] {
+  const found = new Set<string>();
+  for (const m of quote.matchAll(/\b(9|10|14|18|22|24)\s?k(?:t|p)?\b/gi)) found.add(m[1]);
+  for (const m of quote.matchAll(/(?<![\d.])(375|417|585|750|916|917)(?!\d)/g))
+    found.add(KARAT_FINENESS[m[1]]);
+  return [...found];
+}
+
+export function hallmarkInQuote(name: string, value: string, quote: string): boolean {
+  const n = name.trim();
+  const v = value.trim().toLowerCase();
+  const q = String(quote ?? "");
+  const purity = PURITY_FIELD.test(n);
+  if (!purity && !METAL_FIELD.test(n)) return false;
+  const plated = PLATED_MARK.test(q);
+  if (STERLING_MARK.test(q)) {
+    if (purity && /^(?:\.?925(?: parts per 1000| sterling)?|sterling(?: silver)?)$/.test(v)) return true;
+    const base = /\bbase\b/i.test(n);
+    if ((base || !plated) && /^(?:sterling silver|sterling|silver|925 silver)$/.test(v)) return true;
+  }
+  if (plated) return false;
+  const karats = karatsIn(q);
+  if (!karats.length) return false;
+  if (purity)
+    return karats.some((k) => new RegExp(`^${k}\\s?(?:k|kt|karat|ct)$`).test(v) ||
+      Object.entries(KARAT_FINENESS).some(([f, kk]) => kk === k && v === f));
+  return /^(?:(?:yellow|white|rose|two[\s-]tone|tri[\s-]colou?r|multi[\s-]tone)\s+)?gold$/.test(v);
 }
 
 // A stone field is one that asks WHICH stone: Main Stone, Secondary Stone,
