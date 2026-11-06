@@ -115,3 +115,13 @@ describe("Occasion for every item", () => {
     expect(src).not.toContain("Leave Occasion empty only when");
   });
 });
+
+describe("jewellery clasps stay out of the title", () => {
+  it("tells the AI the seller's rule, Toggle on a chunky chain the one exception", async () => {
+    const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
+    const p = String(ANALYSIS_PROMPT);
+    expect(p).toContain("never put a jewellery clasp in the title");
+    expect(p).toContain('The one exception is "Toggle" on a chunky, heavy chain');
+    expect(p).toContain("A toggle on an ordinary or fine chain stays out of the title too.");
+  });
+});
