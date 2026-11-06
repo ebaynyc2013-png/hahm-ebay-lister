@@ -118,10 +118,35 @@ describe("condition: the grade, detailed notes beside the price, a short line in
     const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
     const p = String(ANALYSIS_PROMPT);
     expect(p).toContain("start from EXCELLENT");
-    expect(p).toContain("they are the MOST DETAILED");
+    expect(p).toContain("what shape is THIS piece in — what is good and what is not. Nothing else.");
     expect(p).toContain("• Faded, distressed print is part of the design");
     expect(p).toContain('"Condition: Pre-owned, excellent, nothing is wrong with it."');
-    expect(p).toContain('ONLY when the seller\'s note says so ("zip works great", "all buttons ok")');
+    expect(p).toContain('ONLY when the seller\'s note says so ("zip works great", "clips ok")');
     expect(p).toContain("Condition: Pre-owned, excellent, worn only a couple of times.");
+  });
+});
+
+describe("condition notes: only condition, one thing per line, a human voice (6 Nov 2026)", () => {
+  it("tells the AI the seller's rules from the Dior clip earrings", async () => {
+    const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
+    const p = String(ANALYSIS_PROMPT);
+    // 3 to 7 lines, the grade first
+    expect(p).toContain("3 to 7 lines in all.");
+    expect(p).toContain("Then 2 to 6 lines");
+    // one thing per line, no repeats
+    expect(p).toContain("ONE thing per line, and no two lines say the same thing.");
+    expect(p).toContain('no other line says "No missing stones"');
+    // from big to small
+    expect(p).toContain("From big to small");
+    // never design, hallmarks, brand, size
+    expect(p).toContain('"Clear marquise and round crystals set in a leaf cluster"');
+    expect(p).toContain('"Chr.Dior © stamped on both clip backs"');
+    // small flaw named, big flaw placed and sized; vintage wear
+    expect(p).toContain('"Minor signs of wear consistent with age"');
+    expect(p).toContain("A big one, what it is, where, and how big");
+    // design or damage
+    expect(p).toContain("When the photos cannot tell, say what you see and where, plainly, without calling it either.");
+    // voice
+    expect(p).toContain('Never ad copy or slogans ("Dior is Dior"');
   });
 });
