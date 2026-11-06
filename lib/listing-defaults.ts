@@ -101,6 +101,89 @@ export function applyDefaultVintage(
   return applyDefaultNo(aspects, meta, /^vintage$/i);
 }
 
+/**
+ * Antique: No unless her note says antique (the seller's rule, 6 Nov 2026 —
+ * she almost never sells antiques). After the photo pass, so an "antique" on
+ * her note still comes through as Yes.
+ */
+export function applyDefaultAntique(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+): boolean {
+  return applyDefaultNo(aspects, meta, /^antique$/i);
+}
+
+/**
+ * Signed: Yes whenever anything is written or stamped on the piece itself —
+ * a brand, a signature, a maker's mark, a label, even only a "925" or
+ * "STERLING" — and No only when nothing is (the seller's rule, 6 Nov 2026:
+ * her pieces are almost always signed, Premier Designs included). Only an
+ * empty field is filled, so an answer she gave on the card is never changed.
+ */
+export function applySignedFromMarks(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+  listing: Pick<ListingResult, "maker_marks" | "brand_source">,
+): boolean {
+  const field = meta.find((a) => /^signed$/i.test(a.name.trim()));
+  if (!field) return false;
+  const marked =
+    (listing.maker_marks ?? []).some((m) => String(m ?? "").trim()) ||
+    listing.brand_source === "label" ||
+    listing.brand_source === "marks";
+  if ((aspects[field.name] ?? []).some((v) => v.trim())) return false;
+  if (!marked) return applyDefaultNo(aspects, meta, /^signed$/i);
+  const yes = matchAllowed("Yes", field.values);
+  if (!yes) return false;
+  aspects[field.name] = [yes];
+  return true;
+}
+
+/**
+ * Rhinestones: when the title or the description says rhinestone, Main Stone
+ * is Crystal and Material is Rhinestone (the seller's rule, 6 Nov 2026 — by
+ * the word only, not by the look). Main Stone is set when it is empty or
+ * says rhinestone, crystal or no stone; another real stone (a pearl, a
+ * turquoise) is never replaced. Material gets Rhinestone added where eBay
+ * allows several values, and set where it allows one.
+ */
+export function applyRhinestones(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[]; cardinality?: string }[],
+  listing: Pick<ListingResult, "title" | "description">,
+): boolean {
+  const said = `${listing.title ?? ""}\n${listing.description ?? ""}`;
+  if (!/\brhine[\s-]?stones?\b/i.test(said)) return false;
+  let changed = false;
+  const stone = meta.find((a) => /^main stone$/i.test(a.name.trim()));
+  if (stone) {
+    const current = (aspects[stone.name] ?? []).map((v) => v.trim()).filter(Boolean);
+    const replaceable = current.every((v) =>
+      /^(?:rhine[\s-]?stones?|crystals?|no(?:\s+main)?\s+stones?|none)$/i.test(v),
+    );
+    const crystal = stone.values.length ? matchAllowed("Crystal", stone.values) : "Crystal";
+    if (replaceable && crystal && !(current.length === 1 && current[0] === crystal)) {
+      aspects[stone.name] = [crystal];
+      changed = true;
+    }
+  }
+  const material = meta.find((a) => /^material$/i.test(a.name.trim()));
+  if (material) {
+    const rhinestone = material.values.length
+      ? matchAllowed("Rhinestone", material.values)
+      : "Rhinestone";
+    if (rhinestone) {
+      const current = (aspects[material.name] ?? []).map((v) => v.trim()).filter(Boolean);
+      if (!current.some((v) => v.toLowerCase() === rhinestone.toLowerCase())) {
+        aspects[material.name] =
+          material.cardinality === "MULTI" ? [...current, rhinestone] : [rhinestone];
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
 function applyDefaultNo(
   aspects: Record<string, string[]>,
   meta: { name: string; values: string[] }[],

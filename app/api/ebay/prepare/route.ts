@@ -1,8 +1,11 @@
 import {
+  applyDefaultAntique,
   applyDefaultHandmade,
   applyDefaultPendantType,
   applyDefaultVintage,
   applyListingDefaults,
+  applyRhinestones,
+  applySignedFromMarks,
 } from "@/lib/listing-defaults";
 import {
   applyDefaultDepartment,
@@ -158,6 +161,12 @@ const categoryPath =
             applyVintageAspects(aspects, meta, listing.vintage?.era ?? "");
           // Otherwise Vintage is No (1 Nov 2026), like Handmade.
           else applyDefaultVintage(aspects, meta);
+          // Antique No, Signed from the marks on the piece, rhinestones as
+          // Crystal / Rhinestone — the seller's rules of 6 Nov 2026, after
+          // the photo pass so its answers come first.
+          applyDefaultAntique(aspects, meta);
+          applySignedFromMarks(aspects, meta, listing);
+          applyRhinestones(aspects, meta, listing);
           if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —

@@ -232,6 +232,17 @@ const YES_WORDS: [RegExp, RegExp, RegExp][] = [
     /\bvintage\b/i,
     /\b(?:not|non|isn'?t|no)[\s-]+vintage\b|\bvintage[\s-]+(?:style|styled|inspired|look|looking|reproduction|repro)\b/i,
   ],
+  // "antique" on her note is Antique Yes (6 Nov 2026) — but an antique or
+  // antiqued finish ("antique gold tone", "antiqued silver") is a colour,
+  // not an age.
+  [
+    /^antique$/i,
+    /\bantique\b/i,
+    /\b(?:not|non|isn'?t|no)[\s-]+antique\b|\bantiqued\b|\bantique[\s-]+(?:style|styled|inspired|look|looking|finish|finished|gold|silver|brass|bronze|copper|tone|toned|white|reproduction|repro)\b/i,
+  ],
+  // Signed: anything written or stamped on the piece is a Yes — a brand, a
+  // signature, a maker's mark, even only "925" or "STERLING" (6 Nov 2026).
+  [/^signed$/i, /[\p{L}\p{N}]/u, /\bunsigned\b|\bno\s+(?:signature|marks?|stamps?|hallmarks?)\b/i],
 ];
 
 export function yesInQuote(name: string, value: string, quote: string): boolean {
