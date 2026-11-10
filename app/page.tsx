@@ -35,6 +35,7 @@ import { ListingsView } from "./ListingsView";
 import { HistoryPanel } from "./HistoryPanel";
 import { BrandMemoryPanel } from "./BrandMemoryPanel";
 import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
+import { smallCopiesForRouting } from "@/lib/router-images";
 import { lessonsForAnalysis, loadTagLessons } from "@/lib/tag-memory";
 import { loadPhraseUses, markPhraseUsed, pickPhrases } from "@/lib/style-rotation";
 import { TagMemoryPanel } from "./TagMemoryPanel";
@@ -697,10 +698,10 @@ export default function Home() {
       const group = groupsRef.current.find((g) => g.id === groupId);
       if (!group || inFlight.current.has(groupId)) return;
       inFlight.current.add(groupId);
-      const imgs = (group.analysisPhotoIds ?? group.photoIds)
+      const chosen = (group.analysisPhotoIds ?? group.photoIds)
         .map((id) => photoMap.get(id))
-        .filter((p): p is Photo => Boolean(p) && p!.analysisSelected !== false)
-        .map((p) => ({ mediaType: p.mediaType, data: p.data }));
+        .filter((p): p is Photo => Boolean(p) && p!.analysisSelected !== false);
+      const imgs = chosen.map((p) => ({ mediaType: p.mediaType, data: p.data }));
       setGroups((prev) =>
         prev.map((g) =>
           g.id === groupId ? { ...g, status: "writing", error: undefined } : g,
@@ -720,9 +721,11 @@ export default function Home() {
         const phrases = await loadPhraseUses()
           .catch(() => ({}))
           .then((uses) => pickPhrases(uses));
+        const routerImages = smallCopiesForRouting(chosen, imgs, references);
         const res = await apiPost("/api/analyze", {
           profile: "auto",
           images: imgs,
+          ...(routerImages ? { routerImages } : {}),
           references,
           lessons,
           phrases,

@@ -93,6 +93,13 @@ export interface AnalyzeRequestBody {
   // Optional model overrides; server falls back to its defaults when omitted.
   analysisModel?: string;
   routerModel?: string;
+  /**
+   * The same photos as `images`, in the same order, as the small on-screen
+   * copies (~360px). Only the first step — telling what kind of thing this is —
+   * looks at these: it needs the shape, not the tags, and small copies cost a
+   * fraction. Optional: when missing or not matching, that step uses `images`.
+   */
+  routerImages?: { mediaType: string; data: string }[];
   /** Maker's marks the seller confirmed before (see brand-memory.ts). */
   references?: {
     brand: string;

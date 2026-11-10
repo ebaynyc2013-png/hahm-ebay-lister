@@ -11,6 +11,7 @@ import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
   parseListing,
   imagesSchema,
+  routerImagesSchema,
   validationMessage,
 } from "@/lib/validation";
 import { collectUsage, currentUsage } from "@/lib/ai-usage";
@@ -138,6 +139,9 @@ async function handle(req: NextRequest) {
     // The seller's phrases for the opening sentence: optional, never fatal.
     const phrases = phrasesSchema.safeParse(body.phrases ?? []);
     body.phrases = phrases.success ? phrases.data : [];
+    // The small copies for the first step: optional, never fatal.
+    const small = routerImagesSchema.safeParse(body.routerImages ?? []);
+    body.routerImages = small.success ? small.data : [];
   } catch {
     return NextResponse.json(
       { ok: false, error: "Invalid request body." },
@@ -178,9 +182,15 @@ async function handle(req: NextRequest) {
 
   try {
     const deadline = Date.now() + ANALYZE_TIME_BUDGET_MS;
+    // The first step only tells what kind of thing this is, so it looks at
+    // the small copies when they match the photos one for one; otherwise at
+    // the full ones, exactly as before.
+    const smallBlocks = toImageBlocks(body.routerImages ?? []);
+    const routerBlocks =
+      smallBlocks.length === imageBlocks.length ? smallBlocks : imageBlocks;
     const profile = await routeProfile(
       client,
-      imageBlocks,
+      routerBlocks,
       body.profile,
       routerModel,
       deadline,
