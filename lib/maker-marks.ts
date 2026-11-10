@@ -1,3 +1,4 @@
+import { makerSigns } from "./brand-signs";
 import type { ListingResult } from "./types";
 
 /**
@@ -33,7 +34,9 @@ export interface BrandCandidate {
  * "Unbranded", and a brand named from marks waits for confirmation.
  */
 export function applyMakerMarkRules(l: ListingResult): void {
-  const marks = (l.maker_marks ?? []).filter((m) => m.trim());
+  // Only marks that say who made the piece count here: a "925", "STERLING",
+  // a size or a "Made in …" names no maker (the seller, 10 Nov 2026).
+  const marks = makerSigns(l.maker_marks);
   if (marks.length && UNBRANDED.test(l.brand ?? "")) {
     l.brand = "";
     if (l.item_specifics && UNBRANDED.test(l.item_specifics.Brand ?? "")) {
@@ -60,6 +63,19 @@ export function applyMakerMarkRules(l: ListingResult): void {
     })
     .slice(0, 5);
   l.brand_confirmed = l.brand_source === "marks" && l.brand ? false : undefined;
+  // No sign of a maker at all — no name, logo, signature or maker's tag, and
+  // no maker it could be: the brand is eBay's own "Unbranded", in every
+  // category (the seller, 10 Nov 2026). A brand read or written anywhere wins.
+  if (
+    !String(l.brand ?? "").trim() &&
+    !String(l.item_specifics?.Brand ?? "").trim() &&
+    !marks.length &&
+    !l.brand_candidates.length &&
+    (l.brand_source ?? "none") === "none"
+  ) {
+    l.brand = "Unbranded";
+    l.item_specifics = { ...(l.item_specifics ?? {}), Brand: "Unbranded" };
+  }
 }
 
 /** Whether the brand still waits for the seller's word before posting. */

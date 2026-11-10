@@ -2,6 +2,7 @@
 
 import { applyChosenBrand, photoNumberOfMark } from "@/lib/maker-marks";
 import { imageFromDataUrl, rememberBrandMark } from "@/lib/brand-memory";
+import { makerSigns } from "@/lib/brand-signs";
 import { DraftControls } from "./DraftControls";
 import { CopyButton } from "./CopyButton";
 import { OtherShopsTags } from "./OtherShopsTags";
@@ -94,8 +95,11 @@ export function ListingCard({
   // photo it was seen on ("Photo 2: …"). The program learns marks only from
   // the seller, never from other eBay listings.
   const rememberMark = async (brand: string) => {
-    if (!listing || !brand.trim()) return;
-    const marks = listing.maker_marks ?? [];
+    if (!listing || !brand.trim() || /^unbranded$/i.test(brand.trim())) return;
+    // Only a sign of the maker is worth remembering: a "925" or "STERLING"
+    // alone names no maker and would pair any silver piece with this brand.
+    const marks = makerSigns(listing.maker_marks);
+    if (!marks.length) return;
     const n = marks.map(photoNumberOfMark).find((x): x is number => Boolean(x));
     const ids = group.evidencePhotoIds ?? group.analysisPhotoIds ?? group.photoIds;
     const photo = n ? photoById(ids[n - 1]) : undefined;

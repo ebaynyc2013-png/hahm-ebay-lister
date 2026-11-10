@@ -1,3 +1,4 @@
+import { makerSigns } from "@/lib/brand-signs";
 import { parseListing, shippingSchema, skuSchema } from "@/lib/validation";
 import { verifyReview } from "@/lib/review";
 import { validateAspects } from "./draft";
@@ -852,9 +853,13 @@ export function applyBrandMpnFallback(
   delete inventoryItem.product.brand;
   delete inventoryItem.product.mpn;
   if (!aspects.Brand?.length) {
-    aspects.Brand = [
-      cleanAspectValue(String(listing.brand || "").trim()) || "Unbranded",
-    ];
+    // "Unbranded" only when nothing on the piece names a maker; a piece with
+    // a maker's sign and no brand chosen keeps Brand empty, so eBay's own
+    // error asks for it instead of the listing going out as Unbranded.
+    const brand =
+      cleanAspectValue(String(listing.brand || "").trim()) ||
+      (makerSigns(listing.maker_marks).length ? "" : "Unbranded");
+    if (brand) aspects.Brand = [brand];
   }
   if (!aspects.MPN?.length) aspects.MPN = ["Does Not Apply"];
   inventoryItem.product.aspects = aspects;
