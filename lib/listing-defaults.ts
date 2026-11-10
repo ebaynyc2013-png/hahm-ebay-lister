@@ -246,3 +246,35 @@ export function applyDefaultPendantType(
   aspects[field.name] = [charm];
   return true;
 }
+
+/**
+ * Theme "3D" — the seller's rule, 10 Nov 2026. A Reebok tank came back Theme
+ * "3D" twice because "P3 3D" was printed in its logo; for sportswear "Sports"
+ * is always the better word. So:
+ *   - "3D" is dropped whenever "3D" appears among the marks/text read off the
+ *     item (it came from printed letters, not from the design);
+ *   - in an activewear / athletic category, "3D" becomes "Sports", and an
+ *     empty Theme there is "Sports" too.
+ * Only eBay's own words are written.
+ */
+export function applySportsTheme(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+  listing: Pick<ListingResult, "maker_marks">,
+  categoryPath: string,
+): boolean {
+  const field = meta.find((a) => /^theme$/i.test(a.name.trim()));
+  if (!field) return false;
+  const name = field.name;
+  const before = aspects[name] ?? [];
+  const printed = (listing.maker_marks ?? []).some((m) => /\b3D\b/i.test(String(m ?? "")));
+  const sporty = /activewear|athletic|sportswear|\bsports?\b/i.test(categoryPath);
+  let next = before.filter((v) => !(/^3d$/i.test(v.trim()) && (printed || sporty)));
+  const sports = matchAllowed("Sports", field.values);
+  if (sporty && sports && (next.length < before.length || !next.length) && !next.includes(sports))
+    next = [sports, ...next];
+  if (next.length === before.length && next.every((v, i) => v === before[i])) return false;
+  if (next.length) aspects[name] = next;
+  else delete aspects[name];
+  return true;
+}

@@ -7,6 +7,7 @@ import {
   applyListingDefaults,
   applyRhinestones,
   applySignedFromMarks,
+  applySportsTheme,
 } from "@/lib/listing-defaults";
 import {
   applyDefaultDepartment,
@@ -170,6 +171,9 @@ const categoryPath =
           applyDefaultAntique(aspects, meta);
           applySignedFromMarks(aspects, meta, listing);
           applyRhinestones(aspects, meta, listing);
+          // Theme: never "3D" from letters printed on the item; "Sports" for
+          // sportswear (the seller, 10 Nov 2026).
+          applySportsTheme(aspects, meta, listing, categoryPath);
           if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —

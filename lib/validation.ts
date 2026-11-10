@@ -108,6 +108,15 @@ export const imagesSchema = z
     (xs) => xs.reduce((n, x) => n + x.data.length, 0) < 3_800_000,
     "Photo data is too large. Select fewer analysis photos.",
   );
+// The small copies for the first step (see AnalyzeRequestBody.routerImages):
+// a few tens of kilobytes each, so a tight budget.
+export const routerImagesSchema = z
+  .array(imageSchema)
+  .max(24)
+  .refine(
+    (xs) => xs.reduce((n, x) => n + x.data.length, 0) < 800_000,
+    "Small photo copies are too large.",
+  );
 export const skuSchema = z
   .string()
   .regex(
