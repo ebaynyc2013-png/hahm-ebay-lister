@@ -20,6 +20,11 @@ describe("a metal stamp, size or origin is not a maker's mark (10 Nov 2026)", ()
     'Photo 6: "Made in China" printed label',
     'Photo 3: "100% Cotton" care label',
     'Photo 2: "Size 8" stamped in the insole',
+    // Written without quotes, as the model did on the real cross (10 Nov 2026).
+    "Photo 3: STERLING stamped lengthwise on the back of the upper arm of the cross",
+    "Photo 2: 925 stamped inside the band",
+    "Photo 4: 14K and 585 on the clasp",
+    "Photos 2 & 3: .925 ITALY on the clasp tag",
   ])("%s", (mark) => {
     expect(isNotAMakerMark(mark)).toBe(true);
   });
@@ -31,6 +36,12 @@ describe("a metal stamp, size or origin is not a maker's mark (10 Nov 2026)", ()
     'Photo 1: signature "Trifari" on the back',
     'Photo 2: stamped "M" on the clasp',
     'Photo 4: logo plate reading "Coach"',
+    "Photo 2: NAPIER and STERLING stamped on the clasp",
+    "Photo 3: TM-12 and 925 MEXICO on the back",
+    "Photo 2: small heart logo stamped next to 925",
+    "Photo 1: Trifari signature on the back",
+    "Photo 2: stamped M on the clasp",
+    "Photo 3: a tiny engraved mark on the back",
   ])("keeps %s as a maker's sign", (mark) => {
     expect(isNotAMakerMark(mark)).toBe(false);
   });
@@ -57,6 +68,19 @@ describe("Unbranded when nothing names a maker", () => {
     expect(l.item_specifics?.Brand).toBe("Unbranded");
     // The stamp stays listed: it still makes eBay's Signed "Yes".
     expect(l.maker_marks).toEqual([STERLING]);
+  });
+
+  it("the real card: STERLING written without quotes → Unbranded", () => {
+    const l: ListingResult = {
+      title: "Sterling Silver Cross Pendant Necklace Serpentine Chain Polished 925 Classic",
+      description: "",
+      brand: "",
+      brand_source: "none",
+      maker_marks: ["Photo 3: STERLING stamped lengthwise on the back of the upper arm of the cross"],
+      brand_candidates: [],
+    };
+    applyMakerMarkRules(l);
+    expect(l.brand).toBe("Unbranded");
   });
 
   it("a garment with no label at all → Unbranded", () => {

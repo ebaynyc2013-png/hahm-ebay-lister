@@ -62,10 +62,28 @@ function isNotAMakerText(text: string): boolean {
   return tokens.every((t) => NOT_A_MAKER.has(t) || NUMERIC_TOKEN.test(t));
 }
 
+// Words that describe a maker's sign rather than a stamp's text: with any of
+// them in the mark, it stays a maker's sign whatever else it says.
+const MAKER_CUE =
+  /\b(?:logo|signature|signed|maker|brand|trademark|monogram|initials?|crown|heart|star|symbol|emblem|script|copyright|hallmark of|name)\b|[©®™]/i;
+
+// The stamp's own text when the model wrote it without quotes: the words in
+// capitals and the numbers ("Photo 3: STERLING stamped lengthwise on the back").
+function stampedWords(mark: string): string[] {
+  const body = mark.replace(/^\s*photos?\s*[\d\s,&and]*:\s*/i, "");
+  return body.match(/(?:\.?\d[\d./%]*[a-z]{0,2}|\b[A-Z][A-Z0-9./]{1,}\b)/g) ?? [];
+}
+
 /** True when the mark only states metal, purity, size, content, care or origin. */
 export function isNotAMakerMark(mark: string): boolean {
-  const quoted = quotedTexts(String(mark ?? ""));
-  return quoted.length > 0 && quoted.every(isNotAMakerText);
+  const text = String(mark ?? "");
+  const quoted = quotedTexts(text);
+  if (quoted.length) return quoted.every(isNotAMakerText);
+  // Unquoted: every word in capitals and every number must be such a word,
+  // and nothing in the description may point to a maker's sign.
+  if (MAKER_CUE.test(text)) return false;
+  const words = stampedWords(text);
+  return words.length > 0 && words.every(isNotAMakerText);
 }
 
 /** The marks that do say something about who made the item. */
