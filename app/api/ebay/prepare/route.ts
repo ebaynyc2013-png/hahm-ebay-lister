@@ -1,6 +1,7 @@
 import {
   applyDefaultAntique,
   applyDefaultHandmade,
+  applyDefaultWholesale,
   applyDefaultPendantType,
   applyDefaultVintage,
   applyListingDefaults,
@@ -156,6 +157,8 @@ const categoryPath =
           // seller's rule, 31 Oct 2026) — after the photo pass, so her
           // "handmade" still comes through as Yes.
           applyDefaultHandmade(aspects, meta);
+          // Wholesale: always No — she never sells wholesale (10 Nov 2026).
+          applyDefaultWholesale(aspects, meta);
           // Vintage — her note, or her tick on "Possible vintage": Vintage
           // Yes, the era's Theme and Style, a jewellery Era (31 Oct 2026).
           if (isVintage(listing))
