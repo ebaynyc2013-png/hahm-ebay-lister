@@ -89,6 +89,24 @@ export function applyDefaultHandmade(
 }
 
 /**
+ * Wholesale: always No — she never sells wholesale (the seller, 10 Nov 2026).
+ * Set after the photo pass and over any answer it gave, in every category
+ * where eBay asks. (For other sellers' listings this default must not apply:
+ * their Wholesale stays empty — a rule for the future client site.)
+ */
+export function applyDefaultWholesale(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+): boolean {
+  const field = meta.find((a) => /^wholesale$/i.test(a.name.trim()));
+  const no = field ? matchAllowed("No", field.values) : null;
+  if (!field || !no) return false;
+  if ((aspects[field.name] ?? []).length === 1 && aspects[field.name][0] === no) return false;
+  aspects[field.name] = [no];
+  return true;
+}
+
+/**
  * Vintage: No unless her note says vintage or she ticks "Possible vintage"
  * (1 Nov 2026 — eBay's own suggestions offered "Vintage: No" for a modern
  * top). Applied after the photo pass and after her vintage, so only a field
