@@ -67,3 +67,47 @@ describe("one side of eBay's joined value is that value", () => {
     expect(allowedValuesFrom(["Snap"], m)).toEqual(["Snap/Button"]);
   });
 });
+
+import { applySportsTheme } from "@/lib/listing-defaults";
+
+describe("Theme: Sports, not 3D, for sportswear (10 Nov 2026)", () => {
+  const meta = [{ name: "Theme", values: ["3D", "Classic", "Colorful", "Sports"] }];
+  const path = "Clothing, Shoes & Accessories > Women > Women's Clothing > Activewear > Activewear Tops";
+  const tank = { maker_marks: ["Photo 1,2,3: PW3R SP3ED STR3NGTH graphic with P3 3D logo"] };
+
+  it("the Reebok tank: 3D → Sports", () => {
+    const a: Record<string, string[]> = { Theme: ["3D"] };
+    expect(applySportsTheme(a, meta, tank, path)).toBe(true);
+    expect(a.Theme).toEqual(["Sports"]);
+  });
+
+  it("keeps other honest themes and adds Sports first", () => {
+    const a: Record<string, string[]> = { Theme: ["3D", "Colorful"] };
+    applySportsTheme(a, meta, tank, path);
+    expect(a.Theme).toEqual(["Sports", "Colorful"]);
+  });
+
+  it("an empty Theme on sportswear is Sports", () => {
+    const a: Record<string, string[]> = {};
+    applySportsTheme(a, meta, { maker_marks: [] }, path);
+    expect(a.Theme).toEqual(["Sports"]);
+  });
+
+  it("outside sportswear, 3D from printed letters is dropped", () => {
+    const a: Record<string, string[]> = { Theme: ["3D", "Classic"] };
+    applySportsTheme(a, meta, tank, "Clothing, Shoes & Accessories > Women > Women's Clothing > Tops");
+    expect(a.Theme).toEqual(["Classic"]);
+  });
+
+  it("outside sportswear, a real 3D design is kept", () => {
+    const a: Record<string, string[]> = { Theme: ["3D"] };
+    expect(applySportsTheme(a, meta, { maker_marks: [] }, "Women's Clothing > Tops")).toBe(false);
+    expect(a.Theme).toEqual(["3D"]);
+  });
+
+  it("an activewear Theme without 3D is left alone", () => {
+    const a: Record<string, string[]> = { Theme: ["Colorful"] };
+    expect(applySportsTheme(a, meta, { maker_marks: [] }, path)).toBe(false);
+    expect(a.Theme).toEqual(["Colorful"]);
+  });
+});
