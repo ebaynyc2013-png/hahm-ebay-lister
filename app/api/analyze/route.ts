@@ -1,5 +1,6 @@
 import { scrubContactInfo } from "@/lib/contact-info";
 import { applyMakerMarkRules } from "@/lib/maker-marks";
+import { letterOnly, letterOnlyInDescription } from "@/lib/letter-size";
 import { referenceBlocks, referencesSchema } from "@/lib/brand-references";
 import { lessonBlocks, lessonsSchema } from "@/lib/tag-lessons";
 import { phraseBlocks, phrasesSchema } from "@/lib/style-phrase-blocks";
@@ -306,6 +307,16 @@ listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}`
         // A European, British or Italian women's size: "Size: EU 38 (US 8,
         // Medium)", from eBay's chart (the seller, 31 Oct 2026).
         listing.description = foreignSizeInDescription(listing.description, listing);
+        // A letter size is one value outside the title: the card's Size,
+        // eBay's Size and the description's Size line say "M", the title
+        // keeps "M Medium" (the seller, 10 Nov 2026).
+        listing.size = letterOnly(listing.size);
+        if (listing.item_specifics?.Size)
+          listing.item_specifics = {
+            ...listing.item_specifics,
+            Size: letterOnly(listing.item_specifics.Size),
+          };
+        listing.description = letterOnlyInDescription(listing.description);
         const shaped = formatDescription(listing.description, undefined, listing.brand ?? "");
         listing.description = shaped.text;
         if (shaped.dropped.length) listing.description_dropped = shaped.dropped;
