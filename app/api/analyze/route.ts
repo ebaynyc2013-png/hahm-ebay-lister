@@ -220,12 +220,16 @@ async function handle(req: NextRequest) {
               format: { type: "json_schema", schema: AI_LISTING_SCHEMA },
             },
             // System prompt is large and identical across requests for the same
-            // profile — cache it to cut cost and latency.
+            // profile — cache it to cut cost and latency. Kept for an hour, not
+            // five minutes: the seller writes one item, then the next a few
+            // minutes later (10 Nov 2026). A 1-hour write costs 2× instead of
+            // 1.25×, every read 0.1×. Once many sellers share these rules the
+            // cache stays warm anyway and this can go back to 5 minutes.
             system: [
               {
                 type: "text",
                 text: systemPrompt,
-                cache_control: { type: "ephemeral" },
+                cache_control: { type: "ephemeral", ttl: "1h" },
               },
             ],
             messages: [

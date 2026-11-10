@@ -7,6 +7,8 @@ export interface AiUsage {
   output: number;
   cacheRead: number;
   cacheWrite: number;
+  /** Of cacheWrite, the tokens written to the 1-hour cache (priced at 2×). */
+  cacheWrite1h?: number;
   ms: number;
   ok: boolean;
   estimatedUsd?: number;
@@ -48,6 +50,7 @@ export async function measuredMessage(
       output: u.output_tokens,
       cacheRead: u.cache_read_input_tokens ?? 0,
       cacheWrite: u.cache_creation_input_tokens ?? 0,
+      cacheWrite1h: (u as Anthropic.Usage).cache_creation?.ephemeral_1h_input_tokens ?? 0,
       ok: true,
     };
     // Estimates use standard global list rates; raw counts are authoritative.
@@ -64,7 +67,10 @@ export async function measuredMessage(
         (row.input * rate[0] +
           row.output * rate[1] +
           row.cacheRead * rate[0] * 0.1 +
-          row.cacheWrite * rate[0] * 1.25) /
+          // 5-minute writes cost 1.25× input, 1-hour writes 2× (Anthropic's
+          // prompt-caching prices).
+          (row.cacheWrite - (row.cacheWrite1h ?? 0)) * rate[0] * 1.25 +
+          (row.cacheWrite1h ?? 0) * rate[0] * 2) /
         1e6;
     if (r.stop_reason === "max_tokens")
       throw new Error(

@@ -861,7 +861,13 @@ export default function Home() {
       .map((g) => g.id);
     setStep("listings");
     if (usable.length === 0) return;
-    await runPool(usable, WRITE_CONCURRENCY, writeGroup);
+    // The first listing goes alone: it puts the listing rules into the AI's
+    // memory (cache), and only then do the rest start, three at a time, each
+    // reading the rules for about a tenth of the price. Started together, the
+    // first three would each pay the full price (10 Nov 2026).
+    const [first, ...rest] = usable;
+    await writeGroup(first);
+    if (rest.length) await runPool(rest, WRITE_CONCURRENCY, writeGroup);
   };
 
   const editGroup = (id: string, patch: Partial<ItemGroup>) =>
