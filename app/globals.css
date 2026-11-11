@@ -2006,3 +2006,13 @@ input.no-spin::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* Size 12 as in Word (16px) for the title and the item-specifics values
+   (Olya, 11 Nov 2026). Bold and colours stay as they are. */
+.draft-screen .df-title {
+  font-size: 16px !important;
+}
+.draft-screen .spec input,
+.draft-screen .spec select {
+  font-size: 16px;
+}
