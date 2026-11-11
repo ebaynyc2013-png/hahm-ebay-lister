@@ -318,6 +318,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
                   Minimum offer amount ${" "}
                   <input
                     type="number"
+                    className="no-spin"
                     inputMode="decimal"
                     min="0"
                     step="0.01"

@@ -1995,3 +1995,14 @@ html {
   text-transform: uppercase;
   color: #6b655c;
 }
+
+/* Number boxes the seller types into herself: no ▲▼ arrows (11 Nov 2026). */
+input.no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input.no-spin::-webkit-outer-spin-button,
+input.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
