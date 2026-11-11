@@ -3,6 +3,7 @@ import { rateLimitRequest } from "@/lib/api-guard";
 import { exchangeCode } from "@/lib/ebay/oauth";
 import { EBAY_STATE_COOKIE, connectionFromToken } from "@/lib/ebay/session";
 import { LABEL_COOKIE, saveAccount } from "@/lib/ebay/accounts";
+import { ebayJar, keepAccountsInCloud } from "@/lib/ebay/cloud-accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -37,15 +38,17 @@ export async function GET(req: NextRequest) {
     }
     const res = NextResponse.redirect(appUrl(req, "/?ebay=connected"));
     // Kept beside any other connected account, under the name she gave it,
-    // and made the active one.
+    // and made the active one — in the cloud when it is on (11 Nov 2026).
+    const jar = await ebayJar(req, { trusted: true });
     await saveAccount(
-      req.cookies,
+      jar,
       res,
       connectionFromToken(token.refresh_token, token.refresh_token_expires_in),
       req.cookies.get(LABEL_COOKIE)?.value,
     );
     res.cookies.delete(EBAY_STATE_COOKIE);
     res.cookies.delete(LABEL_COOKIE);
+    await keepAccountsInCloud(req, res, jar);
     return res;
   } catch (e) {
     const msg = encodeURIComponent((e as Error).message);

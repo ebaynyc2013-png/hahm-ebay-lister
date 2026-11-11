@@ -48,6 +48,7 @@ import {
 import { validateAspects } from "@/lib/ebay/draft";
 import { accessTokenFromCookie } from "@/lib/ebay/session";
 import { activeSealed } from "@/lib/ebay/accounts";
+import { ebayJar } from "@/lib/ebay/cloud-accounts";
 import { signReview } from "@/lib/review";
 import { withDeadline } from "@/lib/network";
 import { collectUsage, currentUsage } from "@/lib/ai-usage";
@@ -89,7 +90,7 @@ const categoryPath =
   listing.category_path ||
   "";
           const token = await accessTokenFromCookie(
-            activeSealed(req.cookies),
+            activeSealed(await ebayJar(req)),
           );
           const [meta, ids] = await Promise.all([
             categoryAspects(id),

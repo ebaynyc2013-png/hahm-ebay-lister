@@ -3,6 +3,7 @@ import { validationMessage } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 import { accessTokenFromCookie } from "@/lib/ebay/session";
 import { activeSealed } from "@/lib/ebay/accounts";
+import { ebayJar } from "@/lib/ebay/cloud-accounts";
 import { guardApiRequest } from "@/lib/api-guard";
 import { publishListing } from "@/lib/ebay/publish";
 import type { PublishInput } from "@/lib/ebay/publish";
@@ -41,7 +42,7 @@ async function handle(req: NextRequest) {
   let accessToken: string | null;
   try {
     accessToken = await accessTokenFromCookie(
-      activeSealed(req.cookies),
+      activeSealed(await ebayJar(req)),
     );
   } catch (e) {
     return NextResponse.json(

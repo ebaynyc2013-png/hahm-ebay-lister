@@ -3,6 +3,7 @@ import { boundedFetch } from "@/lib/network";
 import { NextRequest, NextResponse } from "next/server";
 import { accessTokenFromCookie } from "@/lib/ebay/session";
 import { activeSealed } from "@/lib/ebay/accounts";
+import { ebayJar } from "@/lib/ebay/cloud-accounts";
 import { EBAY_INV_BASE } from "@/lib/ebay/config";
 import { guardApiRequest } from "@/lib/api-guard";
 import { nextIndexFromSkus, sanitizeSku } from "@/lib/sku";
@@ -37,7 +38,7 @@ async function handle(req: NextRequest) {
   let accessToken: string | null = null;
   try {
     accessToken = await accessTokenFromCookie(
-      activeSealed(req.cookies),
+      activeSealed(await ebayJar(req)),
     );
   } catch {
     /* not connected — treated below */

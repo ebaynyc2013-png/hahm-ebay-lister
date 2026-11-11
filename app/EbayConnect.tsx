@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiPost } from "@/lib/api-client";
+import { accessHeaders, apiPost } from "@/lib/api-client";
 import { requestText } from "@/lib/text-dialog";
 
 interface Account {
@@ -33,7 +33,8 @@ export function EbayConnect() {
 
   const refresh = useCallback(async () => {
     try {
-      const r = await fetch("/api/ebay/status", { cache: "no-store" });
+      // With the access code, the accounts come from the cloud (11 Nov 2026).
+      const r = await fetch("/api/ebay/status", { cache: "no-store", headers: accessHeaders() });
       setStatus((await r.json()) as Status);
     } catch {
       setStatus({ configured: false, connected: false });

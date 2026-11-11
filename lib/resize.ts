@@ -40,6 +40,21 @@ export async function resizeImage(file: File): Promise<ResizedImage> {
   };
 }
 
+/**
+ * A photo brought back from the cloud: its eBay-size copy is kept as is, the
+ * analysis copy and the small preview are made from it again, exactly as on
+ * the device where it was taken (11 Nov 2026).
+ */
+export async function derivedCopies(
+  jpeg: Blob,
+): Promise<{ data: string; previewUrl: string }> {
+  const bitmap = await loadBitmap(jpeg);
+  const full = drawToJpeg(bitmap, FULL_DIM, FULL_QUALITY);
+  const thumb = drawToJpeg(bitmap, THUMB_DIM, THUMB_QUALITY);
+  if ("close" in bitmap) bitmap.close();
+  return { data: full.split(",")[1], previewUrl: thumb };
+}
+
 function drawToJpeg(
   src: ImageBitmap | HTMLImageElement,
   maxDim: number,
@@ -63,7 +78,7 @@ function scaleDown(w: number, h: number, max: number) {
   return { width: Math.round(w * ratio), height: Math.round(h * ratio) };
 }
 
-async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
+async function loadBitmap(file: Blob): Promise<ImageBitmap | HTMLImageElement> {
   if (typeof createImageBitmap === "function") {
     try {
       return await createImageBitmap(file);

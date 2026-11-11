@@ -97,6 +97,41 @@ export function guardApiRequest(req: NextRequest): NextResponse | null {
   return null;
 }
 
+/** True when the request carries the right access code (no rate limiting). */
+export function hasAccessCode(req: NextRequest): boolean {
+  const secret = process.env.APP_SECRET;
+  if (!secret)
+    return !(process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production");
+  const provided = req.headers.get("x-app-secret") ?? "";
+  return Boolean(provided) && timingSafeEqual(provided, secret);
+}
+
+// The cloud routes move many small things (a photo per request, records in
+// batches), so they get their own, wider window: 600 a minute per address.
+// The access code is still required on every one of them.
+const cloudHits = new Map<string, number[]>();
+const CLOUD_MAX_REQUESTS = 600;
+
+export function guardCloudRequest(req: NextRequest): NextResponse | null {
+  const ip = clientIp(req);
+  const now = Date.now();
+  const recent = (cloudHits.get(ip) ?? []).filter((t) => t > now - RATE_LIMIT_WINDOW_MS);
+  recent.push(now);
+  cloudHits.set(ip, recent);
+  if (cloudHits.size > 5000) cloudHits.clear();
+  if (recent.length > CLOUD_MAX_REQUESTS)
+    return NextResponse.json(
+      { ok: false, error: "Too many requests — wait a minute and try again." },
+      { status: 429 },
+    );
+  if (!hasAccessCode(req))
+    return NextResponse.json(
+      { ok: false, code: "ACCESS_CODE_REQUIRED", error: "Access code required." },
+      { status: 401 },
+    );
+  return null;
+}
+
 /** Log the real error server-side; return only a safe message to the client. */
 export function safeErrorResponse(
   context: string,

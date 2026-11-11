@@ -8,6 +8,7 @@ import {
   listAccounts,
   slotCookie,
 } from "@/lib/ebay/accounts";
+import { ebayJar, keepAccountsInCloud } from "@/lib/ebay/cloud-accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +25,9 @@ export async function POST(req: NextRequest) {
   } catch {
     /* no body: the active account */
   }
-  const accounts = await listAccounts(req.cookies);
-  const active = activeSlotOf(req.cookies, accounts);
+  const jar = await ebayJar(req);
+  const accounts = await listAccounts(jar);
+  const active = activeSlotOf(jar, accounts);
   const gone = slot ?? active;
   const res = NextResponse.json({ ok: true });
   if (gone) res.cookies.delete(slotCookie(gone));
@@ -35,5 +37,6 @@ export async function POST(req: NextRequest) {
     if (rest.length) res.cookies.set(ACTIVE_COOKIE, String(rest[0].slot), COOKIE_OPTIONS);
     else res.cookies.delete(ACTIVE_COOKIE);
   }
+  await keepAccountsInCloud(req, res, jar);
   return res;
 }

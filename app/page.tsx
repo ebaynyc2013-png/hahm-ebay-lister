@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { loadDraft, saveDraft } from "@/lib/draft-store";
+import { enterCodeForCloud, onSyncState, startCloudSync, syncNow, type SyncState } from "@/lib/cloud-sync";
 import {
   deleteFromHistory,
   historyPhotos,
@@ -19,7 +20,7 @@ import {
 } from "@/lib/history-store";
 import { processFiles } from "@/lib/intake";
 import { draftIssues } from "@/lib/client-review";
-import { apiPost } from "@/lib/api-client";
+import { accessHeaders, apiPost } from "@/lib/api-client";
 import { getAnalysisModel, getSortModel } from "@/lib/model-preferences";
 import { resizeImage } from "@/lib/resize";
 import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
@@ -141,6 +142,10 @@ export default function Home() {
   ebayAccountRef.current = ebayAccount;
   const [restored, setRestored] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Loading saved work…");
+  // The cloud copy (11 Nov 2026): same work in every Chrome profile and device.
+  const [cloud, setCloud] = useState<SyncState>({ phase: "off", message: "" });
+  const [cloudProgress, setCloudProgress] = useState("");
+  useEffect(() => onSyncState(setCloud), []);
   const [readOnly, setReadOnly] = useState(false);
   // Written cards kept after they leave the work screen (see history-store).
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -161,6 +166,9 @@ export default function Home() {
     let release: () => void = () => {};
     const restore = async () => {
       try {
+        // First bring in what was done in other profiles and devices. Never
+        // fails the restore: without the cloud, this browser's copy opens.
+        await startCloudSync((m) => active && setCloudProgress(m)).catch(() => {});
         const d = await loadDraft();
         if (d && active) {
           setPhotos(d.photos);
@@ -367,7 +375,7 @@ export default function Home() {
   // Keep eBay connection status in sync (also after the connect bar updates).
   useEffect(() => {
     const check = () =>
-      fetch("/api/ebay/status", { cache: "no-store" })
+      fetch("/api/ebay/status", { cache: "no-store", headers: accessHeaders() })
         .then((r) => r.json())
         .then((d) => {
           setEbayConnected(Boolean(d.connected));
@@ -1096,7 +1104,13 @@ export default function Home() {
     [groups],
   );
 
-  if (!restored) return <main className="wrap">Restoring saved work…</main>;
+  if (!restored)
+    return (
+      <main className="wrap">
+        Restoring saved work…
+        {cloudProgress && <p>{cloudProgress}</p>}
+      </main>
+    );
   if (readOnly)
     return (
       <main className="wrap">
@@ -1106,7 +1120,43 @@ export default function Home() {
     );
   return (
     <main className="wrap">
-      <p role="status">{saveStatus}</p>
+      <p role="status">
+        {saveStatus}
+        {cloud.phase !== "off" && (
+          <>
+            {" · "}
+            <span style={cloud.phase === "error" ? { color: "var(--color-danger)" } : undefined}>
+              {cloud.phase === "idle" ? "☁️ " : ""}
+              {cloud.message}
+            </span>
+            {cloud.phase === "needsCode" ? (
+              <>
+                {" "}
+                <button type="button" onClick={() => void enterCodeForCloud()}>
+                  Turn on cloud
+                </button>
+              </>
+            ) : cloud.needsReload ? (
+              <>
+                {" "}
+                <button type="button" onClick={() => location.reload()}>
+                  Reload to see it
+                </button>
+              </>
+            ) : (
+              cloud.phase !== "pulling" &&
+              cloud.phase !== "pushing" && (
+                <>
+                  {" "}
+                  <button type="button" onClick={() => void syncNow()}>
+                    Sync now
+                  </button>
+                </>
+              )
+            )}
+          </>
+        )}
+      </p>
       <header className="masthead">
         <span className="logo-mark" aria-hidden="true">
           🪄

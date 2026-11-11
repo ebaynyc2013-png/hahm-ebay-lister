@@ -37,6 +37,15 @@ function saveCode(code: string): void {
   }
 }
 
+/**
+ * The access-code header for a plain fetch (GET routes, binary uploads). Empty
+ * when no code is saved yet; apiPost asks for one when a route needs it.
+ */
+export function accessHeaders(): Record<string, string> {
+  const code = storedCode();
+  return code ? { "x-app-secret": code } : {};
+}
+
 export function clearAccessCode(): void {
   try {
     window.localStorage.removeItem(STORAGE_KEY);

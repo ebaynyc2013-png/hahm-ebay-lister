@@ -3,6 +3,7 @@ import { exchangeCode } from "@/lib/ebay/oauth";
 import { guardApiRequest } from "@/lib/api-guard";
 import { connectionFromToken } from "@/lib/ebay/session";
 import { LABEL_COOKIE, saveAccount } from "@/lib/ebay/accounts";
+import { ebayJar, keepAccountsInCloud } from "@/lib/ebay/cloud-accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -54,8 +55,9 @@ export async function POST(req: NextRequest) {
     }
     const res = NextResponse.json({ ok: true });
     // Kept beside any other connected account and made the active one.
+    const jar = await ebayJar(req);
     const saved = await saveAccount(
-      req.cookies,
+      jar,
       res,
       connectionFromToken(token.refresh_token, token.refresh_token_expires_in),
       body.label ?? req.cookies.get(LABEL_COOKIE)?.value,
@@ -63,6 +65,7 @@ export async function POST(req: NextRequest) {
     res.cookies.delete(LABEL_COOKIE);
     const out = NextResponse.json({ ok: true, label: saved.label });
     for (const c of res.cookies.getAll()) out.cookies.set(c);
+    await keepAccountsInCloud(req, out, jar);
     return out;
   } catch (e) {
     return NextResponse.json(

@@ -1,3 +1,4 @@
+import { trackWrites } from "./cloud-dirty";
 import type { ItemGroup, Photo } from "./types";
 export interface WorkspaceDraft {
   version: 1;
@@ -10,13 +11,21 @@ export interface WorkspaceDraft {
   updatedAt: number;
 }
 const DB = "listing-writer-drafts";
-export function openDb(): Promise<IDBDatabase> {
+/** The database exactly as the browser has it — for the cloud sync itself. */
+export function openRawDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const r = indexedDB.open(DB, 1);
     r.onupgradeneeded = () => r.result.createObjectStore("workspace");
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
   });
+}
+/**
+ * The database for the rest of the program. Every key it writes or deletes is
+ * noted, so the cloud sync sends exactly what changed (11 Nov 2026).
+ */
+export async function openDb(): Promise<IDBDatabase> {
+  return trackWrites(await openRawDb());
 }
 export async function loadDraft(): Promise<WorkspaceDraft | null> {
   const db = await openDb();

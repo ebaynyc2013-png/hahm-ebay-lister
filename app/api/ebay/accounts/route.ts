@@ -8,6 +8,7 @@ import {
   listAccounts,
   slotCookie,
 } from "@/lib/ebay/accounts";
+import { ebayJar, keepAccountsInCloud } from "@/lib/ebay/cloud-accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,8 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
   }
-  const accounts = await listAccounts(req.cookies);
+  const jar = await ebayJar(req);
+  const accounts = await listAccounts(jar);
   const account = accounts.find((a) => a.slot === body.slot);
   if (!account)
     return NextResponse.json(
@@ -34,6 +36,7 @@ export async function POST(req: NextRequest) {
   if (body.action === "switch") {
     const res = NextResponse.json({ ok: true, label: account.label });
     res.cookies.set(ACTIVE_COOKIE, String(account.slot), COOKIE_OPTIONS);
+    await keepAccountsInCloud(req, res, jar);
     return res;
   }
   if (body.action === "rename") {
@@ -50,6 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Reconnect this account." }, { status: 400 });
     const res = NextResponse.json({ ok: true, label });
     res.cookies.set(slotCookie(account.slot), await sealConnection({ ...conn, label }), COOKIE_OPTIONS);
+    await keepAccountsInCloud(req, res, jar);
     return res;
   }
   return NextResponse.json({ ok: false, error: "Unknown action." }, { status: 400 });
