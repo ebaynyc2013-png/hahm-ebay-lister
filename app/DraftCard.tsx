@@ -273,10 +273,27 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
           </span>
           <div className="photo-row">
             {photos.map((p, i) => (
-              <button key={p.id} type="button" className="photo-thumb" onClick={() => setZoom(i)} aria-label={`Zoom photo ${i + 1}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.previewUrl} alt="" />
-              </button>
+              <div key={p.id} className="photo-cell">
+                <button type="button" className="photo-thumb" onClick={() => setZoom(i)} aria-label={`Zoom photo ${i + 1}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.previewUrl} alt="" />
+                </button>
+                {/* Takes the photo off this listing only — not off the computer. */}
+                <button
+                  type="button"
+                  className="photo-remove"
+                  aria-label={`Remove photo ${i + 1}`}
+                  title="Remove this photo"
+                  onClick={() =>
+                    onGroupEdit(g.id, {
+                      photoIds: g.photoIds.filter((x) => x !== p.id),
+                      ...(g.analysisPhotoIds ? { analysisPhotoIds: g.analysisPhotoIds.filter((x) => x !== p.id) } : {}),
+                    })
+                  }
+                >
+                  ✕
+                </button>
+              </div>
             ))}
             {Array.from({ length: Math.max(0, photoLimit - photos.length) }, (_, i) => (
               <button

@@ -2092,3 +2092,42 @@ input.no-spin::-webkit-inner-spin-button {
 .draft-screen .photos-added .btn {
   min-width: 80px;
 }
+
+/* ✕ in the top-right corner of a photo, shown when the mouse is over it
+   (always shown on touch screens) — removes the photo from this listing. */
+.draft-screen .photo-cell {
+  position: relative;
+}
+.draft-screen .photo-cell .photo-thumb {
+  width: 100%;
+}
+.draft-screen .photo-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(29, 27, 24, 0.75);
+  color: #fff;
+  font-size: 14px;
+  line-height: 26px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.draft-screen .photo-cell:hover .photo-remove,
+.draft-screen .photo-remove:focus-visible {
+  opacity: 1;
+}
+.draft-screen .photo-remove:hover {
+  background: #1d1b18;
+}
+@media (hover: none) {
+  .draft-screen .photo-remove {
+    opacity: 1;
+  }
+}
