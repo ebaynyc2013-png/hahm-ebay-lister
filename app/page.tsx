@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { loadDraft, saveDraft } from "@/lib/draft-store";
-import { enterCodeForCloud, onCloudChanges, onSyncState, startCloudSync, syncNow, type SyncState } from "@/lib/cloud-sync";
+import { enterCodeForCloud, note, onCloudChanges, onSyncState, startCloudSync, syncNow, type SyncState } from "@/lib/cloud-sync";
 import {
   deleteFromHistory,
   historyPhotos,
@@ -173,6 +173,7 @@ export default function Home() {
         // fails the restore: without the cloud, this browser's copy opens.
         await startCloudSync().catch(() => {});
         const d = await loadDraft();
+        note(`page opened groups=${d?.groups.length ?? "none"}`);
         if (d && active) {
           setPhotos(d.photos);
           setGroups(d.groups);
@@ -225,6 +226,7 @@ export default function Home() {
         void (async () => {
           try {
             const d = await loadDraft();
+            note(`page refreshed groups=${d?.groups.length ?? "none"}`);
             if (d) {
               setPhotos(d.photos);
               setGroups(d.groups);

@@ -37,6 +37,9 @@ class FakeRedis {
     const m = this.h.get(k);
     return m && m.size ? Object.fromEntries(m) : null;
   }
+  async hget(k: string, f: string) {
+    return this.h.get(k)?.get(f) ?? null;
+  }
   async hmget(k: string, ...f: string[]) {
     return Object.fromEntries(f.map((x) => [x, this.h.get(k)?.get(x) ?? null]));
   }
@@ -317,4 +320,20 @@ describe("a screen that saves an old empty copy after the cloud's arrived", () =
     use(edge);
     expect((await edge.drafts.loadDraft())!.groups.map((g) => g.id)).toEqual(["ga4"]);
   });
+});
+
+it("the cloud refuses an empty work screen over one with items", async () => {
+  store.h.clear();
+  const put = (value: unknown) =>
+    recordsRoute.POST(
+      new NextRequest("http://localhost/api/cloud/records", {
+        method: "POST",
+        headers: { "x-app-secret": CODE, "content-type": "application/json" },
+        body: JSON.stringify({ action: "put", items: [{ key: "current", value: JSON.stringify(value) }] }),
+      }),
+    );
+  await put(draft([], [group("gz", "pz")], 1));
+  const res = await (await put(draft([], [], 2))).json();
+  expect(res.refused).toEqual(["current"]);
+  expect(JSON.parse(store.h.get(K.rec)!.get("current")!).groups).toHaveLength(1);
 });

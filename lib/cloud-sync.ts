@@ -122,11 +122,21 @@ async function writeMeta(m: Meta): Promise<void> {
 class CloudOff extends Error {}
 class NeedsCode extends CloudOff {}
 
-async function call(body: unknown): Promise<any> {
+// A short trail of what the sync did, sent along with the next cloud call so
+// a problem on one browser can be looked at from anywhere (test copy, 11 Nov).
+const trail: string[] = [];
+const browserTag = Math.random().toString(36).slice(2, 7);
+export function note(msg: string): void {
+  trail.push(`${new Date().toISOString().slice(11, 23)} ${browserTag} ${msg}`);
+  if (trail.length > 40) trail.shift();
+}
+
+async function call(body: Record<string, unknown>): Promise<any> {
+  const log = trail.splice(0);
   const res = await fetch("/api/cloud/records", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...accessHeaders() },
-    body: JSON.stringify(body),
+    body: JSON.stringify(log.length ? { ...body, log } : body),
   });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) throw new NeedsCode();
@@ -217,6 +227,7 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
   const changed = Object.keys(revs).filter(
     (k) => !isLocalOnly(k) && revs[k] !== meta.revs[k] && revTime(revs[k]) > revTime(meta.revs[k]),
   );
+  note(`pull changed=${changed.length}${changed.includes(WORK) ? " +current" : ""} myRev=${meta.revs[WORK] ?? "-"} cloudRev=${revs[WORK] ?? "-"}`);
   if (!changed.length) return 0;
 
   // Deleted elsewhere: delete here too, unless changed here since.
@@ -252,6 +263,8 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
   const dirty = new Set(dirtyKeys());
   if (!meta.joined) for (const k of await allKeys()) if (!isLocalOnly(k)) dirty.add(k);
   const workHere = updates.includes(WORK) ? await readKey(WORK) : undefined;
+  if (updates.includes(WORK))
+    note(`pull work: here=${isEmptyWorkScreen(workHere) ? "empty" : "items"} dirty=${dirty.has(WORK)} cloud=${values[WORK] && isEmptyWorkScreen(JSON.parse(values[WORK]!)) ? "empty" : "items"}`);
   const localWork = dirty.has(WORK) ? workHere : undefined;
   let healWork = false;
   await withDb(async (db) => {
@@ -301,6 +314,7 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
   await writeMeta(meta);
   // The screen shows what is in this browser's database: tell it, so it never
   // saves an older copy over what just arrived.
+  note(`pull applied=${applied} heal=${healWork} pageOpened=${pageOpened}`);
   if (applied && pageOpened) changeWatchers.forEach((w) => w());
   return applied;
 }
@@ -345,6 +359,7 @@ export async function push(onProgress?: (msg: string) => void, pulledFirst = fal
     const value = await readKey(k);
     // An empty work screen (a browser that just opened) is never sent over a
     // cloud screen that has items.
+    if (k === WORK) note(`push work: here=${isEmptyWorkScreen(value) ? "empty" : "items"} cloudFull=${meta.cloudWorkFull}`);
     if (k === WORK && isEmptyWorkScreen(value) && meta.cloudWorkFull) {
       // ...and the cloud's screen is brought back here instead.
       delete meta.revs[k];
@@ -372,8 +387,17 @@ export async function push(onProgress?: (msg: string) => void, pulledFirst = fal
   let size = 0;
   const flush = async () => {
     if (!batch.length) return;
-    const { revs } = await call({ action: "put", items: batch });
-    for (const it of batch) {
+    const { revs, refused } = (await call({ action: "put", items: batch })) as {
+      revs: Record<string, string>;
+      refused?: string[];
+    };
+    for (const k of refused ?? []) {
+      // The cloud kept its work screen with items: bring it back here.
+      delete meta.revs[k];
+      delete meta.sigs[k];
+      refetchWork = true;
+    }
+    for (const it of batch.filter((b) => !refused?.includes(b.key))) {
       meta.revs[it.key] = revs[it.key];
       meta.sigs[it.key] = fingerprint(it.value);
       if (it.key === WORK) meta.cloudWorkFull = !isEmptyWorkScreen(JSON.parse(it.value));
