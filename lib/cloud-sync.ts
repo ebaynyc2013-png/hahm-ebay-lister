@@ -47,6 +47,8 @@ interface Meta {
   /** Everything in this browser has been offered to the cloud once. */
   joined?: boolean;
   lastGc?: number;
+  /** The cloud's work screen, as this browser last knew it, has items. */
+  cloudWorkFull?: boolean;
 }
 
 export interface SyncState {
@@ -273,6 +275,7 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
         // browser's screen goes back to the cloud instead.
         meta.revs[k] = revs[k];
         delete meta.sigs[k]; // the cloud no longer has what this browser has
+        meta.cloudWorkFull = false;
         healWork = true;
         continue;
       }
@@ -288,6 +291,7 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
       store.put(value, k);
       meta.revs[k] = revs[k];
       meta.sigs[k] = fingerprint(json);
+      if (k === WORK) meta.cloudWorkFull = !isEmptyWorkScreen(JSON.parse(json));
       applied++;
     }
     await done(tx);
@@ -295,6 +299,9 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
   // The merged work screen goes back to the cloud with the next push.
   if ((dirty.has(WORK) && updates.includes(WORK)) || healWork) markDirty(WORK);
   await writeMeta(meta);
+  // The screen shows what is in this browser's database: tell it, so it never
+  // saves an older copy over what just arrived.
+  if (applied && pageOpened) changeWatchers.forEach((w) => w());
   return applied;
 }
 
@@ -304,7 +311,7 @@ const BATCH_CHARS = 3_000_000; // under Vercel's 4.5 MB request limit
 
 /** Send everything changed here. Returns how many records were sent. */
 export async function push(onProgress?: (msg: string) => void, pulledFirst = false): Promise<number> {
-  let meta = await readMeta();
+  const meta = await readMeta();
   const present = new Set((await allKeys()).filter((k) => !isLocalOnly(k)));
   // First time in this browser: offer everything it has.
   const keys = meta.joined ? dirtyKeys() : [...new Set([...present, ...dirtyKeys()])];
@@ -326,6 +333,7 @@ export async function push(onProgress?: (msg: string) => void, pulledFirst = fal
   }
 
   const stamps = keys.map((k) => [k, stampOf(k)] as [string, number]);
+  let refetchWork = false;
   const puts: { key: string; value: string }[] = [];
   const deletes: string[] = [];
   const photos = new Map<string, Photo>();
@@ -334,7 +342,16 @@ export async function push(onProgress?: (msg: string) => void, pulledFirst = fal
       if (meta.revs[k] && !revDeleted(meta.revs[k])) deletes.push(k);
       continue;
     }
-    const { json, photos: inside } = packRecord(await readKey(k));
+    const value = await readKey(k);
+    // An empty work screen (a browser that just opened) is never sent over a
+    // cloud screen that has items.
+    if (k === WORK && isEmptyWorkScreen(value) && meta.cloudWorkFull) {
+      // ...and the cloud's screen is brought back here instead.
+      delete meta.revs[k];
+      refetchWork = true;
+      continue;
+    }
+    const { json, photos: inside } = packRecord(value);
     const sig = fingerprint(json);
     if (meta.sigs[k] === sig && meta.revs[k]) continue; // same as the cloud has
     inside.forEach((p, id) => photos.set(id, p));
@@ -359,6 +376,7 @@ export async function push(onProgress?: (msg: string) => void, pulledFirst = fal
     for (const it of batch) {
       meta.revs[it.key] = revs[it.key];
       meta.sigs[it.key] = fingerprint(it.value);
+      if (it.key === WORK) meta.cloudWorkFull = !isEmptyWorkScreen(JSON.parse(it.value));
     }
     batch = [];
     size = 0;
@@ -380,6 +398,7 @@ export async function push(onProgress?: (msg: string) => void, pulledFirst = fal
   meta.joined = true;
   await writeMeta(meta);
   clearDirty(stamps);
+  if (refetchWork) await pull(onProgress);
   return puts.length + deletes.length;
 }
 
@@ -413,6 +432,8 @@ let wantPull = false;
 let started = false;
 let hiddenAt = 0;
 let onPulled: ((n: number) => void) | null = null;
+/** The screen has read its saved work; from now on it is told of every change. */
+let pageOpened = false;
 
 function run(withPull = false): Promise<void> {
   if (withPull) wantPull = true;
@@ -476,11 +497,11 @@ export async function startCloudSync(
 
   let opened = false;
   const firstPull = new Promise<void>((resolve) => {
-    onPulled = (n) => {
+    onPulled = () => {
       if (!opened) {
         opened = true;
         resolve();
-      } else if (n) changeWatchers.forEach((w) => w());
+      }
     };
   });
   const unsub = onSyncState((s) => {
@@ -505,7 +526,8 @@ export async function startCloudSync(
 
   const finished = run(true);
   await Promise.race([firstPull, finished, new Promise((r) => setTimeout(r, waitMs))]);
-  opened = true; // from here on, changes that arrive go straight onto the screen
+  opened = true;
+  pageOpened = true; // from here on, changes that arrive go straight onto the screen
   unsub();
 }
 

@@ -296,3 +296,25 @@ describe("an empty work screen never wipes another (11 Nov 2026)", () => {
     expect(cloud.groups.map((g: any) => g.id)).toEqual(["ga3"]);
   });
 });
+
+describe("a screen that saves an old empty copy after the cloud's arrived", () => {
+  it("never sends it, and gets the cloud's screen back", async () => {
+    store.h.clear();
+    blobs.clear();
+    const chrome = await browser();
+    await chrome.drafts.saveDraft(draft([photo("pa0004", "BIG-A")], [group("ga4", "pa0004")], 10));
+    use(chrome);
+    await chrome.sync.push();
+
+    const edge = await browser();
+    use(edge);
+    await edge.sync.pull(); // the cloud's screen arrives
+    await edge.drafts.saveDraft(draft([], [], Date.now())); // the page saves its stale empty copy
+    use(edge);
+    await edge.sync.push();
+    const cloud = JSON.parse(store.h.get(K.rec)!.get("current")!);
+    expect(cloud.groups.map((g: any) => g.id)).toEqual(["ga4"]);
+    use(edge);
+    expect((await edge.drafts.loadDraft())!.groups.map((g) => g.id)).toEqual(["ga4"]);
+  });
+});
