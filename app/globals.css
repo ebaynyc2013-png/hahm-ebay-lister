@@ -1967,3 +1967,31 @@ html {
 .draft-screen .df-title {
   min-height: 0;
 }
+
+/* Tags for other shops on the draft screen: one line each, as tall as the
+   text — not paragraph-sized boxes (11 Nov 2026). The copy button sits on
+   the same line. */
+/* tight box around each tag row */
+.draft-screen .other-shops .tag-line {
+  padding: 6px 10px;
+  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 8px;
+}
+.draft-screen .other-shops .tag-line > *:not(.tag-v):not(button) {
+  grid-column: 1 / -1;
+}
+.draft-screen .other-shops .tag-v {
+  min-height: 0;
+  overflow: hidden;
+  resize: none;
+  padding: 6px 8px;
+  line-height: 1.4;
+}
+.draft-screen .other-shops > label {
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b655c;
+}

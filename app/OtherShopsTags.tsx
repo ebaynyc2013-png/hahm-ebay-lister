@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CopyButton } from "./CopyButton";
 import {
   ETSY_TAG_LIMIT,
@@ -57,6 +57,17 @@ export function OtherShopsTags({
   const [etsyText, setEtsyText] = useState(etsyTagLine(etsy));
   const [state, setState] = useState<"" | "saving" | "saved" | "error">("");
 
+  // One line each, as tall as the text — not paragraph-sized boxes.
+  const hashRef = useRef<HTMLTextAreaElement>(null);
+  const etsyRef = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    for (const t of [hashRef.current, etsyRef.current]) {
+      if (!t) continue;
+      t.style.height = "auto";
+      t.style.height = `${t.scrollHeight + 2}px`;
+    }
+  }, [hashText, etsyText]);
+
   // A new analysis or a Re-analyze replaces the tags: show the new ones.
   const hashKey = hashtagLine(hashtags);
   const etsyKey = etsyTagLine(etsy);
@@ -91,7 +102,8 @@ export function OtherShopsTags({
         <textarea
           aria-label="Hashtags for Depop, Mercari and Poshmark"
           className="tag-v"
-          rows={2}
+          ref={hashRef}
+          rows={1}
           value={hashText}
           onChange={(e) => {
             setHashText(e.target.value);
@@ -108,7 +120,8 @@ export function OtherShopsTags({
         <textarea
           aria-label="Etsy tags"
           className="tag-v"
-          rows={3}
+          ref={etsyRef}
+          rows={1}
           value={etsyText}
           onChange={(e) => {
             setEtsyText(e.target.value);
