@@ -1036,6 +1036,9 @@ export interface PublishInput {
   imageUrls?: string[];
   // Start the listing SCHEDULE_DELAY_HOURS from now instead of at once.
   scheduled?: boolean;
+  // Start the listing at this moment (ISO), chosen by the seller — wins over
+  // `scheduled` (11 Nov 2026). eBay schedules up to 3 weeks ahead.
+  scheduleAt?: string;
   // "Allow offers" (on unless allow is false) and the "Minimum offer amount" —
   // offers below it are declined by eBay (1 Nov 2026).
   offers?: { allow?: boolean; minimum?: number | string | null };
@@ -1110,6 +1113,22 @@ export const SCHEDULE_DELAY_HOURS = 24;
 
 export function scheduledStart(now = Date.now()): string {
   return new Date(now + SCHEDULE_DELAY_HOURS * 3600_000).toISOString();
+}
+
+/** eBay's help: a listing can be scheduled up to 3 weeks in advance. */
+export const SCHEDULE_MAX_DAYS = 21;
+
+/**
+ * The start time the seller chose, if eBay can take it: a little in the future
+ * and no more than 3 weeks ahead. Anything else throws, in plain words.
+ */
+export function chosenStart(at: string, now = Date.now()): string {
+  const t = Date.parse(at);
+  if (!Number.isFinite(t)) throw new Error("The schedule date or time is not valid.");
+  if (t < now + 5 * 60_000) throw new Error("Choose a start time at least 5 minutes from now.");
+  if (t > now + SCHEDULE_MAX_DAYS * 24 * 3600_000)
+    throw new Error("eBay schedules listings up to 3 weeks ahead — choose an earlier date.");
+  return new Date(t).toISOString();
 }
 
 // Only accept photo URLs that eBay Picture Services itself minted — anything
@@ -1390,7 +1409,11 @@ export async function publishListing(
         }
       : {}),
   };
-  const startAt = input.scheduled === true ? scheduledStart() : undefined;
+  const startAt = input.scheduleAt
+    ? chosenStart(input.scheduleAt)
+    : input.scheduled === true
+      ? scheduledStart()
+      : undefined;
   const offerBody = {
     sku,
     marketplaceId: EBAY_MARKETPLACE_ID,

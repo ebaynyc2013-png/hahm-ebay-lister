@@ -21,6 +21,7 @@ import {
 import { processFiles } from "@/lib/intake";
 import { draftIssues } from "@/lib/client-review";
 import { accessHeaders, apiPost } from "@/lib/api-client";
+import { pacificToIso } from "@/lib/pacific-time";
 import { getAnalysisModel, getSortModel } from "@/lib/model-preferences";
 import { resizeImage } from "@/lib/resize";
 import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
@@ -32,7 +33,7 @@ import { offerChoice } from "@/lib/offers";
 const ACCOUNT_KEY = "listing-writer:ebay-account";
 import { ModelSelector } from "./ModelSelector";
 import { ReviewBoard } from "./ReviewBoard";
-import { ListingsView } from "./ListingsView";
+import { DraftScreen } from "./DraftScreen";
 import { HistoryPanel } from "./HistoryPanel";
 import { BrandMemoryPanel } from "./BrandMemoryPanel";
 import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
@@ -1059,6 +1060,11 @@ export default function Home() {
             review: group.preparation,
             expectedPhotoCount: group.photoIds.length,
             scheduled: group.scheduleStart === true,
+            // The seller's own date and time, in Pacific time as eBay shows
+            // it (11 Nov 2026).
+            ...(group.scheduleStart === true && group.scheduleAt
+              ? { scheduleAt: pacificToIso(group.scheduleAt) }
+              : {}),
             offers: offerChoice(group),
           });
           // Wait out rate limits / transient platform errors instead of dying
@@ -1380,7 +1386,7 @@ export default function Home() {
       )}
 
       {step === "listings" && (
-        <ListingsView
+        <DraftScreen
           groups={usableGroups}
           photoById={photoById}
           ebayConnected={ebayConnected}

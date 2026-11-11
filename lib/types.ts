@@ -212,6 +212,8 @@ export interface ItemGroup {
    * which the seller can open it on eBay and accept them before it goes live.
    */
   scheduleStart?: boolean;
+  /** The start time the seller picked for this draft (local "YYYY-MM-DDTHH:mm"), when scheduling. */
+  scheduleAt?: string;
   /** When a delayed listing goes live (ISO time), as eBay was told. */
   scheduledFor?: string;
   /** The seller's name for the eBay account it was posted to ("Jewelry"). */

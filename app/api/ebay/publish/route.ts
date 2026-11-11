@@ -5,7 +5,7 @@ import { accessTokenFromCookie } from "@/lib/ebay/session";
 import { activeSealed } from "@/lib/ebay/accounts";
 import { ebayJar } from "@/lib/ebay/cloud-accounts";
 import { guardApiRequest } from "@/lib/api-guard";
-import { publishListing } from "@/lib/ebay/publish";
+import { chosenStart, publishListing } from "@/lib/ebay/publish";
 import type { PublishInput } from "@/lib/ebay/publish";
 
 // Photo upload + several eBay calls + recovery loops — give it room.
@@ -58,6 +58,15 @@ async function handle(req: NextRequest) {
       },
       { status: 401 },
     );
+  }
+
+  // A start time eBay would refuse is refused here, before anything is sent.
+  if (typeof (body as { scheduleAt?: unknown }).scheduleAt === "string") {
+    try {
+      chosenStart((body as { scheduleAt: string }).scheduleAt);
+    } catch (e) {
+      return NextResponse.json({ success: false, error: (e as Error).message }, { status: 400 });
+    }
   }
 
   try {
