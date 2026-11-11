@@ -267,7 +267,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
           />
         </div>
 
-        <div className="df" id={a("photos")}>
+        <div className="df photos-df" id={a("photos")}>
           <span className="df-label">
             Photos · {photos.length} · click to zoom
           </span>
@@ -301,9 +301,9 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
           />
           {justAdded > 0 && (
             <div className="photos-added" role="alert">
-              <b>
+              <span>
                 You added {justAdded} photo{justAdded > 1 ? "s" : ""}. Re-analyze listing?
-              </b>
+              </span>
               <button
                 type="button"
                 className="btn"
@@ -319,25 +319,6 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
               </button>
             </div>
           )}
-          <details className="df-more">
-            <summary>Photos the AI reads for Re-analyze</summary>
-            {photos.map((p, i) => (
-              <label key={p.id} className="analysis-pick">
-                <input
-                  type="checkbox"
-                  checked={(g.analysisPhotoIds ?? g.photoIds).includes(p.id)}
-                  onChange={(e) =>
-                    onGroupEdit(g.id, {
-                      analysisPhotoIds: e.target.checked
-                        ? [...(g.analysisPhotoIds ?? g.photoIds), p.id]
-                        : (g.analysisPhotoIds ?? g.photoIds).filter((x) => x !== p.id),
-                    })
-                  }
-                />{" "}
-                Photo {i + 1}
-              </label>
-            ))}
-          </details>
         </div>
 
         <div className="money-row">

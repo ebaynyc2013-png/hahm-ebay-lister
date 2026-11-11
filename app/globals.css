@@ -2051,23 +2051,44 @@ input.no-spin::-webkit-inner-spin-button {
   border-color: var(--green);
   color: var(--green);
 }
+.draft-screen .photos-df {
+  position: relative;
+}
+/* A small window over the photos: plain black text, Yes / No. */
 .draft-screen .photos-added {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--amber-soft);
-  border: 1px solid var(--amber-line);
+  gap: 12px;
+  max-width: calc(100% - 24px);
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #cfc8bc;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  color: #1d1b18;
   font-size: 16px;
-}
-.draft-screen .photos-added b {
-  color: var(--amber);
+  font-weight: normal;
 }
 @media (max-width: 700px) {
   .draft-screen .photo-row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+.draft-screen .photos-added .btn {
+  font-weight: normal;
+  color: #1d1b18;
+}
+.draft-screen .photos-added > span {
+  flex-basis: 100%;
+  text-align: center;
+}
+.draft-screen .photos-added .btn {
+  min-width: 80px;
 }
