@@ -255,3 +255,44 @@ describe("two Chrome profiles through the cloud", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("an empty work screen never wipes another (11 Nov 2026)", () => {
+  it("a new browser's empty screen is merged, not sent over the cloud's", async () => {
+    store.h.clear();
+    blobs.clear();
+    const jewelry = await browser();
+    await jewelry.drafts.saveDraft(draft([photo("pa0002", "BIG-A")], [group("ga2", "pa0002")], 10));
+    use(jewelry);
+    await jewelry.sync.push();
+
+    const edge = await browser();
+    // The page opened before the cloud arrived and saved its empty screen.
+    await edge.drafts.saveDraft(draft([], [], Date.now()));
+    use(edge);
+    await edge.sync.push();
+    const cloud = JSON.parse(store.h.get(K.rec)!.get("current")!);
+    expect(cloud.groups.map((g: any) => g.id)).toEqual(["ga2"]);
+    use(edge);
+    expect((await edge.drafts.loadDraft())!.groups.map((g) => g.id)).toEqual(["ga2"]);
+  });
+
+  it("an empty screen already in the cloud is replaced by the work here", async () => {
+    store.h.clear();
+    blobs.clear();
+    const jewelry = await browser();
+    await jewelry.drafts.saveDraft(draft([photo("pa0003", "BIG-A")], [group("ga3", "pa0003")], 10));
+    use(jewelry);
+    await jewelry.sync.push();
+    // Someone sent an empty screen (the bug of 11 Nov).
+    store.h.get(K.rec)!.set("current", packRecord(draft([], [], Date.now())).json);
+    store.h.get(K.rev)!.set("current", String(Date.now() + 1000));
+
+    use(jewelry);
+    await jewelry.sync.pull();
+    expect((await jewelry.drafts.loadDraft())!.groups.map((g) => g.id)).toEqual(["ga3"]);
+    use(jewelry);
+    await jewelry.sync.push();
+    const cloud = JSON.parse(store.h.get(K.rec)!.get("current")!);
+    expect(cloud.groups.map((g: any) => g.id)).toEqual(["ga3"]);
+  });
+});

@@ -17,6 +17,7 @@ import { accessHeaders, apiPost } from "./api-client";
 import {
   base64ToBytes,
   fingerprint,
+  isEmptyWorkScreen,
   isPhotoRef,
   mergeWorkScreens,
   packRecord,
@@ -248,7 +249,9 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
   // changed here: nothing of it is replaced, its work screen is merged.
   const dirty = new Set(dirtyKeys());
   if (!meta.joined) for (const k of await allKeys()) if (!isLocalOnly(k)) dirty.add(k);
-  const localWork = dirty.has(WORK) && updates.includes(WORK) ? await readKey(WORK) : undefined;
+  const workHere = updates.includes(WORK) ? await readKey(WORK) : undefined;
+  const localWork = dirty.has(WORK) ? workHere : undefined;
+  let healWork = false;
   await withDb(async (db) => {
     const tx = db.transaction(STORE, "readwrite");
     const store = tx.objectStore(STORE);
@@ -265,6 +268,14 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
       if (json == null) continue;
       let value = withoutMissingPhotos(unpackRecord(json, (ref) => have.get(ref.id)));
       if (value === undefined) continue; // a photo record whose photo is gone
+      if (k === WORK && isEmptyWorkScreen(value) && !isEmptyWorkScreen(workHere)) {
+        // An empty screen from elsewhere never replaces the work here; this
+        // browser's screen goes back to the cloud instead.
+        meta.revs[k] = revs[k];
+        delete meta.sigs[k]; // the cloud no longer has what this browser has
+        healWork = true;
+        continue;
+      }
       if (dirty.has(k)) {
         // Changed here and there. The work screen is merged; for anything
         // else this browser's newer change is sent over the cloud's.
@@ -282,7 +293,7 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
     await done(tx);
   });
   // The merged work screen goes back to the cloud with the next push.
-  if (dirty.has(WORK) && updates.includes(WORK)) markDirty(WORK);
+  if ((dirty.has(WORK) && updates.includes(WORK)) || healWork) markDirty(WORK);
   await writeMeta(meta);
   return applied;
 }
@@ -292,11 +303,20 @@ export async function pull(onProgress?: (msg: string) => void): Promise<number> 
 const BATCH_CHARS = 3_000_000; // under Vercel's 4.5 MB request limit
 
 /** Send everything changed here. Returns how many records were sent. */
-export async function push(onProgress?: (msg: string) => void): Promise<number> {
-  const meta = await readMeta();
+export async function push(onProgress?: (msg: string) => void, pulledFirst = false): Promise<number> {
+  let meta = await readMeta();
   const present = new Set((await allKeys()).filter((k) => !isLocalOnly(k)));
   // First time in this browser: offer everything it has.
   const keys = meta.joined ? dirtyKeys() : [...new Set([...present, ...dirtyKeys()])];
+  // The work screen changed in the cloud since this browser last saw it:
+  // bring that in (merged) before sending, so one screen never wipes another.
+  if (!pulledFirst && keys.includes(WORK)) {
+    const { revs } = (await call({ action: "revs" })) as { revs: Record<string, string> };
+    if (revs[WORK] && revs[WORK] !== meta.revs[WORK]) {
+      await pull(onProgress);
+      return push(onProgress, true);
+    }
+  }
   if (!keys.length) {
     if (!meta.joined) {
       meta.joined = true;

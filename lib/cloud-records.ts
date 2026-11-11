@@ -100,7 +100,7 @@ interface WorkScreen {
   [k: string]: unknown;
 }
 
-const isWorkScreen = (v: unknown): v is WorkScreen =>
+export const isWorkScreen = (v: unknown): v is WorkScreen =>
   !!v &&
   typeof v === "object" &&
   (v as WorkScreen).version === 1 &&
@@ -113,9 +113,17 @@ const isWorkScreen = (v: unknown): v is WorkScreen =>
  * dropped: every item and photo of both is kept; for an item on both, the
  * newer screen's copy wins.
  */
+/** A work screen with no photos and no items — a fresh browser's, or a cleared one. */
+export const isEmptyWorkScreen = (v: unknown): boolean =>
+  isWorkScreen(v) && v.photos.length === 0 && v.groups.length === 0;
+
 export function mergeWorkScreens(local: unknown, remote: unknown): unknown {
   if (!isWorkScreen(local)) return remote;
   if (!isWorkScreen(remote)) return local;
+  // An empty screen brings nothing: the other one stays exactly as it is
+  // (11 Nov 2026: a new browser's empty screen wiped the cloud's).
+  if (isEmptyWorkScreen(local)) return remote;
+  if (isEmptyWorkScreen(remote)) return local;
   const [older, newer] =
     (local.updatedAt ?? 0) > (remote.updatedAt ?? 0) ? [remote, local] : [local, remote];
   const photoId = (p: unknown) => (p && typeof p === "object" ? String((p as { id?: unknown }).id ?? "") : "");
