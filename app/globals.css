@@ -1462,3 +1462,13 @@ div.size-warning p {
 .text-entry-dialog label { display: grid; gap: 14px; line-height: 1.5; }
 .text-entry-dialog input { width: 100%; box-sizing: border-box; padding: 12px; font-size: 16px; }
 .text-entry-dialog form > div { display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px; }
+
+/* The cloud status icon — for the site's owner only (11 Nov 2026). */
+.cloud-icon {
+  border: 0;
+  background: transparent;
+  padding: 2px 6px;
+  font-size: 0.95em;
+  cursor: pointer;
+  color: inherit;
+}

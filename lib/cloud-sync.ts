@@ -51,8 +51,6 @@ interface Meta {
 export interface SyncState {
   phase: "off" | "needsCode" | "idle" | "pulling" | "pushing" | "error";
   message: string;
-  /** The cloud brought in changes the screen does not show yet. */
-  needsReload?: boolean;
 }
 
 let state: SyncState = { phase: "off", message: "" };
@@ -62,6 +60,14 @@ function set(s: Partial<SyncState>) {
   watchers.forEach((w) => w(state));
 }
 export const syncState = () => state;
+
+// The screen listens here: work from another profile or device arrived after
+// the lister opened, and is already in this browser's database.
+const changeWatchers = new Set<() => void>();
+export function onCloudChanges(fn: () => void): () => void {
+  changeWatchers.add(fn);
+  return () => changeWatchers.delete(fn);
+}
 export function onSyncState(fn: (s: SyncState) => void): () => void {
   watchers.add(fn);
   fn(state);
@@ -423,14 +429,14 @@ function run(withPull = false): Promise<void> {
 
 /**
  * Before the lister reads its saved work: bring in what changed elsewhere.
- * The screen shows progress meanwhile (`onProgress`); saving to the cloud
- * carries on in the background. Never waits longer than `waitMs` — then the
- * lister opens with what this browser has and is told to reload when the rest
- * has arrived. When the cloud is not connected, returns at once.
+ * Waits at most `waitMs` (a few seconds): then the lister opens with what this
+ * browser has, and work from elsewhere appears on the screen as soon as it has
+ * arrived (onCloudChanges). Saving to the cloud runs in the background. When
+ * the cloud is not connected, returns at once.
  */
 export async function startCloudSync(
   onProgress?: (msg: string) => void,
-  waitMs = 120_000,
+  waitMs = 3_000,
 ): Promise<void> {
   if (started) return;
   started = true;
@@ -454,7 +460,7 @@ export async function startCloudSync(
       if (!opened) {
         opened = true;
         resolve();
-      } else if (n) set({ needsReload: true, message: "Work from another device arrived." });
+      } else if (n) changeWatchers.forEach((w) => w());
     };
   });
   const unsub = onSyncState((s) => {
@@ -479,7 +485,7 @@ export async function startCloudSync(
 
   const finished = run(true);
   await Promise.race([firstPull, finished, new Promise((r) => setTimeout(r, waitMs))]);
-  opened = true; // from here on, a pull that brings changes asks for a reload
+  opened = true; // from here on, changes that arrive go straight onto the screen
   unsub();
 }
 

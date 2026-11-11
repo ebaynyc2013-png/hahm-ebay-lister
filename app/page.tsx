@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { loadDraft, saveDraft } from "@/lib/draft-store";
-import { enterCodeForCloud, onSyncState, startCloudSync, syncNow, type SyncState } from "@/lib/cloud-sync";
+import { enterCodeForCloud, onCloudChanges, onSyncState, startCloudSync, syncNow, type SyncState } from "@/lib/cloud-sync";
 import {
   deleteFromHistory,
   historyPhotos,
@@ -143,8 +143,11 @@ export default function Home() {
   const [restored, setRestored] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Loading saved work…");
   // The cloud copy (11 Nov 2026): same work in every Chrome profile and device.
+  // Sellers never see the sync working — only a warning when saving fails.
+  // The status icon is for the site's owner; until sellers have their own
+  // sign-in, everyone on this site is the owner (11 Nov 2026).
+  const SHOW_CLOUD_ICON = true;
   const [cloud, setCloud] = useState<SyncState>({ phase: "off", message: "" });
-  const [cloudProgress, setCloudProgress] = useState("");
   useEffect(() => onSyncState(setCloud), []);
   const [readOnly, setReadOnly] = useState(false);
   // Written cards kept after they leave the work screen (see history-store).
@@ -168,7 +171,7 @@ export default function Home() {
       try {
         // First bring in what was done in other profiles and devices. Never
         // fails the restore: without the cloud, this browser's copy opens.
-        await startCloudSync((m) => active && setCloudProgress(m)).catch(() => {});
+        await startCloudSync().catch(() => {});
         const d = await loadDraft();
         if (d && active) {
           setPhotos(d.photos);
@@ -213,6 +216,31 @@ export default function Home() {
       release();
     };
   }, []);
+  // Work from another profile or device arrived after the lister opened:
+  // put it on the screen straight away (no reload button for sellers).
+  useEffect(
+    () =>
+      onCloudChanges(() => {
+        if (readOnly) return;
+        void (async () => {
+          try {
+            const d = await loadDraft();
+            if (d) {
+              setPhotos(d.photos);
+              setGroups(d.groups);
+              setOrphanIds(d.orphanIds);
+              setBinPrefix(d.binPrefix);
+              setSkuStart(d.skuStart);
+              setStep(d.step);
+            }
+            setHistory(await loadHistory());
+          } catch {
+            /* the next change brings it */
+          }
+        })();
+      }),
+    [readOnly],
+  );
   // Mark changed work unsaved before paint; older save completions cannot clear it.
   useLayoutEffect(() => {
     if (!restored || readOnly) return;
@@ -1108,7 +1136,6 @@ export default function Home() {
     return (
       <main className="wrap">
         Restoring saved work…
-        {cloudProgress && <p>{cloudProgress}</p>}
       </main>
     );
   if (readOnly)
@@ -1122,39 +1149,32 @@ export default function Home() {
     <main className="wrap">
       <p role="status">
         {saveStatus}
-        {cloud.phase !== "off" && (
+        {SHOW_CLOUD_ICON && (cloud.phase === "idle" || cloud.phase === "pulling" || cloud.phase === "pushing") && (
           <>
-            {" · "}
-            <span style={cloud.phase === "error" ? { color: "var(--color-danger)" } : undefined}>
-              {cloud.phase === "idle" ? "☁️ " : ""}
-              {cloud.message}
-            </span>
-            {cloud.phase === "needsCode" ? (
-              <>
-                {" "}
-                <button type="button" onClick={() => void enterCodeForCloud()}>
-                  Turn on cloud
-                </button>
-              </>
-            ) : cloud.needsReload ? (
-              <>
-                {" "}
-                <button type="button" onClick={() => location.reload()}>
-                  Reload to see it
-                </button>
-              </>
-            ) : (
-              cloud.phase !== "pulling" &&
-              cloud.phase !== "pushing" && (
-                <>
-                  {" "}
-                  <button type="button" onClick={() => void syncNow()}>
-                    Sync now
-                  </button>
-                </>
-              )
-            )}
+            {" "}
+            <button
+              type="button"
+              className="cloud-icon"
+              title={`${cloud.message} — click to sync now`}
+              aria-label={cloud.phase === "idle" ? "Saved in the cloud. Sync now" : "Syncing with the cloud"}
+              onClick={() => void syncNow()}
+            >
+              {cloud.phase === "idle" ? "☁️ ✓" : "☁️ ↻"}
+            </button>
           </>
+        )}
+        {cloud.phase === "needsCode" && (
+          <>
+            {" "}
+            <button type="button" onClick={() => void enterCodeForCloud()}>
+              Turn on cloud
+            </button>
+          </>
+        )}
+        {cloud.phase === "error" && (
+          <span style={{ display: "block", color: "var(--color-danger)", fontWeight: 600 }} title={cloud.message}>
+            Not saved yet — check your internet. Don&apos;t close this page.
+          </span>
         )}
       </p>
       <header className="masthead">
