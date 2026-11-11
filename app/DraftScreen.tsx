@@ -20,6 +20,8 @@ interface Props {
   onEdit: (groupId: string, patch: Partial<ListingResult>) => void;
   onRenameSku: (groupId: string, sku: string) => void;
   onRetry: (groupId: string) => void;
+  onAddPhotos: (groupId: string, files: FileList | null) => Promise<number>;
+  photoLimit: number;
   onPost: (groupId: string) => void;
   onPostAll: () => void;
   onBack: () => void;
@@ -202,6 +204,8 @@ export function DraftScreen(p: Props) {
         onEdit={p.onEdit}
         onRenameSku={p.onRenameSku}
         onRetry={p.onRetry}
+        onAddPhotos={p.onAddPhotos}
+        photoLimit={p.photoLimit}
       />
 
       <div className="draft-footer">

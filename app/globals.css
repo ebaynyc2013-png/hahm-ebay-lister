@@ -2030,3 +2030,44 @@ input.no-spin::-webkit-inner-spin-button {
 .draft-screen .note-error {
   font-size: 16px;
 }
+
+/* Photos: two rows of six, empty places with "+" to add more (Olya, 11 Nov
+   2026). After adding, a question: re-analyze the listing? */
+.draft-screen .photo-row {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.draft-screen .photo-add {
+  border: 2px dashed #cfc8bc;
+  background: #faf8f4;
+  color: #8a8276;
+  font-size: 28px;
+  font-weight: normal;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.draft-screen .photo-add:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+.draft-screen .photos-added {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber-line);
+  font-size: 16px;
+}
+.draft-screen .photos-added b {
+  color: var(--amber);
+}
+@media (max-width: 700px) {
+  .draft-screen .photo-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

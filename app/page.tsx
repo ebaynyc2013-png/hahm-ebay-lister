@@ -56,6 +56,8 @@ type Step = "upload" | "review" | "listings";
 // chunk's thumbnail payload stays under Vercel's 4.5 MB body limit — then
 // stitched back together with a merge check at every chunk boundary.
 const MAX_PHOTOS = 300;
+/** Photos one item can have on the draft screen (Olya, 10 Nov 2026). */
+const ITEM_PHOTO_LIMIT = 12;
 const SORT_CHUNK = 100;
 const WRITE_CONCURRENCY = 3;
 // eBay accepts at most 12 photos per listing. They ship to eBay in small
@@ -501,6 +503,46 @@ export default function Home() {
     },
     [photos.length],
   );
+
+  // Photos added on the draft screen to one item, up to 12 for that item.
+  // Returns how many were added; the draft then asks about Re-analyze.
+  const addPhotosToGroup = async (groupId: string, fileList: FileList | null): Promise<number> => {
+    const group = groupsRef.current.find((g) => g.id === groupId);
+    if (!group || !fileList || fileList.length === 0) return 0;
+    setError(null);
+    const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+    if (files.length === 0) {
+      setError("Those didn't look like photos. Use JPG, PNG, or WebP.");
+      return 0;
+    }
+    const room = Math.max(0, ITEM_PHOTO_LIMIT - group.photoIds.length);
+    try {
+      const result = await processFiles(files, room, resizeImage);
+      const errors = result.errors.map((e) =>
+        e.includes("exceed the batch limit") ? `Up to ${ITEM_PHOTO_LIMIT} photos per item — the rest were not added.` : e,
+      );
+      if (errors.length) setError(errors.join("; "));
+      const added: Photo[] = result.values.map((r) => ({ id: newId(), ...r }));
+      if (!added.length) return 0;
+      const ids = added.map((x) => x.id);
+      setPhotos((prev) => [...prev, ...added]);
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? {
+                ...g,
+                photoIds: [...g.photoIds, ...ids],
+                ...(g.analysisPhotoIds ? { analysisPhotoIds: [...g.analysisPhotoIds, ...ids] } : {}),
+              }
+            : g,
+        ),
+      );
+      return added.length;
+    } catch (e) {
+      setError((e as Error).message);
+      return 0;
+    }
+  };
 
   const removePhoto = (id: string) =>
     setPhotos((prev) => prev.filter((p) => p.id !== id));
@@ -1395,6 +1437,8 @@ export default function Home() {
           onGroupEdit={editGroup}
           onRenameSku={renameSku}
           onRetry={writeGroup}
+          onAddPhotos={addPhotosToGroup}
+          photoLimit={ITEM_PHOTO_LIMIT}
           onPost={postGroup}
           onPostAll={postAll}
           onBack={() => setStep("review")}

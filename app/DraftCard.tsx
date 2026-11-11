@@ -54,6 +54,8 @@ interface Props {
   onEdit: (groupId: string, patch: Partial<ListingResult>) => void;
   onRenameSku: (groupId: string, sku: string) => void;
   onRetry: (groupId: string) => void;
+  onAddPhotos: (groupId: string, files: FileList | null) => Promise<number>;
+  photoLimit: number;
 }
 
 export function DraftCard(props: Props) {
@@ -80,7 +82,19 @@ export function DraftCard(props: Props) {
   return <DraftBody {...props} />;
 }
 
-function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRenameSku, onRetry }: Props) {
+function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRenameSku, onRetry, onAddPhotos, photoLimit }: Props) {
+  // Photos just added to this item: until she answers, ask whether to
+  // re-analyze — a new photo (a tag, a mark) can change the listing.
+  const [justAdded, setJustAdded] = useState(0);
+  const [adding, setAdding] = useState(false);
+  const addInput = useRef<HTMLInputElement>(null);
+  const addPhotos = async (files: FileList | null) => {
+    setAdding(true);
+    const n = await onAddPhotos(g.id, files);
+    setAdding(false);
+    if (n) setJustAdded((x) => x + n);
+    if (addInput.current) addInput.current.value = "";
+  };
   const d = useDraftEbay(g, photoById, onGroupEdit, accountKey);
   const l = d.l;
   const [zoom, setZoom] = useState<number | null>(null);
@@ -264,7 +278,47 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
                 <img src={p.previewUrl} alt="" />
               </button>
             ))}
+            {Array.from({ length: Math.max(0, photoLimit - photos.length) }, (_, i) => (
+              <button
+                key={`add-${i}`}
+                type="button"
+                className="photo-thumb photo-add"
+                aria-label="Add photos"
+                disabled={adding}
+                onClick={() => addInput.current?.click()}
+              >
+                {adding && i === 0 ? <span className="spinner small" aria-hidden="true" /> : "+"}
+              </button>
+            ))}
           </div>
+          <input
+            ref={addInput}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={(e) => void addPhotos(e.target.files)}
+          />
+          {justAdded > 0 && (
+            <div className="photos-added" role="alert">
+              <b>
+                You added {justAdded} photo{justAdded > 1 ? "s" : ""}. Re-analyze listing?
+              </b>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setJustAdded(0);
+                  onRetry(g.id);
+                }}
+              >
+                Yes
+              </button>
+              <button type="button" className="btn" onClick={() => setJustAdded(0)}>
+                No
+              </button>
+            </div>
+          )}
           <details className="df-more">
             <summary>Photos the AI reads for Re-analyze</summary>
             {photos.map((p, i) => (
