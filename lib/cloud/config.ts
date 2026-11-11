@@ -38,4 +38,7 @@ export function cloudStatus(): { records: boolean; photos: boolean } {
  * All keys live under one owner, so the client site can later give every
  * seller their own space without moving the seller's data.
  */
-export const OWNER = "olya";
+export const OWNER =
+  // The test copy (a Vercel Preview) keeps its own space, so nothing tried
+  // there ever shows up in the working lister's History (11 Nov 2026).
+  process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production" ? "olya-test" : "olya";
