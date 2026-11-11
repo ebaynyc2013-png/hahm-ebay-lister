@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { guardCloudRequest, safeErrorResponse } from "@/lib/api-guard";
 import { cloudStatus, OWNER } from "@/lib/cloud/config";
-import { K, redis } from "@/lib/cloud/redis";
+import { fieldsObject, hashObject, K, redis } from "@/lib/cloud/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
   try {
     if (body.action === "revs") {
-      const revs = ((await r.hgetall(K.rev)) ?? {}) as Record<string, string>;
+      const revs = hashObject(await r.hgetall(K.rev));
       return NextResponse.json({ ok: true, revs });
     }
 
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
       const keys = Array.isArray(body.keys) ? body.keys.map(String) : [];
       if (!keys.length) return NextResponse.json({ ok: true, values: {} });
       if (keys.length > MAX_KEYS || !keys.every((k) => KEY_RE.test(k))) return bad("Bad keys.");
-      const got = (await r.hmget(K.rec, ...keys)) as Record<string, string | null> | null;
-      return NextResponse.json({ ok: true, values: got ?? {} });
+      const got = fieldsObject(keys, await r.hmget(K.rec, ...keys));
+      return NextResponse.json({ ok: true, values: got });
     }
 
     if (body.action === "put") {

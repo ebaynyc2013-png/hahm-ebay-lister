@@ -29,3 +29,25 @@ export const K = {
   photos: `${OWNER}:photos`,
   ebay: `${OWNER}:ebay`,
 };
+
+// With automaticDeserialization off, Upstash hands back Redis's raw replies:
+// HGETALL is a flat list [field, value, field, value, …] and HMGET a list of
+// values in the order asked (found 11 Nov 2026: the sync read nothing back).
+/** A hash as an object, whatever shape the client returned. */
+export function hashObject(raw: unknown): Record<string, string> {
+  if (!raw) return {};
+  if (Array.isArray(raw)) {
+    const out: Record<string, string> = {};
+    for (let i = 0; i + 1 < raw.length; i += 2) out[String(raw[i])] = String(raw[i + 1]);
+    return out;
+  }
+  return Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, String(v)]));
+}
+
+/** HMGET's reply as { field: value | null }, whatever shape the client returned. */
+export function fieldsObject(fields: string[], raw: unknown): Record<string, string | null> {
+  if (Array.isArray(raw))
+    return Object.fromEntries(fields.map((f, i) => [f, raw[i] == null ? null : String(raw[i])]));
+  const o = (raw ?? {}) as Record<string, unknown>;
+  return Object.fromEntries(fields.map((f) => [f, o[f] == null ? null : String(o[f])]));
+}

@@ -33,15 +33,16 @@ class FakeRedis {
     if (!this.h.has(k)) this.h.set(k, new Map());
     return this.h.get(k)!;
   }
+  // Raw replies, exactly as Upstash returns them with automaticDeserialization off.
   async hgetall(k: string) {
     const m = this.h.get(k);
-    return m && m.size ? Object.fromEntries(m) : null;
+    return m && m.size ? [...m].flat() : [];
   }
   async hget(k: string, f: string) {
     return this.h.get(k)?.get(f) ?? null;
   }
   async hmget(k: string, ...f: string[]) {
-    return Object.fromEntries(f.map((x) => [x, this.h.get(k)?.get(x) ?? null]));
+    return f.map((x) => this.h.get(k)?.get(x) ?? null);
   }
   async hset(k: string, o: Record<string, string>) {
     for (const [a, b] of Object.entries(o)) this.m(k).set(a, b);

@@ -21,9 +21,9 @@ vi.mock("@/lib/resize", () => ({
 const h = new Map<string, Map<string, string>>();
 const m = (k: string) => (h.has(k) ? h.get(k)! : (h.set(k, new Map()), h.get(k)!));
 const fake = {
-  hgetall: async (k: string) => (h.get(k)?.size ? Object.fromEntries(h.get(k)!) : null),
+  hgetall: async (k: string) => (h.get(k)?.size ? [...h.get(k)!].flat() : []),
   hget: async (k: string, f: string) => h.get(k)?.get(f) ?? null,
-  hmget: async (k: string, ...f: string[]) => Object.fromEntries(f.map((x) => [x, h.get(k)?.get(x) ?? null])),
+  hmget: async (k: string, ...f: string[]) => f.map((x) => h.get(k)?.get(x) ?? null),
   hset: async (k: string, o: Record<string, string>) => {
     for (const [a, b] of Object.entries(o)) m(k).set(a, b);
   },

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { del, get, put } from "@vercel/blob";
 import { guardCloudRequest, safeErrorResponse } from "@/lib/api-guard";
 import { blobConfigured, OWNER } from "@/lib/cloud/config";
-import { K, redis } from "@/lib/cloud/redis";
+import { hashObject, K, redis } from "@/lib/cloud/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +77,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const keep = new Set<string>(Array.isArray(body?.keep) ? body.keep.map(String) : []);
-    const stored = ((await r.hgetall(K.photos)) ?? {}) as Record<string, string>;
+    const stored = hashObject(await r.hgetall(K.photos));
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000; // a photo just added elsewhere is never taken
     const gone = Object.entries(stored)
       .filter(([id, at]) => !keep.has(id) && Number(at) < weekAgo)

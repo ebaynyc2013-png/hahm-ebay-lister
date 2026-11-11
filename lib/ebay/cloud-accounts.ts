@@ -19,7 +19,7 @@
 
 import type { NextRequest, NextResponse } from "next/server";
 import { hasAccessCode } from "@/lib/api-guard";
-import { K, redis } from "@/lib/cloud/redis";
+import { hashObject, K, redis } from "@/lib/cloud/redis";
 import { EBAY_COOKIE, openConnection } from "./session";
 import { ACTIVE_COOKIE, COOKIE_OPTIONS, MAX_ACCOUNTS, cleanLabel, slotCookie } from "./accounts";
 
@@ -54,7 +54,7 @@ export async function ebayJar(
 
   let slots: Record<string, string>;
   try {
-    slots = ((await r.hgetall(K.ebay)) ?? {}) as Record<string, string>;
+    slots = hashObject(await r.hgetall(K.ebay));
   } catch {
     return plain(req.cookies); // cloud down: this browser's cookies, as before
   }

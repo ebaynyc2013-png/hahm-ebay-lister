@@ -11,7 +11,7 @@ import { GET as status } from "@/app/api/ebay/status/route";
 const h = new Map<string, Map<string, string>>();
 const m = (k: string) => (h.has(k) ? h.get(k)! : (h.set(k, new Map()), h.get(k)!));
 const fake = {
-  hgetall: async (k: string) => (h.get(k)?.size ? Object.fromEntries(h.get(k)!) : null),
+  hgetall: async (k: string) => (h.get(k)?.size ? [...h.get(k)!].flat() : []),
   hset: async (k: string, o: Record<string, string>) => {
     for (const [a, b] of Object.entries(o)) m(k).set(a, b);
   },
