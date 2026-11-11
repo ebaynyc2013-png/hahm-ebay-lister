@@ -2016,3 +2016,17 @@ input.no-spin::-webkit-inner-spin-button {
 .draft-screen .spec select {
   font-size: 16px;
 }
+
+/* Size 12 as in Word (16px) for brand, category, condition, the check bar,
+   the "Item specifics" heading and red notes (Olya, 11 Nov 2026). The price
+   keeps its size. Bold and colours stay. */
+.draft-screen select.big,
+.draft-screen strong.big,
+.draft-screen input.big:not([type="number"]),
+.draft-screen .check-bar,
+.draft-screen .check-bar b,
+.draft-screen .check-bar a,
+.draft-screen .spec-head h3,
+.draft-screen .note-error {
+  font-size: 16px;
+}

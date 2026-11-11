@@ -487,8 +487,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
             >
               {d.choices.options.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.path.split(" > ").pop()} · {o.id}
-                  {o.id === d.choices!.aiPick ? " (AI’s choice)" : ""}
+                  {o.path.split(" > ").pop()}
                 </option>
               ))}
             </select>
@@ -579,7 +578,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
               <option value="">Choose condition</option>
               {g.preparation!.conditions.map((c) => (
                 <option key={c.value} value={c.value}>
-                  {c.label}
+                  {c.label.replace(/\s*\(\d+\)$/, "")}
                 </option>
               ))}
             </select>
