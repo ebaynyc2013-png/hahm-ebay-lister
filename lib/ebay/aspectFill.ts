@@ -432,6 +432,8 @@ Rules:
 - ALWAYS cite the photo you read a fact from in photoIndices — and when it comes from the seller's note or a screenshot, cite THAT photo. A fact with no photo is refused.
 - An adjustable piece or a range of lengths ("adjustable 35-40 in"): choose the SHORTEST length of the range that eBay's list offers — the seller's rule. Quote the text that shows the range.
 - A ruler, tape measure or any measuring tool shown with the item in a photo is a measurement (the seller photographs items on a ruler on purpose — 12 Nov 2026). Read where the item starts and ends against the scale and fill every length, width, height, depth, diameter or drop field it answers: basis "label", quote what you read ("ruler: 1.5 in"), cite that photo. Inches, rounded to the nearest quarter; centimetres converted (2.54 cm to the inch). The value is the number and "in" only — never "Approximately" in an item specific: "1.5 in". A field with eBay's own list takes the value the measurement falls in. Never estimate a size from the look of the item alone.
+- A field marked free text may take the item's OWN words from a label, a tag, a screenshot or the seller's notes even when eBay's list lacks them — the model or line name on the tag ("Product Line": "The Tote Bag"), a fabric her notes name ("Fabric Type": "Denim"), a pattern her notes name ("Pattern": "Patchwork"). Basis "label", quote those words. Words you only see in the look of the item still come from eBay's list or stay out (the seller, 12 Nov 2026).
+- California Prop 65 Warning: leave it empty unless a label or the seller's notes give the warning text — it is a legal statement, never a guess.
 - "seller_notes" in ITEM DATA is what the seller typed about this item: her facts, as good as her photographed note — they win over a screenshot. A fact from them: basis "label", quote her exact words, photoIndices [].
 
 - Never use placeholder text such as "See photos", "Unknown" or "N/A". Omit an unsupported aspect instead, except for UPC where the seller rule above requires "Does Not Apply".
@@ -566,8 +568,23 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       // Where eBay published the answers — as a menu, or as "free text" with a
       // vocabulary behind it — the answer is one of them or it is nothing.
       if (a.mode === "SELECTION_ONLY" || isChoiceSet(a)) {
-        const missed: string[] = [];
+        let missed: string[] = [];
         vals = allowedValuesFrom(raw, a, missed);
+        // A free-text field takes the words of her label, a screenshot or
+        // her notes even when eBay's list lacks them — "The Tote Bag" from
+        // the tag (the seller, 12 Nov 2026). A look alone never does.
+        if (a.mode !== "SELECTION_ONLY" && missed.length) {
+          const norm = (v: string) => ` ${v.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()} `;
+          const quote = norm(String(said?.quote ?? ""));
+          const own = missed.filter(
+            (w) => (said?.basis === "label" && quote.trim() && quote.includes(norm(w))) || fromNotes(w),
+          );
+          for (const w of own) {
+            const v = cleanAspectValue(w, a.maxLength);
+            if (v && !vals.includes(v)) vals.push(v);
+          }
+          missed = missed.filter((w) => !own.includes(w));
+        }
         if (!vals.length) {
           // Not eBay's word — the aspect stays empty.
           report.refused++;
