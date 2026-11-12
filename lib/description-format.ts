@@ -7,7 +7,10 @@
  * them, always in the same order, so a buyer on a phone finds what she
  * looks for in the same place every time:
  *
- *   title → Brand → Condition → Size → Actual Measurements → everything else
+ *   title → Brand → Condition → measurements → Size → everything else
+ *
+ * The measurements stand right after Condition, one per line, no heading
+ * and no bullets: "Length: Approximately 1.5 in (3.8 cm)" (12 Nov 2026).
  *
  * No "Keywords" section and no hashtags in the description: eBay's search
  * gives the description little weight, and the space is worth more to the
@@ -23,6 +26,12 @@
 
 export const DESCRIPTION_LIMIT = 800;
 
+// The measurements: right after Condition, before Size (12 Nov 2026).
+const MEASURE_RANK = 2.5;
+// "Pendant: Approximately 2 W x 2.75 H in" is a measurement too.
+const MEASURED_VALUE =
+  /^\s*(?:approximately|approx\.?|about|adjustable)?\s*\d+(?:\.\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?\s*(?:[WHD]\b|in\b|inch|cm\b|mm\b|g\b|oz\b|"|x\b)/i;
+
 interface Rank {
   test: RegExp;
   rank: number;
@@ -35,8 +44,8 @@ const RANKS: Rank[] = [
   { test: /^condition$/i, rank: 2 },
   { test: /^(?:size|ring size|marked size|tagged size|shoe size)$/i, rank: 3 },
   {
-    test: /^(?:actual measurements|measurements|dimensions|length|width|height|weight)$/i,
-    rank: 4,
+    test: /^(?:actual measurements|measurements|dimensions|length|width|height|depth|diameter|weight|pit to pit|pit-to-pit|chest|bust|waist|hips?|inseam|rise|shoulders?|sleeves?|sleeve length|drop|strap drop|handle drop|heel height|circumference)$/i,
+    rank: MEASURE_RANK,
   },
   // The piece's own name or collection, where "Type" used to stand — the
   // seller's rule of 28 Oct 2026 ("Style: Good As Gold").
@@ -91,14 +100,16 @@ function rankOf(label: string): number {
   return RANKS.find((r) => r.test.test(label.trim()))?.rank ?? UNKNOWN_RANK;
 }
 
-/** Each measurement on its own line, marked "• " — eBay gets them as a list. */
+/**
+ * Each measurement on its own line, no heading and no bullets (12 Nov 2026):
+ * an old "Actual Measurements:" heading goes, its "• " list becomes lines.
+ */
 function tidyMeasurements(text: string): string {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-  if (lines.length < 2) return lines.join("\n");
-  return [
-    lines[0],
-    ...lines.slice(1).map((l) => `• ${l.replace(BULLET, "")}`),
-  ].join("\n");
+  return text
+    .split("\n")
+    .map((l) => l.trim().replace(BULLET, ""))
+    .filter((l) => l && !/^(?:actual\s+)?measurements\s*:?\s*$/i.test(l))
+    .join("\n");
 }
 
 export interface FormattedDescription {
@@ -141,6 +152,12 @@ export function formatDescription(
       return;
     }
     let rank = rankOf(label);
+    if (
+      label &&
+      (rank === 9 || rank === UNKNOWN_RANK) &&
+      MEASURED_VALUE.test(block.slice(block.indexOf(":") + 1))
+    )
+      rank = MEASURE_RANK;
     // The first paragraph after the title, when it is not one of the known
     // sections, is the seller's warm opening sentence (no label) — even if it
     // happens to contain a colon. The last unknown paragraph is a closing line.
@@ -149,7 +166,14 @@ export function formatDescription(
     sections.push({ label: rank === OPENING_RANK || rank === CLOSING_RANK ? "" : label, rank, text: block, index });
   });
   for (const s of sections)
-    if (s.rank === 4) s.text = tidyMeasurements(s.text);
+    if (s.rank === MEASURE_RANK) s.text = tidyMeasurements(s.text);
+  // The measurements stand together, one block (no blank lines between).
+  const measured = sections.filter((s) => s.rank === MEASURE_RANK && s.text);
+  if (measured.length > 1) {
+    measured[0].text = measured.map((s) => s.text).join("\n");
+    for (const s of measured.slice(1)) s.text = "";
+  }
+  for (let i = sections.length - 1; i >= 0; i--) if (!sections[i].text) sections.splice(i, 1);
   // "Style: Premier Designs Good As Gold" → "Style: Good As Gold": the brand
   // has its own line, and repeating it was the seller's complaint.
   const b = brand.trim();

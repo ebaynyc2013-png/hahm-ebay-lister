@@ -21,6 +21,7 @@ import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 import { CopyButton } from "./CopyButton";
 import { OtherShopsTags } from "./OtherShopsTags";
 import { useDraftEbay } from "./useDraftEbay";
+import { reviseListing, showCost } from "./reviseClient";
 
 const TITLE_LIMIT = 80;
 // Fields eBay calls free text but whose answer is one of eBay's own words.
@@ -97,6 +98,29 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
   };
   const d = useDraftEbay(g, photoById, onGroupEdit, accountKey);
   const l = d.l;
+  // "Update with notes": the listing corrected from what she typed, text
+  // only — a few cents, not a Re-analyze (12 Nov 2026).
+  const [updating, setUpdating] = useState(false);
+  const [updateMsg, setUpdateMsg] = useState<{ text: string; error?: boolean } | null>(null);
+  const updateWithNotes = async () => {
+    const notes = (g.notes ?? "").trim();
+    if (!notes) return;
+    setUpdating(true);
+    setUpdateMsg(null);
+    try {
+      const r = await reviseListing(l, notes);
+      d.edit({ ...r.patch, seller_notes: notes });
+      setUpdateMsg({
+        text: r.changed.length
+          ? `Updated: ${r.changed.join(" · ")}${r.usd ? ` · ${showCost(r.usd)}` : ""}`
+          : `Nothing needed to change${r.usd ? ` · ${showCost(r.usd)}` : ""}`,
+      });
+    } catch (e) {
+      setUpdateMsg({ text: (e as Error).message, error: true });
+    } finally {
+      setUpdating(false);
+    }
+  };
   const [zoom, setZoom] = useState<number | null>(null);
   // Drag a photo to a new place; the order is eBay's order, the first is the
   // main photo (the seller, 12 Nov 2026).
@@ -457,6 +481,36 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
               SKU
             </label>
             <input id={`${a("sku")}-in`} value={g.sku} onChange={(e) => onRenameSku(g.id, e.target.value)} />
+          </div>
+        </div>
+
+        <div className="df draft-notes" id={a("notes")}>
+          <label htmlFor={`${a("notes")}-in`} className="df-label">
+            Notes
+          </label>
+          <textarea
+            id={`${a("notes")}-in`}
+            rows={1}
+            value={g.notes ?? ""}
+            placeholder="What you know about this item — e.g. copper flower, bronze disc; zipper works"
+            onChange={(e) => onGroupEdit(g.id, { notes: e.target.value })}
+          />
+          <div className="draft-notes-row">
+            <button
+              type="button"
+              className="btn btn-small"
+              disabled={updating || !(g.notes ?? "").trim() || (g.notes ?? "").trim() === (l.seller_notes ?? "").trim()}
+              onClick={() => void updateWithNotes()}
+            >
+              {updating ? (
+                <>
+                  <span className="spinner small" aria-hidden="true" /> Updating…
+                </>
+              ) : (
+                "Update with notes"
+              )}
+            </button>
+            {updateMsg && <span className={`hint${updateMsg.error ? " warn" : ""}`}>{updateMsg.text}</span>}
           </div>
         </div>
 

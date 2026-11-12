@@ -27,6 +27,15 @@ export interface ListingResult {
   material?: string;
   condition?: string;
   condition_notes?: string;
+  /** Her typed notes the listing was written or updated from. */
+  seller_notes?: string;
+  /**
+   * What the writer was not sure of, or where the texts disagree — shown at
+   * the top of the draft with a button for each choice (12 Nov 2026).
+   */
+  doubts?: ListingDoubt[];
+  /** Fields whose doubt the seller settled — not asked again. */
+  doubts_resolved?: string[];
   measurements?: string;
   description: string;
   suggested_price?: number | string;
@@ -110,6 +119,8 @@ export interface AnalyzeRequestBody {
   lessons?: string[];
   /** The seller's own phrases, in turn (see style-rotation.ts). */
   phrases?: { id: string; kind: string; stone?: string; text: string }[];
+  /** What she typed in the item's Notes box: facts she knows (12 Nov 2026). */
+  sellerNotes?: string;
 }
 
 export interface AnalyzeResponse {
@@ -175,6 +186,12 @@ export interface ItemGroup {
   /** What the seller paid for the item, in dollars; ends the SKU as -COG12. */
   cost?: number | "";
   name: string;
+  /**
+   * The Notes box on the items screen and the draft: what the seller knows
+   * about the item that the photos may not show ("copper flower, bronze
+   * disc"). The listing is written from it like from her photographed note.
+   */
+  notes?: string;
   photoIds: string[];
   listing?: ListingResult;
   status: ItemStatus;
@@ -268,4 +285,11 @@ export interface PreparedCategory {
    */
   fill?: string;
   issues: string[];
+}
+
+/** One thing the writer was not sure of — the field and the choices. */
+export interface ListingDoubt {
+  field: string;
+  options: string[];
+  why: string;
 }

@@ -78,7 +78,7 @@ describe("Style instead of Type, without the brand again (28 Oct 2026)", () => {
       "Premier Designs",
     );
     expect(r.text).toBe(
-      "T\n\nOne good thing about this necklace is that you don't need much more.\n\nBrand: Premier Designs\n\nActual Measurements:\n• Length: 35-40 in\n\nStyle: Good As Gold\n\nColor: Gold tone.",
+      "T\n\nOne good thing about this necklace is that you don't need much more.\n\nBrand: Premier Designs\n\nLength: 35-40 in\n\nStyle: Good As Gold\n\nColor: Gold tone.",
     );
   });
 

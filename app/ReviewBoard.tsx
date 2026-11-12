@@ -9,6 +9,8 @@ interface ReviewBoardProps {
   photoById: (id: string) => Photo | undefined;
   onRename: (groupId: string, name: string) => void;
   onRenameSku: (groupId: string, sku: string) => void;
+  /** The item's Notes box: what the seller knows about it (12 Nov 2026). */
+  onNotes: (groupId: string, notes: string) => void;
   onMovePhoto: (photoId: string, toGroupId: string | "orphans") => void;
   onReorderPhoto: (groupId: string, fromIndex: number, toIndex: number) => void;
   onDeleteGroup: (groupId: string) => void;
@@ -168,6 +170,7 @@ export function ReviewBoard({
   photoById,
   onRename,
   onRenameSku,
+  onNotes,
   onMovePhoto,
   onReorderPhoto,
   onDeleteGroup,
@@ -221,6 +224,15 @@ export function ReviewBoard({
                 Delete
               </button>
             </header>
+            <label className="board-notes">
+              <span>Notes</span>
+              <textarea
+                rows={1}
+                value={group.notes ?? ""}
+                placeholder="What you know about this item — e.g. copper flower, bronze disc; zipper works"
+                onChange={(e) => onNotes(group.id, e.target.value)}
+              />
+            </label>
             {group.photoIds.length === 0 ? (
               <p className="board-empty">
                 Empty — move photos here using the menu under a photo.

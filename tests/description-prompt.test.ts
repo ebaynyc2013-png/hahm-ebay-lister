@@ -14,14 +14,14 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
       "2. The seller's opening sentence",
       "3. Brand",
       "4. Condition",
-      "5. Size",
-      "6. Actual Measurements",
+      "5. The measurements, right after Condition",
+      "6. Size",
     ];
     const from = prompt.indexOf("SECTION ORDER");
     const at = order.map((o) => prompt.indexOf(o, from));
     expect(at.every((i) => i > 0)).toBe(true);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
-    expect(prompt).toContain('starting with "• "');
+    expect(prompt).toContain("no heading and no bullets");
     expect(prompt).toContain("NEVER write a Keywords section");
     expect(prompt).not.toMatch(/\nKeywords: /);
   });
@@ -33,7 +33,7 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
     expect(m![2].length).toBeLessThanOrEqual(800);
     // The seller's approved example (28 Oct 2026): her voice, then facts.
     expect(m![2]).toContain("can be given some extra pizzazz");
-    expect(m![2]).toContain("• Length: adjustable 35-40 in");
+    expect(m![2]).toContain("Length: Approximately 35-40 in (88.9-101.6 cm), adjustable");
     expect(m![2]).not.toMatch(/made in/i);
   });
 

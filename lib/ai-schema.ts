@@ -111,6 +111,16 @@ export const AI_LISTING_SCHEMA = {
     // For Depop/Mercari and Etsy — shown on the card, never sent to eBay.
     hashtags: strings,
     etsy_tags: strings,
+    // What it was not sure of — the seller picks with one click (12 Nov 2026).
+    doubts: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: { field: string, options: strings, why: string },
+        required: ["field", "options", "why"],
+      },
+    },
   },
   required: [
     "category",
@@ -141,6 +151,7 @@ export const AI_LISTING_SCHEMA = {
     "description",
     "hashtags",
     "etsy_tags",
+    "doubts",
   ],
 };
 

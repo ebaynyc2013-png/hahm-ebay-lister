@@ -34,7 +34,7 @@ import {
   COLOR_SYNONYMS,
   MAX_MULTI_VALUES,
 } from "./aspects";
-import { sellerTextSupports } from "@/lib/note-facts";
+import { notesSupport, sellerTextSupports } from "@/lib/note-facts";
 
 const FILL_MODEL = "claude-sonnet-4-6";
 // Prompt-size bound, applied AFTER priority sorting — required and
@@ -367,6 +367,8 @@ export async function fillRecommendedAspects(
         .map(([k, v]) => [clip(k, 60), clip(v, 120)]),
     ),
     description: clip(listing.description, 900),
+    // What she typed in the item's Notes box (12 Nov 2026).
+    seller_notes: clip(listing.seller_notes, 1000),
   };
 
   const imageBlocks = (
@@ -422,6 +424,8 @@ Rules:
 - Measurements shown on a photographed seller note — or on a screenshot among the photos — are valid seller-provided measurements. Fill EVERY eBay aspect they answer: Inseam, Waist Size, Rise, Hip, Bust/Chest, lengths and the like. A waist, hip or chest the note gives measured flat across is doubled for eBay, which sizes around the body ("Waist 14 in" flat → Waist Size "28 in"). Where eBay offers ranges, choose the range the number falls in ("Rise 9 in" → "Mid (8.5-10.5 in)"). Words on the note answer fields too ("straight" → Leg Style "Straight").
 - ALWAYS cite the photo you read a fact from in photoIndices — and when it comes from the seller's note or a screenshot, cite THAT photo. A fact with no photo is refused.
 - An adjustable piece or a range of lengths ("adjustable 35-40 in"): choose the SHORTEST length of the range that eBay's list offers — the seller's rule. Quote the text that shows the range.
+- A ruler, tape measure or any measuring tool shown with the item in a photo is a measurement (the seller photographs items on a ruler on purpose — 12 Nov 2026). Read where the item starts and ends against the scale and fill every length, width, height, depth, diameter or drop field it answers: basis "label", quote what you read ("ruler: 1.5 in"), cite that photo. Inches, rounded to the nearest quarter; centimetres converted (2.54 cm to the inch). The value is the number and "in" only — never "Approximately" in an item specific: "1.5 in". A field with eBay's own list takes the value the measurement falls in. Never estimate a size from the look of the item alone.
+- "seller_notes" in ITEM DATA is what the seller typed about this item: her facts, as good as her photographed note — they win over a screenshot. A fact from them: basis "label", quote her exact words, photoIndices [].
 
 - Never use placeholder text such as "See photos", "Unknown" or "N/A". Omit an unsupported aspect instead, except for UPC where the seller rule above requires "Does Not Apply".
 - Values must be short and comply with the eBay aspect requirements.
@@ -509,6 +513,8 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
         sellerTextSupports(String(said?.value ?? ""), a, listing)
       )
         problem = null;
+      // Her typed notes: her own words are the check (12 Nov 2026).
+      if (problem && notesSupport(said, listing.seller_notes)) problem = null;
       if (problem) {
         report.refused++;
         refuse(problem);

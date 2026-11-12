@@ -359,7 +359,7 @@ const UNIT_OF: [RegExp, string][] = [
 ];
 const unitOf = (u: string) => UNIT_OF.find(([re]) => re.test(u.trim()))?.[1] ?? "";
 const MEASURE_WORDS =
-  /\b(?:adjustable|adjusts|length|long|measures?|measurements?|chain|cord|drop|width|wide|inseam|pit|waist|hips?|rise|heel|height|tall|diameter|circumference|wrist)\b/i;
+  /\b(?:adjustable|adjusts|length|long|measures?|measurements?|chain|cord|drop|width|wide|inseam|pit|waist|hips?|rise|heel|height|tall|diameter|circumference|wrist|ruler|tape|depth)\b/i;
 const MEASURE_VALUE = /^\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|”|''|cm|mm|ft|g|oz)?\s*$/i;
 
 export function measurementInQuote(value: string, quote: string): boolean {

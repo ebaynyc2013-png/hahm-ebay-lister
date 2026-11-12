@@ -806,6 +806,7 @@ export default function Home() {
         const res = await apiPost("/api/analyze", {
           profile: "auto",
           images: imgs,
+          ...(group.notes?.trim() ? { sellerNotes: group.notes.trim().slice(0, 2000) } : {}),
           ...(routerImages ? { routerImages } : {}),
           references,
           lessons,
@@ -1418,6 +1419,7 @@ export default function Home() {
           photoById={photoById}
           onRename={rename}
           onRenameSku={renameSku}
+          onNotes={(id, notes) => editGroup(id, { notes })}
           onMovePhoto={movePhoto}
           onReorderPhoto={reorderPhoto}
           onDeleteGroup={deleteGroup}

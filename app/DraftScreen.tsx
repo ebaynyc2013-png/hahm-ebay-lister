@@ -10,6 +10,9 @@ import { downloadFile, listingsToCsv, listingsToJson } from "@/lib/export";
 import { showPacific } from "@/lib/pacific-time";
 import type { EbayAccountInfo, ItemGroup, ListingResult, Photo } from "@/lib/types";
 import { DraftCard, fieldAnchor } from "./DraftCard";
+import { allDoubts } from "@/lib/listing-mismatch";
+import { requestText } from "@/lib/text-dialog";
+import { reviseListing, showCost } from "./reviseClient";
 
 interface Props {
   groups: ItemGroup[];
@@ -195,6 +198,10 @@ export function DraftScreen(p: Props) {
         </div>
       )}
 
+      {g.status === "done" && g.listing && g.postStatus !== "posted" && (
+        <DoubtsBox key={`doubts-${g.id}`} group={g} onEdit={p.onEdit} />
+      )}
+
       <DraftCard
         key={g.id}
         group={g}
@@ -239,5 +246,117 @@ export function DraftScreen(p: Props) {
         </button>
       </div>
     </section>
+  );
+}
+
+/**
+ * What the writer was not sure of, and where the title, the description and
+ * the item specifics disagree — at the top, with a button for each choice
+ * (12 Nov 2026). The first choice is the main one (Metal); a second is named
+ * in the title and the description. Apply corrects the listing everywhere,
+ * text only, a few cents.
+ */
+function DoubtsBox({
+  group: g,
+  onEdit,
+}: {
+  group: ItemGroup;
+  onEdit: (groupId: string, patch: Partial<ListingResult>) => void;
+}) {
+  const l = g.listing!;
+  const doubts = allDoubts(l);
+  const [picked, setPicked] = useState<Record<string, string[]>>({});
+  const [busy, setBusy] = useState("");
+  const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
+  if (!doubts.length && !msg) return null;
+
+  const toggle = (field: string, option: string) =>
+    setPicked((prev) => {
+      const now = prev[field] ?? [];
+      return { ...prev, [field]: now.includes(option) ? now.filter((o) => o !== option) : [...now, option] };
+    });
+  const other = async (field: string) => {
+    const typed = (await requestText(`${field} — type the right value`))?.trim();
+    if (typed) setPicked((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), typed] }));
+  };
+  const apply = async (field: string) => {
+    const choice = picked[field] ?? [];
+    if (!choice.length) return;
+    const facts =
+      choice.length === 1
+        ? `${field}: ${choice[0]}. Use exactly this in the item specifics, the title and the description.`
+        : `${field}: ${choice[0]} is the main one — it goes in ${field}${/metal/i.test(field) ? " and Base Metal" : ""}. The item also has ${choice
+            .slice(1)
+            .join(" and ")} — name it in the title and the description too. Use exactly these words.`;
+    setBusy(field);
+    setMsg(null);
+    try {
+      const r = await reviseListing(l, facts);
+      onEdit(g.id, {
+        ...r.patch,
+        doubts: (l.doubts ?? []).filter((d) => d.field.toLowerCase() !== field.toLowerCase()),
+        doubts_resolved: [...new Set([...(l.doubts_resolved ?? []), field])],
+      });
+      setMsg({
+        text: r.changed.length
+          ? `Updated: ${r.changed.join(" · ")}${r.usd ? ` · ${showCost(r.usd)}` : ""}`
+          : `Nothing needed to change${r.usd ? ` · ${showCost(r.usd)}` : ""}`,
+      });
+    } catch (e) {
+      setMsg({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy("");
+    }
+  };
+
+  return (
+    <div className="doubts-box">
+      {doubts.map((d) => {
+        const sel = picked[d.field] ?? [];
+        return (
+          <div key={d.field} className="doubt">
+            <span>
+              <b>Not sure — {d.field}:</b> {d.why}
+            </span>
+            <div className="doubt-options">
+              {[...d.options, ...sel.filter((o) => !d.options.includes(o))].map((o) => {
+                const at = sel.indexOf(o);
+                return (
+                  <button
+                    key={o}
+                    type="button"
+                    className={`btn btn-small${at >= 0 ? " picked" : ""}`}
+                    aria-pressed={at >= 0}
+                    disabled={Boolean(busy)}
+                    onClick={() => toggle(d.field, o)}
+                  >
+                    {at >= 0 ? `${at + 1}. ` : ""}
+                    {o}
+                  </button>
+                );
+              })}
+              <button type="button" className="btn btn-small" disabled={Boolean(busy)} onClick={() => void other(d.field)}>
+                Other…
+              </button>
+              <button
+                type="button"
+                className="btn btn-small btn-apply"
+                disabled={!sel.length || Boolean(busy)}
+                onClick={() => void apply(d.field)}
+              >
+                {busy === d.field ? (
+                  <>
+                    <span className="spinner small" aria-hidden="true" /> Updating…
+                  </>
+                ) : (
+                  "Apply"
+                )}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      {msg && <p className={`hint${msg.error ? " warn" : ""}`}>{msg.text}</p>}
+    </div>
   );
 }

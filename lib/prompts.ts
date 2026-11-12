@@ -1,3 +1,4 @@
+import { SELLER_NOTES_RULES } from "./seller-notes";
 // Listing-analysis prompts ported verbatim from ebay_lister_v2_robust.py so the
 // web app writes listings exactly the way the original script did.
 
@@ -257,7 +258,7 @@ The description is written in the SELLER'S OWN VOICE: one warm opening sentence,
 
 LENGTH: the whole description — the title line, every section, every space and line break — must be AT MOST 800 CHARACTERS, and should come close to it: aim for 700–790. Reach it with true facts and the seller's warm sentence, never with filler. If the facts run out sooner, a shorter description is fine. eBay shows up to 800 characters in full on a phone.
 
-The description must NOT be one continuous paragraph. Use short labeled sections with exactly one blank line between every section. Inside a section write on one line — no line breaks — except in the Actual Measurements list.
+The description must NOT be one continuous paragraph. Use short labeled sections with exactly one blank line between every section. Inside a section write on one line — no line breaks — except the measurement lines, which stand together, one measurement per line.
 
 The FIRST line of the description must be the COMPLETE FINAL TITLE, copied exactly word-for-word and in the same order. Do not shorten it, rewrite it, summarize it, or create a different introductory sentence.
 
@@ -289,8 +290,8 @@ SECTION ORDER — always this order, the same in every listing, so a buyer on a 
 2. The seller's opening sentence (no label)
 3. Brand
 4. Condition — one short line, the seller's way: "Condition: Pre-owned, excellent, nothing is wrong with it." (details go in the condition notes)
-5. Size — the marked size (Ring Size for rings), only when the item has one. A European, British or Italian women's size is written as read, "Size: EU 38"; the program completes it to "Size: EU 38 (US 8, Medium)".
-6. Actual Measurements — the label on its own line, then EACH measurement on its own line starting with "• ", for example "• Length: 18 in", "• Pendant: 2 x 1.5 in", "• Weight: 12 g". Every measurement shown in the photos, on a measurement photo, a screenshot or the seller's note goes here — never leave one out. Never two measurements on one line. Weight belongs in this list.
+5. The measurements, right after Condition (the seller's rule, 12 Nov 2026) — see MEASUREMENTS below. Each on its own line, named for what it measures, together in one block, no heading and no bullets: "Length: Approximately 1.5 in (3.8 cm)", "Pit to pit: Approximately 18 in (45.7 cm)". Weight, when known: "Weight: 12 g".
+6. Size — the marked size (Ring Size for rings), only when the item has one. A European, British or Italian women's size is written as read, "Size: EU 38"; the program completes it to "Size: EU 38 (US 8, Medium)".
 7. Style — the piece's OWN NAME or collection, WITHOUT the brand (the brand already has its line): "Style: Good As Gold", "Style: Elsa Peretti Open Heart", "Style: Wheaton". Only when a label, stamp, the seller's note or a screenshot names it; otherwise leave this line out. This line is the piece's name, not eBay's Style item specific. Never write a "Type" line — the title already says what the item is.
 8. Color
 9. Material (Metal, Metal Purity). A piece made of MORE THAN ONE FABRIC OR MATERIAL — any kind of item: a T-shirt-knit front with a sheer chiffon back, a woven body with knit sleeves, a lace panel, a satin collar, a leather bag with fabric straps — always says so here, naming each part and how it looks (the seller's rule, 31 Oct 2026; a buyer must know the back is sheer). Judged by eye, say "-like" or "looks like": "Front: soft T-shirt knit. Back: sheer chiffon-like fabric with a floral print." Fiber content (viscose, cotton, polyester percentages) still only from a label; when the label covers one part only, say which part, or give it without claiming it for the whole piece.
@@ -305,7 +306,7 @@ NEVER write a Keywords section, a list of search words, or hashtags in the descr
 
 The example below shows the SHAPE and the VOICE of a description and nothing else. Its brand, design, measurements and condition belong to that one item. Never carry them onto the item you are describing, and never let a resemblance between the example and your item stand in for evidence.
 
-Example (738 characters):
+Example (779 characters):
 
 Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord 35-40in
 
@@ -315,9 +316,8 @@ Brand: Premier Designs
 
 Condition: Pre-owned, excellent, worn only a couple of times.
 
-Actual Measurements:
-• Length: adjustable 35-40 in
-• Pendant: 2 x 2.75 in
+Length: Approximately 35-40 in (88.9-101.6 cm), adjustable
+Pendant: Approximately 2 W x 2.75 H in (5.1 W x 7 H cm)
 
 Style: Good As Gold
 
@@ -403,7 +403,7 @@ Include weight when supplied or reliably available.
 
 For clothing, shoes, accessories, and other sized goods, preserve useful actual measurements separately from the manufacturer's marked size.
 
-In the description, actual measurements go in the Actual Measurements list, one measurement per line, each line starting with "• ".
+In the description, actual measurements go right after the Condition line, one measurement per line, as MEASUREMENTS below says.
 
 IDENTIFIERS AND LABEL INFORMATION
 
@@ -541,11 +541,31 @@ VINTAGE — "vintage"
 - source "none": neither. "era" and "reasons": "".
 - A look is never a clue. A print, a cut or a colour "from the 70s" is what vintage-style pieces made today look like too; only labels and hardware date a piece. A modern brand's current label is a clue AGAINST vintage.`;
 
+// Measurements read from a ruler or tape in the photos, or her notes (the
+// seller's rules, 12 Nov 2026) — every kind of item.
+export const MEASUREMENTS_SECTION = `
+
+MEASUREMENTS — the seller's rules of 12 Nov 2026, for every kind of item: jewellery, clothing, shoes, bags, accessories, home goods, collectibles.
+- Where they come from: a ruler, tape measure or any measuring tool shown with the item in a photo (she photographs items on a ruler on purpose), a label, a screenshot, her photographed note or her typed notes. Read the tool: where the item starts and where it ends against the scale. Never estimate a size from the look of the item alone, and never write a measurement nothing shows.
+- Always in inches, rounded to the nearest quarter (1, 1.25, 1.5, 1.75), followed by centimetres in brackets, to one decimal (inches x 2.54): "Approximately 1.5 in (3.8 cm)". A tape in centimetres is converted to inches the same way. Whole-number centimetres keep no ".0" only when exact: "(10 cm)" is fine.
+- In the description: each measurement on its own line right after the Condition line, named for what it measures, the word "Approximately" written out in full once, at the start of the value: "Length: Approximately 1.5 in (3.8 cm)". Clothing measured flat: "Pit to pit: Approximately 18 in (45.7 cm)", "Length: Approximately 26 in (66 cm)", "Waist: Approximately 14 in (35.6 cm)", "Inseam: Approximately 29 in (73.7 cm)". A bag, a box or anything with three sides: ONE line, "Measurements: Approximately 10 W x 8 H x 4 D in (25.4 W x 20.3 H x 10.2 D cm)" — W, H and D after each number. Never the words "Actual Measurements", never "long", never bullets, never the symbol × or " for inches — the letter x and "in".
+- In the item specifics: the number and "in" only, no "Approximately" ("Item Length": "1.5 in"). A field with eBay's own list of values takes the value from that list the measurement falls in.
+- Earrings and pendants: the length from the top of the hook or bail to the bottom. Necklaces and bracelets: the full length. Rings: never a length — the ring size.`;
+
+// Where the writer is not sure, or the evidence disagrees (12 Nov 2026).
+export const DOUBTS_SECTION = `
+
+DOUBTS ("doubts") — what you are NOT sure of, so the seller decides with one click instead of finding a mistake later. Report a doubt when a fact that matters to a buyer rests on weak or conflicting evidence: the metal or the material (a screenshot says brass but the colour looks like copper; a piece looks silver but has no stamp), parts made of different metals or materials, or her typed notes disagreeing with a screenshot or a label. Each doubt: "field" — the eBay field it decides ("Metal", "Material", "Color"…), "options" — two to four values from eBay's usual words, the one you used FIRST, and "why" — one short plain sentence a seller understands ("The screenshot says brass; the flower looks like copper."). When an item is made of two metals, put the one there is most of first: that one is the Metal; the other is named in the title and the description. No doubts is a normal answer: return [] when the evidence is clear. Never a doubt about the brand — the brand has its own box.`;
+
 export function buildProfiledAnalysisPrompt(profile: string): string {
   const normalized = normalizeItemProfile(profile);
   const addon = PROFILE_PROMPT_ADDONS[normalized] ?? "";
   return (
     ANALYSIS_PROMPT +
+    MEASUREMENTS_SECTION +
+    "\n\n" +
+    SELLER_NOTES_RULES +
+    DOUBTS_SECTION +
     AESTHETICS_SECTION +
     CONTACT_SECTION +
     MAKER_MARKS_SECTION +

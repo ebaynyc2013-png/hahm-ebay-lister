@@ -35,6 +35,18 @@ title: z.string().trim().min(1).max(80),
   material: scalar.optional(),
   condition: z.enum(CONDITIONS).optional(),
   condition_notes: z.string().max(3000).optional(),
+  seller_notes: z.string().max(2000).optional(),
+  doubts: z
+    .array(
+      z.object({
+        field: z.string().max(60),
+        options: z.array(z.string().max(60)).max(6),
+        why: z.string().max(300),
+      }),
+    )
+    .max(8)
+    .optional(),
+  doubts_resolved: z.array(z.string().max(60)).max(20).optional(),
   measurements: text.optional(),
   suggested_price: z
     .union([

@@ -41,7 +41,7 @@ function measurementLines(t: Text): { label: string; n: number }[] {
   const out: { label: string; n: number }[] = [];
   const text = `${t.description ?? ""}\n${t.measurements ?? ""}`;
   for (const line of text.split(/\n|;/)) {
-    const m = line.match(/^\s*(?:[•*-]\s*)?([A-Za-z][A-Za-z /-]{1,30}?)\s*[:\-–]\s*(\d+(?:\.\d+)?)\s*(?:in\b|inch|inches|"|”)?/i);
+    const m = line.match(/^\s*(?:[•*-]\s*)?([A-Za-z][A-Za-z /-]{1,30}?)\s*[:\-–]\s*(?:approximately|approx\.?|about)?\s*(\d+(?:\.\d+)?)\s*(?:in\b|inch|inches|"|”)?/i);
     if (m) out.push({ label: m[1].toLowerCase().trim(), n: Number(m[2]) });
   }
   return out;
@@ -64,7 +64,11 @@ export function sellerTextSupports(value: string, aspect: AspectShape, t: Text):
   const v = String(value ?? "").trim();
   if (!v || v.includes(" | ")) return false;
   const key = keyOf(aspect.name);
-  const names = SYNONYMS[key] ?? (key ? [key] : []);
+  const names = [...(SYNONYMS[key] ?? (key ? [key] : []))];
+  // "Item Length", "Necklace Length", "Item Width": a line named for the
+  // dimension answers it ("Length: Approximately 1.5 in", 12 Nov 2026).
+  const dim = aspect.name.toLowerCase().match(/\b(length|width|height|depth|diameter|drop)\b/);
+  if (dim && !names.includes(dim[1])) names.push(dim[1]);
   const lines = measurementLines(t).filter((l) => names.some((n) => l.label.includes(n)));
 
   const single = v.match(/^(\d+(?:\.\d+)?)\s*(?:in|inch|inches|"|”)?$/i);
@@ -82,4 +86,29 @@ export function sellerTextSupports(value: string, aspect: AspectShape, t: Text):
   const hay = ` ${`${t.title ?? ""} ${t.description ?? ""}`.toLowerCase().replace(/[^a-z0-9]+/g, " ")} `;
   const needle = ` ${v.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
   return hay.includes(needle);
+}
+
+const words = (v: string) =>
+  ` ${String(v ?? "").toLowerCase().replace(/[^\p{L}\p{N}.]+/gu, " ").trim()} `;
+
+/**
+ * A fact taken from what the seller typed in the item's Notes box (12 Nov
+ * 2026): no photo to cite, so the check is her own words. The quote must be
+ * in her notes, and the value in the quote — or, for a measurement, its
+ * number.
+ */
+export function notesSupport(
+  fact: { value?: unknown; quote?: unknown } | null | undefined,
+  notes: string | undefined,
+): boolean {
+  const n = String(notes ?? "").trim();
+  const quote = String(fact?.quote ?? "").trim();
+  const value = String(fact?.value ?? "").trim();
+  if (!n || !quote || !value) return false;
+  if (!words(n).includes(words(quote))) return false;
+  return value.split(" | ").every((v) => {
+    if (words(quote).includes(words(v))) return true;
+    const num = v.match(/^\s*(\d+(?:\.\d+)?)\s*(?:in|inch|inches|cm|mm|g|oz)?\s*$/i);
+    return num ? words(quote).includes(` ${num[1]} `) || quote.includes(num[1]) : false;
+  });
 }

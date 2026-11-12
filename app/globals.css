@@ -2194,3 +2194,92 @@ input.no-spin::-webkit-inner-spin-button {
   display: grid;
   place-items: center;
 }
+
+/* The item's Notes box on the items screen (12 Nov 2026). */
+.board-notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+}
+.board-notes > span {
+  padding-top: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+.board-notes textarea {
+  flex: 1 1 auto;
+  min-height: 0;
+  resize: vertical;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  field-sizing: content;
+}
+
+/* Notes on the draft + "Update with notes" (12 Nov 2026). */
+.draft-screen .draft-notes textarea {
+  width: 100%;
+  min-height: 0;
+  resize: vertical;
+  field-sizing: content;
+}
+.draft-screen .draft-notes-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.draft-screen .draft-notes-row .hint {
+  font-size: 14px;
+}
+.draft-screen .btn-small {
+  font-size: 13.33px;
+  padding: 6px 12px;
+}
+
+/* "Not sure" — the writer's doubts and the texts' disagreements, with a
+   button for each choice (12 Nov 2026). */
+.draft-screen .doubts-box {
+  margin: 0 0 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber-line);
+  font-size: 16px;
+}
+.draft-screen .doubt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+}
+.draft-screen .doubt + .doubt {
+  border-top: 1px solid var(--amber-line);
+}
+.draft-screen .doubt b {
+  color: var(--amber);
+}
+.draft-screen .doubt-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.draft-screen .doubt-options .picked {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.draft-screen .doubt-options .btn-apply:not(:disabled) {
+  font-weight: bold;
+}
+.draft-screen .doubts-box .hint {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.draft-screen .doubt-options .btn {
+  font-weight: normal;
+}

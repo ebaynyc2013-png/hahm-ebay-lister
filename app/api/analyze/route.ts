@@ -8,6 +8,9 @@ import { formatDescription } from "@/lib/description-format";
 import { cleanEtsyTags, cleanHashtags, tagEvidence } from "@/lib/marketplace-tags";
 import { isAestheticHashtag } from "@/lib/aesthetics";
 import { acceptedPhotoFact } from "@/lib/photo-facts";
+import { notesSupport } from "@/lib/note-facts";
+import { sellerNotesBlocks } from "@/lib/seller-notes";
+import { cleanDoubts } from "@/lib/listing-mismatch";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
   parseListing,
@@ -143,6 +146,9 @@ async function handle(req: NextRequest) {
     // The small copies for the first step: optional, never fatal.
     const small = routerImagesSchema.safeParse(body.routerImages ?? []);
     body.routerImages = small.success ? small.data : [];
+    // What she typed in the item's Notes box: optional, never fatal.
+    body.sellerNotes =
+      typeof body.sellerNotes === "string" ? body.sellerNotes.trim().slice(0, 2000) : "";
   } catch {
     return NextResponse.json(
       { ok: false, error: "Invalid request body." },
@@ -241,6 +247,7 @@ async function handle(req: NextRequest) {
                   ...referenceBlocks(body.references),
                   ...lessonBlocks(body.lessons),
                   ...phraseBlocks(body.phrases),
+                  ...sellerNotesBlocks(body.sellerNotes),
                   {
                     type: "text",
                     text: "Analyze these photos and return the listing JSON now.",
@@ -256,8 +263,12 @@ async function handle(req: NextRequest) {
         );
         const raw = parseModelJson<Record<string, unknown>>(firstText(resp));
         const specifics = Array.isArray(raw.specifics) ? raw.specifics : [];
-        const supported = specifics.filter((s) =>
-          acceptedPhotoFact(s, imageBlocks.length),
+        // A fact from her typed notes has no photo to cite; her own words
+        // are its check (12 Nov 2026).
+        const supported = specifics.filter(
+          (s) =>
+            acceptedPhotoFact(s, imageBlocks.length) ||
+            notesSupport(s as { value?: unknown; quote?: unknown }, body.sellerNotes),
         );
         const listing = parseListing({
           ...raw,
@@ -281,6 +292,10 @@ async function handle(req: NextRequest) {
         if (listing.vintage?.source === "note")
           listing.item_specifics = { ...listing.item_specifics, Vintage: "Yes" };
         listing.item_profile = profile;
+        // Kept with the listing: the eBay pass and "Update with notes" read
+        // the same words (12 Nov 2026).
+        if (body.sellerNotes) listing.seller_notes = body.sellerNotes;
+        listing.doubts = cleanDoubts(listing.doubts);
         listing.evidence = Object.fromEntries(
           supported.map((s: any) => [s.name, s.photoIndices]),
         );

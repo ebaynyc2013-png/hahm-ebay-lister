@@ -58,34 +58,41 @@ describe("the description fits a phone screen, in the seller's order", () => {
         "Keywords: black, coach",
       ].join("\n\n"),
     );
+    // The measurements right after Condition, without the old heading (12 Nov 2026).
     expect(labels(r.text)).toEqual([
       "Brand",
       "Condition",
+      "Length",
       "Size",
-      "Actual Measurements",
       "Color",
       "Occasion",
       "Notes",
       "Hallmarks",
     ]);
+    expect(r.text).toContain("Condition: Excellent.\n\nLength: 18 in\nWeight: 5 g\n\nSize: M Medium");
     expect(r.dropped).toEqual([]);
   });
 
-  it("writes each measurement on its own line, marked for eBay's list", () => {
+  it("writes each measurement on its own line, no heading, no bullets (12 Nov 2026)", () => {
     const r = formatDescription(
       "T\n\nActual Measurements:\nLength: 18 in\n- Pendant: 2 x 1.5 in\n* Weight: 12 g",
     );
-    expect(r.text).toBe(
-      "T\n\nActual Measurements:\n• Length: 18 in\n• Pendant: 2 x 1.5 in\n• Weight: 12 g",
-    );
+    expect(r.text).toBe("T\n\nLength: 18 in\nPendant: 2 x 1.5 in\nWeight: 12 g");
   });
 
-  it("keeps a list written as its own paragraph with its label", () => {
+  it("an old list written as its own paragraph becomes plain lines", () => {
     const r = formatDescription(
       "T\n\nColor: Red.\n\nActual Measurements:\n\n• Length: 18 in\n• Weight: 12 g\n\nBrand: Coach",
     );
+    expect(r.text).toBe("T\n\nBrand: Coach\n\nLength: 18 in\nWeight: 12 g\n\nColor: Red.");
+  });
+
+  it("puts the measurement lines together right after Condition, before Size", () => {
+    const r = formatDescription(
+      "T\n\nBrand: Adajio\n\nSize: OS\n\nCondition: Pre-owned, excellent.\n\nLength: Approximately 1.5 in (3.8 cm)\n\nPendant: Approximately 2 W x 2.75 H in (5.1 W x 7 H cm)\n\nColor: Copper.",
+    );
     expect(r.text).toBe(
-      "T\n\nBrand: Coach\n\nActual Measurements:\n• Length: 18 in\n• Weight: 12 g\n\nColor: Red.",
+      "T\n\nBrand: Adajio\n\nCondition: Pre-owned, excellent.\n\nLength: Approximately 1.5 in (3.8 cm)\nPendant: Approximately 2 W x 2.75 H in (5.1 W x 7 H cm)\n\nSize: OS\n\nColor: Copper.",
     );
   });
 
@@ -104,8 +111,8 @@ describe("the description fits a phone screen, in the seller's order", () => {
     expect(labels(r.text)).toEqual([
       "Brand",
       "Condition",
+      "Length",
       "Size",
-      "Actual Measurements",
       "Material",
       "Hallmarks",
     ]);
