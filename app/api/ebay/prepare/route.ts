@@ -7,6 +7,8 @@ import {
   applyDefaultVintage,
   applyListingDefaults,
   applyJewelryFeatures,
+  applyMeasuredDimensions,
+  dropImportedCountry,
   applyRhinestones,
   applySignedFromMarks,
   applySportsTheme,
@@ -180,6 +182,10 @@ const categoryPath =
           // Jewellery Features: Nickel-Free for silver, gold and stainless
           // steel; Engraved only for letters (the seller, 12 Nov 2026).
           applyJewelryFeatures(aspects, meta, listing, categoryPath);
+          // Height / width / depth from her notes or the measurement line;
+          // "Imported" is never a country (12 Nov 2026).
+          applyMeasuredDimensions(aspects, meta, listing);
+          dropImportedCountry(aspects);
           if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —

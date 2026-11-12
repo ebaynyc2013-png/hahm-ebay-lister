@@ -112,3 +112,15 @@ export function notesSupport(
     return num ? words(quote).includes(` ${num[1]} `) || quote.includes(num[1]) : false;
   });
 }
+
+/**
+ * A value whose own words she wrote in the Notes box ("patchwork denim" →
+ * Denim; "100 cotton" → Cotton). Words of three letters or more, whole words.
+ */
+export function valueInNotes(value: string, notes: string | undefined): boolean {
+  const n = words(String(notes ?? ""));
+  const v = String(value ?? "").trim();
+  if (n.trim() === "" || !v || v.includes(" | ")) return false;
+  const tokens = words(v).trim().split(" ").filter((t) => t.length >= 3);
+  return tokens.length > 0 && tokens.every((t) => n.includes(` ${t} `));
+}

@@ -325,3 +325,74 @@ export function applyJewelryFeatures(
   else delete aspects[name];
   return true;
 }
+
+// Height, width and depth from her notes or the description's measurement
+// line ("Approx. 13.4"H x 16.5"W x 6.3"D", "Measurements: Approximately
+// 13.5"H x 16.5"W x 6.25"D (…)") into eBay's Height / Width / Depth fields
+// (12 Nov 2026 — a tote came back with Bag Width, Height and Depth empty
+// though her notes gave all three). eBay's own list: the nearest value;
+// no list: the number to the nearest quarter, "16.5 in". A field already
+// answered is left alone.
+const DIM_LETTER: Record<string, RegExp> = {
+  H: /\bheight\b/i,
+  W: /\bwidth\b/i,
+  D: /\bdepth\b/i,
+};
+
+export function measuredDimensions(text: string): Partial<Record<"H" | "W" | "D", number>> {
+  const out: Partial<Record<"H" | "W" | "D", number>> = {};
+  const t = String(text ?? "");
+  for (const m of t.matchAll(/(\d+(?:\.\d+)?)\s*(?:"|”|''|in\b\.?|inch(?:es)?)?\s*([HWD])\b(?![a-z])/g)) {
+    const k = m[2] as "H" | "W" | "D";
+    if (out[k] === undefined) out[k] = Number(m[1]);
+  }
+  for (const [k, word] of [["H", "height"], ["W", "width"], ["D", "depth"]] as const) {
+    if (out[k] !== undefined) continue;
+    const m = t.match(new RegExp(`\\b${word}\\s*[:\\-–]?\\s*(?:approximately|approx\\.?|about)?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:"|”|in\\b|inch)`, "i"));
+    if (m) out[k] = Number(m[1]);
+  }
+  return out;
+}
+
+export function applyMeasuredDimensions(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[] }[],
+  listing: Pick<ListingResult, "description" | "seller_notes">,
+): boolean {
+  const dims = measuredDimensions(`${listing.seller_notes ?? ""}\n${listing.description ?? ""}`);
+  let changed = false;
+  for (const [k, re] of Object.entries(DIM_LETTER) as ["H" | "W" | "D", RegExp][]) {
+    const n = dims[k];
+    if (n === undefined || !(n > 0)) continue;
+    for (const field of meta.filter((a) => re.test(a.name))) {
+      if (aspects[field.name]?.some((v) => v.trim())) continue;
+      let value = `${Math.round(n * 4) / 4} in`;
+      const listed = field.values
+        .map((v) => ({ v, n: Number(v.match(/^\s*(\d+(?:\.\d+)?)\s*in\b/i)?.[1]) }))
+        .filter((x) => Number.isFinite(x.n));
+      if (listed.length) {
+        const best = listed.reduce((a, b) => (Math.abs(b.n - n) <= Math.abs(a.n - n) ? b : a));
+        if (Math.abs(best.n - n) > 1) continue; // off eBay's list — leave it for her
+        value = best.v;
+      }
+      aspects[field.name] = [value];
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+/** "Imported" says where it was not made, not where it was: never a country (12 Nov 2026). */
+export function dropImportedCountry(aspects: Record<string, string[]>): boolean {
+  let changed = false;
+  for (const name of Object.keys(aspects)) {
+    if (!/country|region of manufacture|made in/i.test(name)) continue;
+    const kept = aspects[name].filter((v) => !/^\s*(?:imported|import|foreign)\s*$/i.test(v));
+    if (kept.length !== aspects[name].length) {
+      changed = true;
+      if (kept.length) aspects[name] = kept;
+      else delete aspects[name];
+    }
+  }
+  return changed;
+}

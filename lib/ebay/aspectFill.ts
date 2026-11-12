@@ -34,7 +34,7 @@ import {
   COLOR_SYNONYMS,
   MAX_MULTI_VALUES,
 } from "./aspects";
-import { notesSupport, sellerTextSupports } from "@/lib/note-facts";
+import { notesSupport, sellerTextSupports, valueInNotes } from "@/lib/note-facts";
 
 const FILL_MODEL = "claude-sonnet-4-6";
 // Prompt-size bound, applied AFTER priority sorting — required and
@@ -520,8 +520,29 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
         sellerTextSupports(String(said?.value ?? ""), a, listing)
       )
         problem = null;
-      // Her typed notes: her own words are the check (12 Nov 2026).
-      if (problem && notesSupport(said, listing.seller_notes)) problem = null;
+      // Her typed notes: her own words are the check (12 Nov 2026) — the
+      // quote from them, or the value's own words written in them ("patchwork
+      // denim" answers Exterior Material Denim).
+      const fromNotes = (v: string) =>
+        notesSupport({ ...said, value: v }, listing.seller_notes) || valueInNotes(v, listing.seller_notes);
+      if (problem && fromNotes(String(said?.value ?? ""))) problem = null;
+      // Several values, some supported: keep those, refuse the rest (12 Nov
+      // 2026 — "Denim | Leather" lost Denim because Leather had no proof).
+      let keptValue: string | null = null;
+      if (problem && String(said?.value ?? "").includes(" | ")) {
+        const parts = String(said?.value).split(" | ").map((v) => v.trim()).filter(Boolean);
+        const ok = parts.filter(
+          (v) => photoFactProblem({ ...said, value: v }, imageBlocks.length, a) === null || fromNotes(v),
+        );
+        if (ok.length) {
+          for (const v of parts.filter((x) => !ok.includes(x))) {
+            report.refused++;
+            refuse(problem, v);
+          }
+          keptValue = ok.join(" | ");
+          problem = null;
+        }
+      }
       if (problem) {
         report.refused++;
         refuse(problem);
@@ -529,6 +550,7 @@ Return {"facts":[{"name":"Material","value":"Cashmere","basis":"label","quote":"
       }
       const accepted = {
         ...(fact as PhotoFact),
+        ...(keptValue ? { value: keptValue } : {}),
         photoIndices: Array.isArray((fact as PhotoFact).photoIndices)
           ? (fact as PhotoFact).photoIndices.filter(
               (i) => Number.isInteger(i) && i > 0 && i <= imageBlocks.length,
