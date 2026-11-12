@@ -13,6 +13,7 @@ import { DraftCard, fieldAnchor } from "./DraftCard";
 import { allDoubts } from "@/lib/listing-mismatch";
 import { requestText } from "@/lib/text-dialog";
 import { reviseListing, showCost } from "./reviseClient";
+import { hostOf, type LookupLink, type ProductLookup } from "@/lib/product-lookup";
 
 interface Props {
   groups: ItemGroup[];
@@ -198,6 +199,10 @@ export function DraftScreen(p: Props) {
         </div>
       )}
 
+      {g.status === "done" && g.lookup && g.lookup.status !== "searching" && g.postStatus !== "posted" && (
+        <LookupBox lookup={g.lookup} />
+      )}
+
       {g.status === "done" && g.listing && g.postStatus !== "posted" && (
         <DoubtsBox key={`doubts-${g.id}`} group={g} onEdit={p.onEdit} />
       )}
@@ -357,6 +362,48 @@ function DoubtsBox({
         );
       })}
       {msg && <p className={`hint${msg.error ? " warn" : ""}`}>{msg.text}</p>}
+    </div>
+  );
+}
+
+/** What the online search found, what it changed, where from (12 Nov 2026). */
+function LookupBox({ lookup: r }: { lookup: ProductLookup }) {
+  const links = (xs: LookupLink[] | undefined) =>
+    (xs ?? []).map((x, i) => (
+      <span key={x.url}>
+        {i ? " · " : ""}
+        <a href={x.url} target="_blank" rel="noopener noreferrer">
+          {x.title || hostOf(x.url)} ↗
+        </a>
+      </span>
+    ));
+  const cost = r.usd ? ` · ${showCost(r.usd)}` : "";
+  return (
+    <div className={`lookup-box ${r.status}`}>
+      {r.status === "found" && r.source && (
+        <p>
+          <b>Found online:</b>{" "}
+          <a href={r.source.url} target="_blank" rel="noopener noreferrer">
+            {r.product_name || r.source.title} — {r.source.site} ↗
+          </a>
+          {r.changed?.length ? ` · Updated: ${r.changed.join(" · ")}` : " · Nothing needed to change"}
+          {cost}
+        </p>
+      )}
+      {r.status === "similar" && (
+        <p>
+          <b>Not found exactly online.</b> Similar (not used): {links(r.similar)}
+          {cost}
+        </p>
+      )}
+      {r.status === "not_found" && (
+        <p>
+          <b>Not found online.</b>
+          {cost}
+        </p>
+      )}
+      {r.status === "error" && <p className="warn">Online search did not work: {r.error}</p>}
+      {(r.resale ?? []).length > 0 && <p className="hint">On resale sites (not used): {links(r.resale)}</p>}
     </div>
   );
 }

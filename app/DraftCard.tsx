@@ -66,7 +66,8 @@ export function DraftCard(props: Props) {
       <div className="draft-pending">
         {group.status === "writing" && (
           <p>
-            <span className="spinner small" aria-hidden="true" /> Writing this listing…
+            <span className="spinner small" aria-hidden="true" />{" "}
+            {group.lookup?.status === "searching" ? "Looking this item up online…" : "Writing this listing…"}
           </p>
         )}
         {group.status === "idle" && <p>Waiting to be written…</p>}
@@ -443,6 +444,14 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
               )}
               <span className="hint">eBay declines lower offers for you</span>
             </div>
+            {g.lookup?.status === "found" && g.lookup.retail_price && g.lookup.source && (
+              <span className="hint retail-hint">
+                Retail {g.lookup.retail_price} at{" "}
+                <a href={g.lookup.source.url} target="_blank" rel="noopener noreferrer">
+                  {g.lookup.source.site} ↗
+                </a>
+              </span>
+            )}
             {g.comps?.ok && g.comps.median !== undefined && (
               <span className="hint" title={g.comps.basis}>
                 Market: {g.comps.count} similar, ${g.comps.low?.toFixed(0)}–${g.comps.high?.toFixed(0)} ·{" "}

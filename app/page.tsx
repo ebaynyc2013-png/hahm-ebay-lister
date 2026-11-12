@@ -24,6 +24,8 @@ import { accessHeaders, apiPost } from "@/lib/api-client";
 import { pacificToIso } from "@/lib/pacific-time";
 import { getAnalysisModel, getSortModel } from "@/lib/model-preferences";
 import { resizeImage } from "@/lib/resize";
+import { lookupEvidence, lookupFacts, type ProductLookup } from "@/lib/product-lookup";
+import { reviseListing } from "./reviseClient";
 import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
 import { chunkImagesForUpload } from "@/lib/uploadBatches";
 import { ACCOUNT_CHANGED, EbayConnect } from "./EbayConnect";
@@ -842,11 +844,38 @@ export default function Home() {
               : g,
           ),
         );
+        // Find the item online first (the seller, 12 Nov 2026): its own
+        // page on the brand's site or a big store; found facts go into the
+        // listing at once, before the eBay fields are prepared from it.
+        let lookedUp = data.listing;
+        let lookup: ProductLookup | undefined;
+        setGroups((prev) =>
+          prev.map((g) => (g.id === groupId ? { ...g, lookup: { status: "searching" } } : g)),
+        );
+        try {
+          const lr = await apiPost("/api/lookup", {
+            listing: data.listing,
+            images: (routerImages ?? []).slice(0, 4),
+          });
+          const ld = (await readJson(lr)) as { ok?: boolean; lookup?: ProductLookup; error?: string };
+          lookup = ld.ok && ld.lookup ? ld.lookup : { status: "error", error: ld.error || "Could not look it up." };
+          const facts = lookupFacts(lookup);
+          if (facts) {
+            const r = await reviseListing(lookedUp, facts);
+            lookedUp = { ...lookedUp, ...r.patch, web_facts: lookupEvidence(lookup) };
+            lookup = { ...lookup, changed: r.changed, usd: (lookup.usd ?? 0) + (r.usd ?? 0) };
+          }
+        } catch (e) {
+          lookup = { status: "error", error: (e as Error).message };
+        }
+        setGroups((prev) =>
+          prev.map((g) => (g.id === groupId ? { ...g, lookup, listing: lookedUp } : g)),
+        );
         // Resolve final category/schema before review, never during publication.
-        let researchListing = data.listing;
+        let researchListing = lookedUp;
         try {
           const pr = await apiPost("/api/ebay/prepare", {
-            listing: data.listing,
+            listing: lookedUp,
             images: imgs,
             enrich: true,
           });

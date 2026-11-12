@@ -29,6 +29,8 @@ export interface ListingResult {
   condition_notes?: string;
   /** Her typed notes the listing was written or updated from. */
   seller_notes?: string;
+  /** Facts from the item's own product page online — evidence like her notes. */
+  web_facts?: string;
   /**
    * What the writer was not sure of, or where the texts disagree — shown at
    * the top of the draft with a button for each choice (12 Nov 2026).
@@ -192,6 +194,8 @@ export interface ItemGroup {
    * disc"). The listing is written from it like from her photographed note.
    */
   notes?: string;
+  /** The item looked up online after writing (12 Nov 2026). */
+  lookup?: import("./product-lookup").ProductLookup;
   photoIds: string[];
   listing?: ListingResult;
   status: ItemStatus;

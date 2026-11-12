@@ -2283,3 +2283,29 @@ input.no-spin::-webkit-inner-spin-button {
 .draft-screen .doubt-options .btn {
   font-weight: normal;
 }
+
+/* "Found online" — the item's own product page (12 Nov 2026). */
+.draft-screen .lookup-box {
+  margin: 0 0 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--green-soft);
+  border: 1px solid var(--green-line);
+  font-size: 16px;
+}
+.draft-screen .lookup-box.similar,
+.draft-screen .lookup-box.not_found,
+.draft-screen .lookup-box.error {
+  background: #f7f5f1;
+  border-color: #ddd6ca;
+}
+.draft-screen .lookup-box p {
+  margin: 4px 0;
+}
+.draft-screen .lookup-box .hint {
+  font-size: 14px;
+}
+.draft-screen .retail-hint {
+  display: block;
+  font-size: 14px;
+}

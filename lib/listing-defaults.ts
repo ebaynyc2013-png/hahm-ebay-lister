@@ -34,9 +34,15 @@ export function applyListingDefaults(
   answerNo(listing, meta, /^personali[sz]ed?$/i);
   // Unit Quantity: always 1 — she sells one item per listing (31 Oct 2026).
   // eBay gives no list for it; the photo check refuses a number from a look.
+  // A set counts its pieces: "Set of 3", "3 piece", "3-pc" (12 Nov 2026).
   const unitQuantity = meta.find((a) => /^unit quantity$/i.test(a.name));
   if (unitQuantity && !listing.item_specifics?.[unitQuantity.name]?.trim())
-    setDefault(listing, unitQuantity.name, "1");
+    setDefault(listing, unitQuantity.name, String(piecesInSet(listing)));
+  // Unit Type: Unit, where eBay offers it (12 Nov 2026).
+  const unitType = meta.find((a) => /^unit type$/i.test(a.name));
+  const unit = unitType ? matchAllowed("Unit", unitType.values) : null;
+  if (unitType && unit && !listing.item_specifics?.[unitType.name]?.trim())
+    setDefault(listing, unitType.name, unit);
   // The eBay condition follows the grade the AI gave from the photos (the
   // seller's rule, 31 Oct 2026: it judges, starting from Excellent, and the
   // menu, the condition notes and the description always agree). Clothing
@@ -58,6 +64,16 @@ export function applyListingDefaults(
       listing.ebay_condition = "PRE_OWNED_EXCELLENT";
     if (!listing.condition) listing.condition = "EXCELLENT";
   }
+}
+
+/** How many pieces the listing sells: a set's count, else 1. */
+export function piecesInSet(listing: Pick<ListingResult, "title" | "description">): number {
+  const text = `${listing.title ?? ""}\n${(listing.description ?? "").split("\n").slice(0, 6).join("\n")}`;
+  const m =
+    text.match(/\bset\s+of\s+(\d{1,2})\b/i) ??
+    text.match(/\b(\d{1,2})\s*[- ]?\s*(?:piece|pieces|pc|pcs)\b/i);
+  const n = m ? Number(m[1]) : 1;
+  return n >= 2 && n <= 50 ? n : 1;
 }
 
 function setDefault(listing: ListingResult, name: string, value: string): void {

@@ -36,6 +36,7 @@ title: z.string().trim().min(1).max(80),
   condition: z.enum(CONDITIONS).optional(),
   condition_notes: z.string().max(3000).optional(),
   seller_notes: z.string().max(2000).optional(),
+  web_facts: z.string().max(3000).optional(),
   doubts: z
     .array(
       z.object({
