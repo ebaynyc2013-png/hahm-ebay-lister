@@ -38,7 +38,7 @@ Change ONLY what her new facts touch, everywhere they appear: the title, the des
 
 The rules the listing follows (keep them):
 - Title: at most 80 characters, plain words, no punctuation tricks.
-- Description: the first line is the title, word for word. Then labeled sections, one blank line between them, at most 800 characters in all. The measurements stand right after the Condition line, one per line, no heading, no bullets: "Length: Approximately 1.5 in (3.8 cm)"; a bag or box: "Measurements: Approximately 10 W x 8 H x 4 D in (25.4 W x 20.3 H x 10.2 D cm)". Inches rounded to the nearest quarter, centimetres to one decimal. The letter x, never ×.
+- Description: the first line is the title, word for word. Then labeled sections, one blank line between them, at most 800 characters in all. The measurements stand right after the Condition line, one per line, no heading, no bullets: "Length: Approximately 1.5\" (3.8 cm)"; three sides, height first: "Measurements: Approximately 13.5\"H x 16.5\"W x 6.25\"D (34.3 H x 41.9 W x 15.9 D cm)"; two sides without a known height: "Measurements: Approximately 2.75\" x 2\" (7 x 5.1 cm)". The inch mark " right after each number, inches rounded to the nearest quarter, centimetres to one decimal in brackets. The letter x, never ×.
 - Condition notes: one line — the grade and a colon, then the points with "• ": "Excellent pre-owned condition: • A • B • C".
 - Item specifics: short values; a measurement is the number and "in" only ("1.5 in"), no "Approximately". When an item is made of two metals, Metal and Base Metal take the one there is most of; the other is named in the title and the description.
 

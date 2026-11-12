@@ -33,7 +33,7 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
     expect(m![2].length).toBeLessThanOrEqual(800);
     // The seller's approved example (28 Oct 2026): her voice, then facts.
     expect(m![2]).toContain("can be given some extra pizzazz");
-    expect(m![2]).toContain("Length: Approximately 35-40 in (88.9-101.6 cm), adjustable");
+    expect(m![2]).toContain('Length: Approximately 35-40" (88.9-101.6 cm), adjustable');
     expect(m![2]).not.toMatch(/made in/i);
   });
 

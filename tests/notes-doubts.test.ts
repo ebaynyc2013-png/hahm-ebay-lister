@@ -69,8 +69,9 @@ describe("her typed notes count like her photographed note (12 Nov 2026)", () =>
   it("the writer is told the rules: notes, measurements, doubts", () => {
     const p = buildProfiledAnalysisPrompt("auto");
     expect(p).toContain("THE SELLER'S TYPED NOTES");
-    expect(p).toContain('"Length: Approximately 1.5 in (3.8 cm)"');
-    expect(p).toContain("Measurements: Approximately 10 W x 8 H x 4 D in (25.4 W x 20.3 H x 10.2 D cm)");
+    expect(p).toContain('"Length: Approximately 1.5" (3.8 cm)"');
+    expect(p).toContain('Measurements: Approximately 13.5"H x 16.5"W x 6.25"D (34.3 H x 41.9 W x 15.9 D cm)');
+    expect(p).toContain('Measurements: Approximately 2.75" x 2" (7 x 5.1 cm)');
     expect(p).toContain("no \"Approximately\"");
     expect(p).toContain("DOUBTS");
     expect(AI_LISTING_SCHEMA.required).toContain("doubts");
@@ -109,5 +110,21 @@ describe("Update with notes: only what her facts touch changes", () => {
   it("never removes the brand", () => {
     const l = { ...adajio(), item_specifics: { Brand: "Adajio" } } as ListingResult;
     expect(applyRevision(l, { removed_specifics: ["Brand"] }).patch.item_specifics).toBeUndefined();
+  });
+});
+
+describe('the inch mark format (12 Nov 2026): Approximately 13.5"H x 16.5"W x 6.25"D', () => {
+  it("measurement lines with the inch mark stay together right after Condition", async () => {
+    const { formatDescription } = await import("@/lib/description-format");
+    const r = formatDescription(
+      'T\n\nBrand: Coach\n\nColor: Black.\n\nCondition: Pre-owned, excellent.\n\nMeasurements: Approximately 13.5"H x 16.5"W x 6.25"D (34.3 H x 41.9 W x 15.9 D cm)\n\nStrap drop: Approximately 9" (22.9 cm)',
+    );
+    expect(r.text).toBe(
+      'T\n\nBrand: Coach\n\nCondition: Pre-owned, excellent.\n\nMeasurements: Approximately 13.5"H x 16.5"W x 6.25"D (34.3 H x 41.9 W x 15.9 D cm)\nStrap drop: Approximately 9" (22.9 cm)\n\nColor: Black.',
+    );
+  });
+  it('Length: Approximately 1.5" (3.8 cm) answers Item Length 1.5 in', () => {
+    const aspect = { name: "Item Length", values: [], mode: "FREE_TEXT" } as never;
+    expect(sellerTextSupports("1.5 in", aspect, { description: 'T\n\nLength: Approximately 1.5" (3.8 cm)' })).toBe(true);
   });
 });

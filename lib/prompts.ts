@@ -290,7 +290,7 @@ SECTION ORDER — always this order, the same in every listing, so a buyer on a 
 2. The seller's opening sentence (no label)
 3. Brand
 4. Condition — one short line, the seller's way: "Condition: Pre-owned, excellent, nothing is wrong with it." (details go in the condition notes)
-5. The measurements, right after Condition (the seller's rule, 12 Nov 2026) — see MEASUREMENTS below. Each on its own line, named for what it measures, together in one block, no heading and no bullets: "Length: Approximately 1.5 in (3.8 cm)", "Pit to pit: Approximately 18 in (45.7 cm)". Weight, when known: "Weight: 12 g".
+5. The measurements, right after Condition (the seller's rule, 12 Nov 2026) — see MEASUREMENTS below. Each on its own line, named for what it measures, together in one block, no heading and no bullets: "Length: Approximately 1.5\" (3.8 cm)", "Pit to pit: Approximately 18\" (45.7 cm)". Weight, when known: "Weight: 12 g".
 6. Size — the marked size (Ring Size for rings), only when the item has one. A European, British or Italian women's size is written as read, "Size: EU 38"; the program completes it to "Size: EU 38 (US 8, Medium)".
 7. Style — the piece's OWN NAME or collection, WITHOUT the brand (the brand already has its line): "Style: Good As Gold", "Style: Elsa Peretti Open Heart", "Style: Wheaton". Only when a label, stamp, the seller's note or a screenshot names it; otherwise leave this line out. This line is the piece's name, not eBay's Style item specific. Never write a "Type" line — the title already says what the item is.
 8. Color
@@ -306,7 +306,7 @@ NEVER write a Keywords section, a list of search words, or hashtags in the descr
 
 The example below shows the SHAPE and the VOICE of a description and nothing else. Its brand, design, measurements and condition belong to that one item. Never carry them onto the item you are describing, and never let a resemblance between the example and your item stand in for evidence.
 
-Example (779 characters):
+Example (768 characters):
 
 Premier Designs Gold Brown Good As Gold Pendant Necklace Rope Cord 35-40in
 
@@ -316,8 +316,8 @@ Brand: Premier Designs
 
 Condition: Pre-owned, excellent, worn only a couple of times.
 
-Length: Approximately 35-40 in (88.9-101.6 cm), adjustable
-Pendant: Approximately 2 W x 2.75 H in (5.1 W x 7 H cm)
+Length: Approximately 35-40\" (88.9-101.6 cm), adjustable
+Pendant: Approximately 2.75\" x 2\" (7 x 5.1 cm)
 
 Style: Good As Gold
 
@@ -547,8 +547,11 @@ export const MEASUREMENTS_SECTION = `
 
 MEASUREMENTS — the seller's rules of 12 Nov 2026, for every kind of item: jewellery, clothing, shoes, bags, accessories, home goods, collectibles.
 - Where they come from: a ruler, tape measure or any measuring tool shown with the item in a photo (she photographs items on a ruler on purpose), a label, a screenshot, her photographed note or her typed notes. Read the tool: where the item starts and where it ends against the scale. Never estimate a size from the look of the item alone, and never write a measurement nothing shows.
-- Always in inches, rounded to the nearest quarter (1, 1.25, 1.5, 1.75), followed by centimetres in brackets, to one decimal (inches x 2.54): "Approximately 1.5 in (3.8 cm)". A tape in centimetres is converted to inches the same way. Whole-number centimetres keep no ".0" only when exact: "(10 cm)" is fine.
-- In the description: each measurement on its own line right after the Condition line, named for what it measures, the word "Approximately" written out in full once, at the start of the value: "Length: Approximately 1.5 in (3.8 cm)". Clothing measured flat: "Pit to pit: Approximately 18 in (45.7 cm)", "Length: Approximately 26 in (66 cm)", "Waist: Approximately 14 in (35.6 cm)", "Inseam: Approximately 29 in (73.7 cm)". A bag, a box or anything with three sides: ONE line, "Measurements: Approximately 10 W x 8 H x 4 D in (25.4 W x 20.3 H x 10.2 D cm)" — W, H and D after each number. Never the words "Actual Measurements", never "long", never bullets, never the symbol × or " for inches — the letter x and "in".
+- Always in inches, rounded to the nearest quarter (1, 1.25, 1.5, 1.75), the inch mark " right after each number, followed by centimetres in brackets, to one decimal (inches x 2.54): "Approximately 1.5\" (3.8 cm)". A tape in centimetres is converted to inches the same way. Whole-number centimetres need no ".0": "(10 cm)".
+- In the description (the seller's format of 12 Nov 2026, every kind of item — jewellery, bags, clothing, shoes, phones, computers, auto parts, collectibles): each measurement on its own line right after the Condition line, named for what it measures, the word "Approximately" written out in full once, at the start of the value: "Length: Approximately 1.5\" (3.8 cm)". Clothing measured flat: "Pit to pit: Approximately 18\" (45.7 cm)", "Length: Approximately 26\" (66 cm)", "Waist: Approximately 14\" (35.6 cm)", "Inseam: Approximately 29\" (73.7 cm)".
+- Three sides — a bag, a box, a phone, a laptop, anything with height, width and depth: ONE line, height first, the letters H, W and D right after each number, and the same letters in the centimetres: "Measurements: Approximately 13.5\"H x 16.5\"W x 6.25\"D (34.3 H x 41.9 W x 15.9 D cm)".
+- Two sides: when the source says which is the height and which the width, height first with the letters — "Measurements: Approximately 2.75\"H x 2\"W (7 H x 5.1 W cm)"; when it does not say, no letters — "Measurements: Approximately 2.75\" x 2\" (7 x 5.1 cm)".
+- Never the words "Actual Measurements", never "long", never bullets, never "in" or "inches" after a number in the description (the mark " instead), never the symbol × — the letter x.
 - In the item specifics: the number and "in" only, no "Approximately" ("Item Length": "1.5 in"). A field with eBay's own list of values takes the value from that list the measurement falls in.
 - Earrings and pendants: the length from the top of the hook or bail to the bottom. Necklaces and bracelets: the full length. Rings: never a length — the ring size.`;
 
