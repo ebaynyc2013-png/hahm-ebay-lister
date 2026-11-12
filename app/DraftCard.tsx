@@ -269,7 +269,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
 
         <div className="df photos-df" id={a("photos")}>
           <span className="df-label">
-            Photos · {photos.length} · click to zoom
+            Photos · {photos.length} · Click to zoom
           </span>
           <div className="photo-row">
             {photos.map((p, i) => (
@@ -453,7 +453,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
         </div>
 
         <div>
-          <button type="button" className="btn" onClick={() => onRetry(g.id)}>
+          <button type="button" className="btn btn-reanalyze" onClick={() => onRetry(g.id)}>
             ↻ Re-analyze selected photos (replaces this draft)
           </button>
         </div>

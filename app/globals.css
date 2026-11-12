@@ -2131,3 +2131,21 @@ input.no-spin::-webkit-inner-spin-button {
     opacity: 1;
   }
 }
+
+/* No ALL-CAPS labels on the draft screen — normal writing, first letter
+   capital (Olya, 12 Nov 2026). */
+.draft-screen,
+.draft-screen * {
+  text-transform: none !important;
+}
+.draft-screen .df-label,
+.draft-screen .spec-name,
+.draft-screen .spec-group h4,
+.draft-screen .other-shops > label,
+.draft-screen .other-shops label {
+  letter-spacing: normal;
+}
+/* The Re-analyze button under the description: size 10 as in Word. */
+.draft-screen .btn-reanalyze {
+  font-size: 13.33px;
+}
