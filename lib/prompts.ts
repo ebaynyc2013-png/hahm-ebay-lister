@@ -216,40 +216,30 @@ WHERE CONDITION COMES FROM — the seller's rule of 28 Oct 2026: ONLY from the p
 THE GRADE ("condition"). Judge it yourself from the photos; a grade written on the seller's note decides. Almost everything she sells is in excellent condition, so start from EXCELLENT — eBay's "Pre-owned Excellent: like-new items that have been previously worn, but with little-to-no signs of wear" — and go lower only for wear you can actually SEE: GOOD ("light signs of wear, with or without visible flaws") or FAIR ("significantly visible flaws, heavy signs of wear"). A grade below EXCELLENT needs at least one flaw NAMED in the condition notes — what it is and where ("Light pilling under the arms"). If you cannot name one, the grade is EXCELLENT; the program enforces this. An intended look — a distressed or faded print, washed denim, a raw hem — is design, not wear. The grade, the condition notes and the description's Condition line always agree.
 
 THE CONDITION NOTES ("condition_notes") — the seller's rules of 6 Nov 2026, for every kind of item (jewelry, clothing, shoes, bags, anything). eBay shows them right beside the price, the first thing a buyer reads. They answer ONE question: what shape is THIS piece in — what is good and what is not. Nothing else.
-- 3 to 7 lines in all. First line: the grade and a short overall impression — "Excellent pre-owned condition — looks great.", or for a vintage piece "Excellent vintage condition — looks great." Then 2 to 6 lines, each starting with "• ".
-- ONE thing per line, and no two lines say the same thing. Each line is about one part or one kind of wear. When a line says "All stones in place and still sparkly", no other line says "No missing stones". Write "No stains, holes or pulls" only on clothing, only when it is true, and only when no line above already says it.
+- ONE line in all (the seller, 12 Nov 2026). It opens with the grade and a colon — "Excellent pre-owned condition:", or for a vintage piece "Excellent vintage condition:", "Good pre-owned condition:", "Fair pre-owned condition:" — and nothing else before the colon: never "looks great", "gently worn" or any other impression. After the colon, the points, on the same line, each starting with "• ": "Excellent pre-owned condition: • Bright, high polish on the cross • Serpentine chain is smooth with no kinks • Spring ring clasp opens and closes fine".
+- How many points: Excellent, Very good and Good — 1 to 3; Fair and lower — up to 5 (the seller, 11 Nov 2026). Pick the ones a buyer most needs; every flaw that lowers the grade is among them.
+- ONE thing per point, and no two points say the same thing. Each point is about one part or one kind of wear. When a point says "All stones in place and still sparkly", no other point says "No missing stones". Write "No stains, holes or pulls" only on clothing, only when it is true, and only when no point before it already says it.
 - From big to small, the way you look a piece over in your hands: the overall impression first; then the main part (the stones; on clothing the fabric and colour); then the front — the finish, the plating, the print, the surface; then the back, once you turn it over — scratches, spots; then the small parts — clasps, clips, hinges, zippers, buttons, loops.
-- What a line can be about — the good or the bad of one part:
+- What a point can be about — the good or the bad of one part:
   - stones: all in place and sparkly — or which one is missing, loose, cloudy or dull, and where ("One small stone missing on the left earring");
   - finish and surface: plating, metal, fabric, leather, print — bright and clean, or rubbed, faded, worn, gold tone worn through to the base metal, and where;
   - mechanisms: clasp, clip, hinge, zipper, snaps, buttons — whether they work ONLY when the seller's note says so ("zip works great", "clips ok"), since a photo cannot show it; a part you can SEE is broken, bent or missing is always named;
   - wear and damage: scratches, scuffs, pilling, stains, spots, holes, pulls, a missing button, a torn loop, an open seam, a fallen hem.
 - How much to say about a flaw: a small one, just name it — "Light scratches on the back", "Minor signs of wear consistent with age". A big one, what it is, where, and how big — "A 1/4 in hole by the left back pocket".
 - Vintage: light wear that comes with age is normal — "Minor signs of wear consistent with age". A vintage piece with no visible wear is "Excellent vintage condition".
-- Design or damage: a hole, a raw or uneven hem, a frayed edge, a missing button can be either. When the photos show it is the design (it matches on both sides, its edges are finished, it is part of the cut), say so in one line — "Raw hem is part of the design". When it is damage, it is a flaw: what and where. When the photos cannot tell, say what you see and where, plainly, without calling it either.
+- Design or damage: a hole, a raw or uneven hem, a frayed edge, a missing button can be either. When the photos show it is the design (it matches on both sides, its edges are finished, it is part of the cut), say so in one point — "Raw hem is part of the design". When it is damage, it is a flaw: what and where. When the photos cannot tell, say what you see and where, plainly, without calling it either.
 - NEVER here — it belongs in the description or nowhere: what the piece looks like or how it is made (the design, stone shapes and cuts, how the stones are set, the layout, colours as design, the fabric, the cut — "Clear marquise and round crystals set in a leaf cluster"); hallmarks, signatures, stamps, logos, maker's marks, labels and tags ("Chr.Dior © stamped on both clip backs", a missing care tag); the brand; size and measurements; and never "(as noted by seller)", "(per seller)" or any word about where a fact came from.
 - Voice: warm and human, the way a real owner tells a neighbour about a piece she loves — plain everyday words people actually say: "Stones haven't lost any of their sparkle after all these years." Never ad copy or slogans ("Dior is Dior", "flawless quality", "a true gem", "great condition!"), never padding, never a feel you cannot know from a photo ("sheer-feeling", "soft to the touch").
 Example, jewelry, nothing wrong (vintage clip earrings; the seller's note said the clips work):
-Excellent vintage condition — looks great.
-• All stones in place and still sparkly after all these years
-• Gold tone bright and clean, no rubbing
-• Backs just as clean
-• Clips open and close firmly
+Excellent vintage condition: • All stones in place and still sparkly after all these years • Gold tone bright and clean, no rubbing • Clips open and close firmly
 Example, jewelry, with flaws:
-Good vintage condition — gently worn.
-• One small stone missing on the left earring
-• Gold tone worn through to silver on the clip edges
-• Light scratches on the backs
+Good vintage condition: • One small stone missing on the left earring • Gold tone worn through to silver on the clip edges • Light scratches on the backs
 Example, clothing, nothing wrong:
-Excellent pre-owned condition — looks great.
-• Faded, distressed print is part of the design
-• Neat stitching throughout
-• No stains, holes or pulls
+Excellent pre-owned condition: • Faded, distressed print is part of the design • Neat stitching throughout • No stains, holes or pulls
 Example, clothing, with flaws (a wool cardigan):
-Good pre-owned condition — lightly worn.
-• Light pilling under the arms
-• Small light spot on the left cuff
-• All buttons present
+Good pre-owned condition: • Light pilling under the arms • Small light spot on the left cuff • All buttons present
+Example, clothing, heavy wear (her note said the zip works):
+Fair pre-owned condition: • Fading across the back • Pilling on both sleeves • Small hole by the left hem • Light stain on the collar • Zip works great
 
 THE DESCRIPTION'S CONDITION LINE is SHORT — the seller's own way of answering "what condition?": "Condition: Pre-owned, excellent, nothing is wrong with it." With a flaw: "Condition: Pre-owned, good, light pilling under the arms." The details live in the condition notes.
 

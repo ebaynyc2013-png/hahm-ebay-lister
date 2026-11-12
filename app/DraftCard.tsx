@@ -98,6 +98,10 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
   const d = useDraftEbay(g, photoById, onGroupEdit, accountKey);
   const l = d.l;
   const [zoom, setZoom] = useState<number | null>(null);
+  // Drag a photo to a new place; the order is eBay's order, the first is the
+  // main photo (the seller, 12 Nov 2026).
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
   const locked = g.postStatus === "posted" || g.postStatus === "posting";
   const a = (field: string) => fieldAnchor(g.id, field);
 
@@ -245,6 +249,17 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
   const prepared = Boolean(g.preparation);
   const photos = g.photoIds.map((id) => photoById(id)).filter((p): p is Photo => Boolean(p));
   const zoomed = zoom === null ? undefined : photos[zoom];
+  const movePhoto = (from: number, to: number) => {
+    if (from === to) return;
+    const order = photos.map((p) => p.id);
+    const [moved] = order.splice(from, 1);
+    order.splice(to, 0, moved);
+    onGroupEdit(g.id, { photoIds: [...order, ...g.photoIds.filter((id) => !order.includes(id))] });
+  };
+  const endDrag = () => {
+    setDragFrom(null);
+    setDragOver(null);
+  };
 
   return (
     <fieldset className="draft-halves" disabled={locked || d.busy}>
@@ -273,10 +288,31 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
           </span>
           <div className="photo-row">
             {photos.map((p, i) => (
-              <div key={p.id} className="photo-cell">
+              <div
+                key={p.id}
+                className={`photo-cell${dragOver === i && dragFrom !== null && dragFrom !== i ? " drop-here" : ""}${dragFrom === i ? " dragging" : ""}`}
+                draggable={!locked}
+                onDragStart={(e) => {
+                  setDragFrom(i);
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", String(i));
+                }}
+                onDragOver={(e) => {
+                  if (dragFrom === null) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  if (dragOver !== i) setDragOver(i);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragFrom !== null) movePhoto(dragFrom, i);
+                  endDrag();
+                }}
+                onDragEnd={endDrag}
+              >
                 <button type="button" className="photo-thumb" onClick={() => setZoom(i)} aria-label={`Zoom photo ${i + 1}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.previewUrl} alt="" />
+                  <img src={p.previewUrl} alt="" draggable={false} />
                 </button>
                 {/* Takes the photo off this listing only — not off the computer. */}
                 <button
@@ -702,8 +738,39 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
 
       {zoomed && (
         <div className="zoom" role="dialog" aria-label={`Photo ${zoom! + 1}`} onClick={() => setZoom(null)}>
+          {zoom! > 0 && (
+            <button
+              type="button"
+              className="zoom-arrow left"
+              aria-label="Previous photo"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom(zoom! - 1);
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">
+                <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+          {zoom! < photos.length - 1 && (
+            <button
+              type="button"
+              className="zoom-arrow right"
+              aria-label="Next photo"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom(zoom! + 1);
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">
+                <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            key={zoomed.id}
             src={zoomed.uploadData ? `data:${zoomed.mediaType};base64,${zoomed.uploadData}` : zoomed.previewUrl}
             alt={`Photo ${zoom! + 1}`}
             onClick={(e) => {

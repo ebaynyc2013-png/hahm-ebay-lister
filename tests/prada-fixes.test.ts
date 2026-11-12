@@ -89,7 +89,7 @@ describe("condition notes are about condition", () => {
         "Excellent pre-owned condition — looks like new.\n• No care tags present (as noted by seller)\n• Neat stitching throughout, seams intact\n• Belt loops all present (per seller)\n• No stains, holes or pulls",
       ),
     ).toBe(
-      "Excellent pre-owned condition — looks like new.\n• Neat stitching throughout, seams intact\n• Belt loops all present\n• No stains, holes or pulls",
+      "Excellent pre-owned condition: • Neat stitching throughout, seams intact • Belt loops all present • No stains, holes or pulls",
     );
   });
 });

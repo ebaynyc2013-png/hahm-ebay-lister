@@ -275,7 +275,7 @@ async function handle(req: NextRequest) {
         // Excellent — the seller's rule (31 Oct 2026); the notes' first line
         // and the description's Condition line follow.
         excellentWithoutFlaw(listing);
-        listing.condition_notes = tidyConditionNotes(listing.condition_notes);
+        listing.condition_notes = tidyConditionNotes(listing.condition_notes, listing.condition);
         // "vintage 90s" on her note: Vintage Yes now, the era's Theme and
         // Style at Prepare (eBay's lists), and the title opening with it.
         if (listing.vintage?.source === "note")

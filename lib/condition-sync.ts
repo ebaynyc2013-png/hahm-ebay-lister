@@ -1,5 +1,5 @@
 // The grade, eBay's condition menu, the description's Condition line and the
-// first line of the condition notes always agree — the seller's rule of 31 Oct
+// opening of the condition notes always agree — the seller's rule of 31 Oct
 // 2026. Changing one on the card changes the others; and a grade below
 // Excellent needs a flaw named in the notes, or it is Excellent.
 //
@@ -82,25 +82,65 @@ const FLAW =
 const NOT_A_FLAW =
   /^\s*no\b|\bno (?:[\w-]+ ){0,4}(?:spots?|stains?|holes?|pulls?|snags?|tears?|marks?|odou?rs?|flaws?|damage|wear|pilling)\b|\bintact\b|\bpart of the design\b|\bby design\b|\bintended\b|\bin (?:good|great|excellent) shape\b|\bfree of\b|\bwithout\b/i;
 
-/** The flaw lines among the notes' "• " lines. */
-export function flawLines(notes: string | undefined): string[] {
-  return String(notes ?? "")
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.startsWith("•"))
-    .map((l) => l.replace(/^•\s*/, ""))
-    .filter((l) => FLAW.test(l) && !NOT_A_FLAW.test(l));
+/**
+ * The notes split into the grade phrase and its points. Reads both the
+ * one-line form of 12 Nov 2026 — "Excellent pre-owned condition: • A • B" —
+ * and the older form, a lead line with one "• " line under it per point.
+ */
+export function noteParts(notes: string | undefined): { lead: string; points: string[] } {
+  const text = String(notes ?? "").replace(/\r/g, "").trim();
+  if (!text) return { lead: "", points: [] };
+  const [head, ...rest] = text.split("•");
+  return {
+    lead: head.replace(/\s+/g, " ").trim(),
+    points: rest.map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean),
+  };
 }
 
+/** The flaw points among the notes' "•" points. */
+export function flawLines(notes: string | undefined): string[] {
+  return noteParts(notes).points.filter((l) => FLAW.test(l) && !NOT_A_FLAW.test(l));
+}
+
+// The grade phrase that opens the notes — just the grade, no "looks great"
+// (the seller, 12 Nov 2026). A vintage piece keeps "vintage".
 const LEAD: Record<string, string> = {
-  NEW_WITH_TAGS: "New with tags.",
-  NEW_NO_TAGS: "New without tags.",
-  EXCELLENT: "Excellent pre-owned condition — looks great.",
-  VERY_GOOD: "Very good pre-owned condition — light wear.",
-  GOOD: "Good pre-owned condition — lightly worn.",
-  FAIR: "Fair pre-owned condition — visible wear.",
-  FOR_PARTS_OR_NOT_WORKING: "For parts or not working.",
+  NEW_WITH_TAGS: "New with tags",
+  NEW_NO_TAGS: "New without tags",
+  EXCELLENT: "Excellent pre-owned condition",
+  VERY_GOOD: "Very good pre-owned condition",
+  GOOD: "Good pre-owned condition",
+  FAIR: "Fair pre-owned condition",
+  FOR_PARTS_OR_NOT_WORKING: "For parts or not working",
 };
+
+/** How many points the notes keep: Excellent and Good up to 3, lower up to 5 (11 Nov 2026). */
+export function maxPoints(grade: string | undefined): number {
+  return grade === "FAIR" || grade === "FOR_PARTS_OR_NOT_WORKING" ? 5 : 3;
+}
+
+function leadFor(grade: string, oldLead = ""): string {
+  const lead = LEAD[grade] ?? LEAD.GOOD;
+  return /\bvintage\b/i.test(oldLead) ? lead.replace("pre-owned", "vintage") : lead;
+}
+
+/** One line: the grade phrase, a colon, then the points — "Excellent pre-owned condition: • A • B". */
+export function oneLineNotes(lead: string, points: string[]): string {
+  const clean = points.map((p) => p.replace(/[.;,]\s*$/, ""));
+  return clean.length ? `${lead}: ${clean.map((p) => `• ${p}`).join(" ")}` : `${lead}.`;
+}
+
+/**
+ * Too many points: keep every flaw (a grade below Excellent rests on them)
+ * and the first others, in the order written.
+ */
+function keepPoints(points: string[], max: number): string[] {
+  if (points.length <= max) return points;
+  const isFlaw = (l: string) => FLAW.test(l) && !NOT_A_FLAW.test(l);
+  const flaws = points.filter(isFlaw).length;
+  let others = Math.max(0, max - flaws);
+  return points.filter((l) => isFlaw(l) || others-- > 0);
+}
 
 /** The description's short Condition line for a grade, in the seller's words. */
 export function conditionLine(grade: string, notes?: string): string {
@@ -125,15 +165,10 @@ export function conditionLine(grade: string, notes?: string): string {
   }
 }
 
-/** The notes with their first line saying the grade; the "• " lines untouched. */
+/** The notes opening with the grade, in the one-line form; the points kept as written. */
 export function notesForGrade(notes: string | undefined, grade: string): string {
-  const lead = LEAD[grade] ?? LEAD.GOOD;
-  const lines = String(notes ?? "").split("\n");
-  const at = lines.findIndex((l) => l.trim() && !l.trim().startsWith("•"));
-  if (!String(notes ?? "").trim()) return lead;
-  if (at >= 0 && at === lines.findIndex((l) => l.trim())) lines[at] = lead;
-  else lines.unshift(lead);
-  return lines.join("\n");
+  const { lead, points } = noteParts(notes);
+  return oneLineNotes(leadFor(grade, lead), points);
 }
 
 /** The description with its Condition line saying the grade. */
@@ -183,20 +218,14 @@ export function excellentWithoutFlaw(l: ListingResult): boolean {
  * care or content labels, are taken out; the Label line in the description
  * already says it.
  */
-export function tidyConditionNotes(notes: string | undefined): string {
+export function tidyConditionNotes(notes: string | undefined, grade?: string): string {
   if (!notes) return notes ?? "";
-  return notes
-    .replace(/\s*\((?:as\s+)?(?:noted|stated|mentioned|written|per|according to)\b[^)]*\)/gi, "")
-    .split("\n")
-    .filter(
-      (line) =>
-        !(
-          /^\s*•/.test(line) &&
-          /\b(?:care|content|fabric|fiber|fibre)\s+(?:tags?|labels?)\b/i.test(line)
-        ),
-    )
-    .join("\n")
-    .replace(/[ \t]+\n/g, "\n")
-    .trim();
+  const { lead, points } = noteParts(
+    notes.replace(/\s*\((?:as\s+)?(?:noted|stated|mentioned|written|per|according to)\b[^)]*\)/gi, ""),
+  );
+  const kept = points.filter((p) => !/\b(?:care|content|fabric|fiber|fibre)\s+(?:tags?|labels?)\b/i.test(p));
+  // One line, the grade phrase first (the seller, 12 Nov 2026). Without a
+  // known grade the model's own phrase stays, minus anything after a dash.
+  const opening = grade ? leadFor(grade, lead) : lead.replace(/\s+[—–-]\s+.*$/, "").replace(/[:.]\s*$/, "");
+  return oneLineNotes(opening, keepPoints(kept, maxPoints(grade)));
 }
-

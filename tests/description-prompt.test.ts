@@ -130,12 +130,13 @@ describe("condition notes: only condition, one thing per line, a human voice (6 
   it("tells the AI the seller's rules from the Dior clip earrings", async () => {
     const { ANALYSIS_PROMPT } = await import("@/lib/prompts");
     const p = String(ANALYSIS_PROMPT);
-    // 3 to 7 lines, the grade first
-    expect(p).toContain("3 to 7 lines in all.");
-    expect(p).toContain("Then 2 to 6 lines");
-    // one thing per line, no repeats
-    expect(p).toContain("ONE thing per line, and no two lines say the same thing.");
-    expect(p).toContain('no other line says "No missing stones"');
+    // one line: the grade, a colon, the points (12 Nov 2026); 3 / 5 points (11 Nov)
+    expect(p).toContain("ONE line in all (the seller, 12 Nov 2026).");
+    expect(p).toContain('never "looks great"');
+    expect(p).toContain("Excellent, Very good and Good — 1 to 3; Fair and lower — up to 5");
+    // one thing per point, no repeats
+    expect(p).toContain("ONE thing per point, and no two points say the same thing.");
+    expect(p).toContain('no other point says "No missing stones"');
     // from big to small
     expect(p).toContain("From big to small");
     // never design, hallmarks, brand, size

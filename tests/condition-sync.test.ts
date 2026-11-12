@@ -6,6 +6,9 @@ import {
   flawLines,
   gradeChange,
   gradeForEbayCondition,
+  noteParts,
+  notesForGrade,
+  tidyConditionNotes,
 } from "@/lib/condition-sync";
 import type { ListingResult } from "@/lib/types";
 
@@ -58,7 +61,7 @@ describe("a grade below Excellent with no flaw named is Excellent", () => {
     const l = top();
     expect(excellentWithoutFlaw(l)).toBe(true);
     expect(l.condition).toBe("EXCELLENT");
-    expect(l.condition_notes?.split("\n")[0]).toBe("Excellent pre-owned condition — looks great.");
+    expect(l.condition_notes?.startsWith("Excellent pre-owned condition: • ")).toBe(true);
     expect(l.condition_notes).toContain("• No holes or pulls");
     expect(l.description).toContain("Condition: Pre-owned, excellent, nothing is wrong with it.");
     expect(l.description).not.toContain("very good");
@@ -79,7 +82,8 @@ describe("changing the grade on the card", () => {
     const patch = gradeChange(top(), "EXCELLENT", apparel);
     expect(patch.ebay_condition).toBe("PRE_OWNED_EXCELLENT");
     expect(patch.description).toContain("Condition: Pre-owned, excellent, nothing is wrong with it.");
-    expect(patch.condition_notes?.split("\n")[0]).toBe("Excellent pre-owned condition — looks great.");
+    expect(patch.condition_notes?.startsWith("Excellent pre-owned condition: • ")).toBe(true);
+    expect(patch.condition_notes).not.toContain("\n");
     expect(patch.condition_notes).toContain("• Seams and stitching intact");
   });
   it("Good with a flaw in the notes names it in the description", () => {
@@ -89,5 +93,41 @@ describe("changing the grade on the card", () => {
   });
   it("before Prepare, eBay's menu waits", () => {
     expect(gradeChange(top(), "EXCELLENT").ebay_condition).toBe("");
+  });
+});
+
+describe("condition notes in one line (the seller, 12 Nov 2026)", () => {
+  it("grade, colon, then the points with bullets — no 'looks great'", () => {
+    expect(
+      tidyConditionNotes(
+        "Excellent pre-owned condition — looks great.\n• Bright, high polish on the cross\n• Serpentine chain is smooth with no kinks\n• Spring ring clasp opens and closes fine",
+        "EXCELLENT",
+      ),
+    ).toBe(
+      "Excellent pre-owned condition: • Bright, high polish on the cross • Serpentine chain is smooth with no kinks • Spring ring clasp opens and closes fine",
+    );
+  });
+  it("vintage stays vintage", () => {
+    expect(tidyConditionNotes("Excellent vintage condition: • All stones in place", "EXCELLENT")).toBe(
+      "Excellent vintage condition: • All stones in place",
+    );
+  });
+  it("Excellent and Good keep up to 3 points, every flaw kept", () => {
+    const out = tidyConditionNotes(
+      "Good pre-owned condition: • Colour still rich • Neat stitching • All buttons present • Seams intact • Light pilling under the arms",
+      "GOOD",
+    );
+    expect(out).toBe("Good pre-owned condition: • Colour still rich • Neat stitching • Light pilling under the arms");
+    expect(flawLines(out)).toEqual(["Light pilling under the arms"]);
+  });
+  it("Fair keeps up to 5 points", () => {
+    const pts = ["A small hole by the hem", "Fading on the back", "Pilling on the sleeves", "Loose button", "Stain on the collar", "Seams intact"];
+    const out = tidyConditionNotes(`Fair pre-owned condition: ${pts.map((p) => `• ${p}`).join(" ")}`, "FAIR");
+    expect(noteParts(out).points).toHaveLength(5);
+  });
+  it("changing the grade rewrites only the opening", () => {
+    expect(notesForGrade("Excellent pre-owned condition: • Small spot on the left cuff", "GOOD")).toBe(
+      "Good pre-owned condition: • Small spot on the left cuff",
+    );
   });
 });
