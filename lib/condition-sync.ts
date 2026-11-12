@@ -229,3 +229,39 @@ export function tidyConditionNotes(notes: string | undefined, grade?: string): s
   const opening = grade ? leadFor(grade, lead) : lead.replace(/\s+[—–-]\s+.*$/, "").replace(/[:.]\s*$/, "");
   return oneLineNotes(opening, keepPoints(kept, maxPoints(grade)));
 }
+
+/**
+ * eBay's condition menu in words a seller reads, for every category
+ * (12 Nov 2026: Handcrafted earrings showed "USED EXCELLENT"). eBay sends the
+ * condition's number only; this is the name eBay's own site gives it. In
+ * clothing (which has Pre-owned Excellent), 3000 is "Pre-owned · Good".
+ */
+export function conditionMenuLabel(value: string, values: string[]): string {
+  const apparel = values.includes("PRE_OWNED_EXCELLENT") || values.includes("PRE_OWNED_FAIR");
+  switch (value) {
+    case "NEW":
+      return apparel ? "New with tags" : "New";
+    case "NEW_OTHER":
+      return apparel ? "New without tags" : "New other (see details)";
+    case "NEW_WITH_DEFECTS":
+      return "New with defects";
+    case "LIKE_NEW":
+      return "Like New";
+    case "PRE_OWNED_EXCELLENT":
+      return "Pre-owned · Excellent";
+    case "USED_EXCELLENT":
+      return apparel ? "Pre-owned · Good" : "Pre-owned";
+    case "PRE_OWNED_FAIR":
+      return "Pre-owned · Fair";
+    case "USED_VERY_GOOD":
+      return "Used · Very Good";
+    case "USED_GOOD":
+      return "Used · Good";
+    case "USED_ACCEPTABLE":
+      return "Used · Acceptable";
+    case "FOR_PARTS_OR_NOT_WORKING":
+      return "For parts or not working";
+    default:
+      return value.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
+  }
+}

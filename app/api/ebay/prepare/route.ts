@@ -1,3 +1,4 @@
+import { conditionMenuLabel } from "@/lib/condition-sync";
 import {
   applyDefaultAntique,
   applyDefaultHandmade,
@@ -201,21 +202,14 @@ const categoryPath =
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
           sanitizeNumericAspects(aspects, meta);
+          // Names a seller reads, in every category (12 Nov 2026).
+          const accepted = [...ids].map((id) => CONDITION_ID_ENUM[id]).filter(Boolean);
           const conditions = [...ids]
             .filter((id) => CONDITION_ID_ENUM[id])
             .map((id) => ({
               value: CONDITION_ID_ENUM[id],
-              label:
-                id === 2990
-                  ? "Pre-owned Excellent (2990)"
-                  : `${CONDITION_ID_ENUM[id].replace(/_/g, " ")} (${id})`,
+              label: conditionMenuLabel(CONDITION_ID_ENUM[id], accepted),
             }));
-          if (ids.has(2990) || ids.has(3010)) {
-            const c = conditions.find(
-              (c) => c.value === CONDITION_ID_ENUM[3000],
-            );
-            if (c) c.label = "Pre-owned Good (3000)";
-          }
           listing.category_id = id;
           // Kept with the ID so the next Prepare can still read Department
           // off it without searching for the category again.

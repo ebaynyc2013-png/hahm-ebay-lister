@@ -131,3 +131,24 @@ describe("condition notes in one line (the seller, 12 Nov 2026)", () => {
     );
   });
 });
+
+describe("eBay's condition menu in words, every category (12 Nov 2026)", () => {
+  it("never shows eBay's code words", async () => {
+    const { conditionMenuLabel } = await import("@/lib/condition-sync");
+    const jewelry = ["NEW", "NEW_OTHER", "USED_EXCELLENT"];
+    expect(conditionMenuLabel("USED_EXCELLENT", jewelry)).toBe("Pre-owned");
+    expect(conditionMenuLabel("NEW", jewelry)).toBe("New");
+    expect(conditionMenuLabel("USED_EXCELLENT", apparel)).toBe("Pre-owned · Good");
+    expect(conditionMenuLabel("PRE_OWNED_EXCELLENT", apparel)).toBe("Pre-owned · Excellent");
+    expect(conditionMenuLabel("NEW", apparel)).toBe("New with tags");
+    const phones = ["NEW", "USED_EXCELLENT", "USED_VERY_GOOD", "USED_GOOD", "USED_ACCEPTABLE", "FOR_PARTS_OR_NOT_WORKING"];
+    expect(phones.map((v) => conditionMenuLabel(v, phones))).toEqual([
+      "New",
+      "Pre-owned",
+      "Used · Very Good",
+      "Used · Good",
+      "Used · Acceptable",
+      "For parts or not working",
+    ]);
+  });
+});

@@ -14,7 +14,7 @@ import { makerSigns } from "@/lib/brand-signs";
 import { DESCRIPTION_LIMIT } from "@/lib/description-format";
 import { withCost } from "@/lib/sku";
 import { confirmVintage } from "@/lib/vintage";
-import { gradeChange, gradeForEbayCondition } from "@/lib/condition-sync";
+import { conditionMenuLabel, gradeChange, gradeForEbayCondition } from "@/lib/condition-sync";
 import { requestText } from "@/lib/text-dialog";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
 import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
@@ -720,7 +720,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
               <option value="">Choose condition</option>
               {g.preparation!.conditions.map((c) => (
                 <option key={c.value} value={c.value}>
-                  {c.label.replace(/\s*\(\d+\)$/, "")}
+                  {conditionMenuLabel(c.value, g.preparation!.conditions.map((x) => x.value))}
                 </option>
               ))}
             </select>
