@@ -278,3 +278,50 @@ export function applySportsTheme(
   else delete aspects[name];
   return true;
 }
+
+// Jewellery Features (the seller's rules, 12 Nov 2026).
+// Nickel-Free: silver, gold and stainless steel are nickel-free — always;
+// costume jewellery only when her notes or a screenshot say "nickel free";
+// never when nickel is named (Metal Nickel, nickel silver, German silver,
+// "contains nickel"). Engraved: only a monogram or cut-in letters — a pattern
+// is not engraving; the program keeps Engraved only when the listing names
+// letters, a monogram, initials, a name or a date.
+const NICKEL_FREE_METALS =
+  /^(?:sterling silver|silver|fine silver|yellow gold|white gold|rose gold|multi-tone gold|gold|stainless steel|surgical steel)$/i;
+const NICKEL_SAID = /\bnickel\s+silver\b|\bgerman\s+silver\b|\bcontains?\s+nickel\b|\bnickel\s+(?:alloy|base)\b|^nickel$/i;
+const ENGRAVED_WORDS = /\b(?:monogram\w*|initials?|letters?|lettering|inscri\w+|engraved\s+(?:with|name|date|words?|text|message)|names?|dates?)\b/i;
+
+export function applyJewelryFeatures(
+  aspects: Record<string, string[]>,
+  meta: { name: string; values: string[]; cardinality?: string }[],
+  listing: Pick<ListingResult, "title" | "description" | "seller_notes" | "maker_marks">,
+  categoryPath: string,
+): boolean {
+  if (!/jewel/i.test(categoryPath)) return false;
+  const field = meta.find((a) => /^features?$/i.test(a.name.trim()));
+  if (!field) return false;
+  const name = field.name;
+  const before = (aspects[name] ?? []).map((v) => v.trim()).filter(Boolean);
+  let next = [...before];
+  const metals = ["Metal", "Base Metal"]
+    .flatMap((k) => aspects[Object.keys(aspects).find((x) => x.toLowerCase() === k.toLowerCase()) ?? ""] ?? [])
+    .map((v) => v.trim());
+  const text = [listing.title, listing.description, listing.seller_notes, ...(listing.maker_marks ?? [])].join("\n");
+  const nickel = metals.some((m) => NICKEL_SAID.test(m)) || NICKEL_SAID.test(text);
+  const nickelFree =
+    field.values.find((v) => /^nickel[\s-]?free$/i.test(v)) ?? (field.values.length ? "" : "Nickel-Free");
+  const isNickelFree = (v: string) => /^nickel[\s-]?free$/i.test(v);
+  if (nickel) next = next.filter((v) => !isNickelFree(v));
+  else if (nickelFree && !next.some(isNickelFree)) {
+    const fineMetal = metals.length > 0 && metals.every((m) => NICKEL_FREE_METALS.test(m));
+    const saidFree = /\bnickel[\s-]?free\b/i.test(`${listing.seller_notes ?? ""}\n${listing.description ?? ""}`);
+    if (fineMetal || saidFree) next.push(nickelFree);
+  }
+  if (next.some((v) => /^engraved$/i.test(v)) && !ENGRAVED_WORDS.test(text))
+    next = next.filter((v) => !/^engraved$/i.test(v));
+  if (field.cardinality && field.cardinality !== "MULTI") next = next.slice(0, 1);
+  if (next.length === before.length && next.every((v, i) => v === before[i])) return false;
+  if (next.length) aspects[name] = next;
+  else delete aspects[name];
+  return true;
+}

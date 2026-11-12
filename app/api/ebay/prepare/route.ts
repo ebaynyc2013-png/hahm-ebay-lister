@@ -6,6 +6,7 @@ import {
   applyDefaultPendantType,
   applyDefaultVintage,
   applyListingDefaults,
+  applyJewelryFeatures,
   applyRhinestones,
   applySignedFromMarks,
   applySportsTheme,
@@ -176,6 +177,9 @@ const categoryPath =
           // Theme: never "3D" from letters printed on the item; "Sports" for
           // sportswear (the seller, 10 Nov 2026).
           applySportsTheme(aspects, meta, listing, categoryPath);
+          // Jewellery Features: Nickel-Free for silver, gold and stainless
+          // steel; Engraved only for letters (the seller, 12 Nov 2026).
+          applyJewelryFeatures(aspects, meta, listing, categoryPath);
           if (fillReport) fill = describeFill(withoutSettledRefusals(fillReport, aspects));
           // Nothing is put back. A word eBay has no entry for filters nothing
           // and searches nothing, so an empty aspect is the honest result —
