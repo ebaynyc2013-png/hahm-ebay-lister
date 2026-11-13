@@ -45,3 +45,44 @@ describe("MADE IN USA is United States", () => {
     expect(countryInQuote("Country of Origin", "United States", "USAGE: cold wash")).toBe(false);
   });
 });
+
+describe("Update with notes: a field with eBay's list takes a word from it (13 Nov 2026)", () => {
+  const COLORS = ["Beige", "Black", "Blue", "Brown", "Gray", "Multicolor", "White"];
+  const aspects = [
+    { name: "Color", mode: "FREE_TEXT", values: COLORS },
+    { name: "Style", mode: "FREE_TEXT", values: ["Biker", "Casual", "Gothic"] },
+    { name: "Brand", mode: "FREE_TEXT", values: ["Nike"] },
+  ] as never;
+  const before = { title: "T", description: "T", item_specifics: { Color: "Black", Brand: "Sledge USA" } } as unknown as ListingResult;
+  it("Navy Blue in her notes: Color becomes Blue, the message says why", async () => {
+    const { snapRevisionToLists } = await import("@/lib/revise");
+    const r = snapRevisionToLists(
+      before,
+      { patch: { item_specifics: { Color: "Navy Blue", Brand: "Sledge USA" } }, changed: ["Color: Black → Navy Blue"] },
+      aspects,
+    );
+    expect(r.patch.item_specifics?.Color).toBe("Blue");
+    expect(r.changed).toEqual(["Color: Black → Blue (eBay's word for Navy Blue)"]);
+  });
+  it("a word not on the list is not applied", async () => {
+    const { snapRevisionToLists } = await import("@/lib/revise");
+    const r = snapRevisionToLists(
+      before,
+      { patch: { item_specifics: { Color: "Black", Brand: "Sledge USA", Style: "Rocker" } }, changed: ["Style: Rocker"] },
+      aspects,
+    );
+    expect(r.patch.item_specifics).toBeUndefined();
+    expect(r.changed).toEqual([`Style: "Rocker" is not on eBay's list — left empty`]);
+  });
+  it("a brand is never held to a list; no draft fields, nothing changes", async () => {
+    const { snapRevisionToLists } = await import("@/lib/revise");
+    const r = snapRevisionToLists(
+      before,
+      { patch: { item_specifics: { Color: "Black", Brand: "Sledge" } }, changed: ["Brand: Sledge USA → Sledge"] },
+      aspects,
+    );
+    expect(r.patch.item_specifics?.Brand).toBe("Sledge");
+    const r2 = snapRevisionToLists(before, { patch: { item_specifics: { Color: "Navy Blue" } }, changed: [] }, undefined);
+    expect(r2.patch.item_specifics?.Color).toBe("Navy Blue");
+  });
+});

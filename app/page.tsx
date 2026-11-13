@@ -24,7 +24,7 @@ import { accessHeaders, apiPost } from "@/lib/api-client";
 import { pacificToIso } from "@/lib/pacific-time";
 import { getAnalysisModel, getSortModel } from "@/lib/model-preferences";
 import { resizeImage } from "@/lib/resize";
-import { lookupEvidence, lookupFacts, type ProductLookup } from "@/lib/product-lookup";
+import { lookupEvidence, lookupFacts, needsLookup, type ProductLookup } from "@/lib/product-lookup";
 import { reviseListing } from "./reviseClient";
 import { buildSku, nextIndexFromSkus, skuPrefix } from "@/lib/sku";
 import { chunkImagesForUpload } from "@/lib/uploadBatches";
@@ -849,27 +849,44 @@ export default function Home() {
         // listing at once, before the eBay fields are prepared from it.
         let lookedUp = data.listing;
         let lookup: ProductLookup | undefined;
-        setGroups((prev) =>
-          prev.map((g) => (g.id === groupId ? { ...g, lookup: { status: "searching" } } : g)),
-        );
-        try {
-          const lr = await apiPost("/api/lookup", {
-            listing: data.listing,
-            images: (routerImages ?? []).slice(0, 4),
-          });
-          const ld = (await readJson(lr)) as { ok?: boolean; lookup?: ProductLookup; error?: string };
-          lookup = ld.ok && ld.lookup ? ld.lookup : { status: "error", error: ld.error || "Could not look it up." };
-          const facts = lookupFacts(lookup);
-          if (facts) {
-            const r = await reviseListing(lookedUp, facts);
-            lookedUp = { ...lookedUp, ...r.patch, web_facts: lookupEvidence(lookup) };
-            lookup = { ...lookup, changed: r.changed, usd: (lookup.usd ?? 0) + (r.usd ?? 0) };
+        // Its cost goes into the card's total too (13 Nov 2026).
+        const lookupUsage: NonNullable<ItemGroup["usage"]> = [];
+        // No brand, Unbranded, Handmade: not searched, nothing spent.
+        if (!needsLookup(data.listing)) lookup = { status: "skipped" };
+        else {
+          setGroups((prev) =>
+            prev.map((g) => (g.id === groupId ? { ...g, lookup: { status: "searching" } } : g)),
+          );
+          try {
+            const lr = await apiPost("/api/lookup", {
+              listing: data.listing,
+              images: (routerImages ?? []).slice(0, 4),
+            });
+            const ld = (await readJson(lr)) as {
+              ok?: boolean;
+              lookup?: ProductLookup;
+              error?: string;
+              usage?: NonNullable<ItemGroup["usage"]>;
+            };
+            lookupUsage.push(...(ld.usage ?? []));
+            lookup = ld.ok && ld.lookup ? ld.lookup : { status: "error", error: ld.error || "Could not look it up." };
+            const facts = lookupFacts(lookup);
+            if (facts) {
+              const r = await reviseListing(lookedUp, facts);
+              lookupUsage.push(...r.usage);
+              lookedUp = { ...lookedUp, ...r.patch, web_facts: lookupEvidence(lookup) };
+              lookup = { ...lookup, changed: r.changed, usd: (lookup.usd ?? 0) + (r.usd ?? 0) };
+            }
+          } catch (e) {
+            lookup = { status: "error", error: (e as Error).message };
           }
-        } catch (e) {
-          lookup = { status: "error", error: (e as Error).message };
         }
         setGroups((prev) =>
-          prev.map((g) => (g.id === groupId ? { ...g, lookup, listing: lookedUp } : g)),
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, lookup, listing: lookedUp, usage: [...(g.usage ?? []), ...lookupUsage] }
+              : g,
+          ),
         );
         // Resolve final category/schema before review, never during publication.
         let researchListing = lookedUp;

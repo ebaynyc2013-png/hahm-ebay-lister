@@ -6,14 +6,14 @@ import { guardApiRequest, safeErrorResponse } from "@/lib/api-guard";
 import { AnthropicAuthError, anthropicAuthError, getClient, parseModelJson } from "@/lib/anthropic";
 import { collectUsage, currentUsage, measuredMessage } from "@/lib/ai-usage";
 import { toImageBlock, type ImageBlock } from "@/lib/images";
-import { LOOKUP_RULES, checkLookup, lookupMessage, type ProductLookup } from "@/lib/product-lookup";
+import { LOOKUP_RULES, checkLookup, lookupMessage, needsLookup, type ProductLookup } from "@/lib/product-lookup";
 import { parseListing, routerImagesSchema } from "@/lib/validation";
 
 export const maxDuration = 120;
 
-// Text and small photos: the mid model searches well for a fraction of the
-// photo model's price.
-const LOOKUP_MODEL = "claude-sonnet-4-6";
+// The small model (the seller, 13 Nov 2026): most of a search's cost is the
+// found pages it reads, and it reads them for a third of the mid model's price.
+const LOOKUP_MODEL = "claude-haiku-4-5";
 const MAX_SEARCHES = 3;
 const MAX_PHOTOS = 4;
 
@@ -32,6 +32,9 @@ async function handle(req: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false, error: "This draft could not be read." }, { status: 400 });
   }
+  // No brand, Unbranded, Handmade: not searched, nothing spent.
+  if (!needsLookup(listing))
+    return NextResponse.json({ ok: true, lookup: { status: "skipped" } satisfies ProductLookup, usage: [] });
   const small = routerImagesSchema.safeParse(body.images ?? []);
   const photos = (small.success ? small.data : [])
     .slice(0, MAX_PHOTOS)
@@ -75,9 +78,21 @@ async function handle(req: NextRequest) {
       raw = null;
     }
     const lookup = checkLookup(raw, String(listing.brand ?? ""));
-    const usd = currentUsage().reduce((n, u) => n + (u.estimatedUsd ?? 0), 0);
-    // Each search is billed on top of the tokens: $10 per 1,000.
-    lookup.usd = usd + searches * 0.01;
+    // Each search is billed on top of the tokens: $10 per 1,000. Kept as a
+    // line of its own so the card's total counts it too.
+    if (searches)
+      currentUsage().push({
+        stage: "web search",
+        model: `${searches} search${searches === 1 ? "" : "es"}`,
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        ms: 0,
+        ok: true,
+        estimatedUsd: searches * 0.01,
+      });
+    lookup.usd = currentUsage().reduce((n, u) => n + (u.estimatedUsd ?? 0), 0);
     return NextResponse.json({ ok: true, lookup, usage: currentUsage() });
   } catch (e) {
     const fatal = e instanceof AnthropicAuthError ? e : anthropicAuthError(e);

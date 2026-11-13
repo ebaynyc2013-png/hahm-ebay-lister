@@ -15,8 +15,14 @@ export interface LookupLink {
   url: string;
 }
 
+/** A price for this exact item somewhere online, shown as a guide only. */
+export interface PriceLink extends LookupLink {
+  site: string;
+  price: string;
+}
+
 export interface ProductLookup {
-  status: "searching" | "found" | "similar" | "not_found" | "error";
+  status: "searching" | "skipped" | "found" | "similar" | "not_found" | "error";
   source?: LookupLink & { site: string };
   product_name?: string;
   model_name?: string;
@@ -28,6 +34,8 @@ export interface ProductLookup {
   other_facts?: string[];
   similar?: LookupLink[];
   resale?: LookupLink[];
+  /** Prices for THIS exact item on resale sites and in stores — a guide, never a fact. */
+  prices?: PriceLink[];
   /** What the listing update changed, for the screen. */
   changed?: string[];
   usd?: number;
@@ -36,7 +44,9 @@ export interface ProductLookup {
 
 // Other sellers' words, never a source of facts.
 const RESALE =
-  /(?:^|\.)(?:ebay|poshmark|mercari|depop|etsy|grailed|vinted|therealreal|vestiairecollective|thredup|tradesy|rebag|fashionphile|facebook|craigslist|offerup|amazon|walmart|aliexpress|temu|shein|pinterest|worthpoint|liveauctioneers|1stdibs|rubylane|chairish)\.[a-z.]+$/i;
+  /(?:^|\.)(?:ebay|poshmark|mercari|depop|etsy|grailed|vinted|therealreal|vestiairecollective|thredup|tradesy|rebag|fashionphile|whatnot|facebook|craigslist|offerup|amazon|walmart|aliexpress|temu|shein|pinterest|worthpoint|liveauctioneers|1stdibs|rubylane|chairish)\.[a-z.]+$/i;
+// Never used at all, not even for a price (the seller, 13 Nov 2026).
+const NEVER = /(?:^|\.)amazon\.[a-z.]+$/i;
 
 export function hostOf(url: string): string {
   try {
@@ -47,27 +57,43 @@ export function hostOf(url: string): string {
 }
 
 export const isResale = (url: string) => RESALE.test(hostOf(url));
+export const isNeverUsed = (url: string) => NEVER.test(hostOf(url));
 
-export const LOOKUP_RULES = `You find ONE resale item's own product page on the web, to make its eBay listing exact. You see small photos of the item and what was already written about it.
+/**
+ * No brand, Unbranded or Handmade: no store sells it under a name, so it is
+ * not searched at all — no cost (the seller, 13 Nov 2026).
+ */
+export function needsLookup(l: Pick<ListingResult, "brand">): boolean {
+  const b = String(l.brand ?? "").trim();
+  return Boolean(b) && !/^(?:unbranded|handmade|hand[\s-]?made|unknown|no brand|n\/?a)\b/i.test(b);
+}
 
-SEARCH: at most 3 searches. Search for the exact item — brand, model or style name, colour, material, any style number on a tag or note — on the brand's own website and on big established stores (department stores and well-known retailers: Saks Fifth Avenue, Bloomingdale's, Nordstrom, Neiman Marcus, Macy's, Selfridges, Net-a-Porter, the brand's own shop and the like). An item without a brand: search by what it plainly is and any mark or stamp on it.
+export const LOOKUP_RULES = `You find ONE resale item online, to make its eBay listing exact and to show the seller what it sells for. You see small photos of the item and what was already written about it.
 
-NEVER use resale or marketplace sites as a source of facts — eBay, Poshmark, Mercari, Depop, Etsy, Grailed, Vinted, The RealReal, Vestiaire, ThredUp, Amazon, Walmart marketplace and the like. Those are other sellers' words. You may list them under "resale" as suggestions only.
+SEARCH: at most 3 searches. Search for the exact item — brand, model or style name, colour, material, any style number on a tag or note. Use the searches for two things:
+1. The item's own product page: on the brand's own website or shop, or in any known store that sells new clothing and accessories — department stores and chains, luxury or mass-market alike (Saks Fifth Avenue, Bloomingdale's, Nordstrom, Neiman Marcus, Macy's, Selfridges, Net-a-Porter, Zalando, H&M, Forever 21, Zara and the like). You judge which stores count as known stores.
+2. Prices for this exact item on resale sites: eBay, Poshmark, Mercari, Depop, Grailed, Etsy, Vestiaire Collective, Whatnot, The RealReal, ThredUp, Fashionphile.
+
+NEVER use Amazon at all — no facts, no prices, no links.
+
+FACTS come ONLY from the brand's page or a known store's page. Resale sites (all of those in 2.) are other sellers' words: never a source of facts, only of prices.
 
 DECIDE THE MATCH — be strict:
-- "found": a brand or big-store page for THIS item — the same brand, the same model or style, the same colour or pattern and material as the photos and the tag. Give every fact that page states.
+- "found": a brand or store page for THIS item — the same brand, the same model or style, the same colour or pattern and material as the photos and the tag. Give every fact that page states.
 - "similar": pages for close items (another colour, another size of the same model, a look-alike) — list them under "similar"; give NO facts.
 - "not_found": nothing close.
 Never fill a fact from your own memory, only from the page you found. Never guess.
 
+PRICES: list a price ONLY for a listing or page of THIS exact item — the same brand, model or style and colour. A similar item's price is left out. The brand's or store's page you found goes in too, with its price. Give the price as the page shows it, with the currency ("$47").
+
 Return ONLY this JSON (no other words):
-{"status":"found|similar|not_found","source":{"site":"Saks Fifth Avenue","title":"page title","url":"https://…"},"product_name":"","model_name":"","official_color":"","material":"","dimensions":"","country":"","retail_price":"","other_facts":[""],"similar":[{"title":"","url":""}],"resale":[{"title":"","url":""}]}
+{"status":"found|similar|not_found","source":{"site":"Macy's","title":"page title","url":"https://…"},"product_name":"","model_name":"","official_color":"","material":"","dimensions":"","country":"","retail_price":"","other_facts":[""],"similar":[{"title":"","url":""}],"prices":[{"site":"Poshmark","price":"$47","title":"listing title","url":"https://…"}]}
 - "material": the materials and composition exactly as the page gives them ("100% cotton; leather trim").
 - "dimensions": as the page gives them ("13.4\\"H x 16.5\\"W x 6.3\\"D").
 - "country": where it was made, only if the page names a country ("Made in China"); "Imported" is not a country — leave it "".
-- "retail_price": the page's price with the currency ("$298").
+- "retail_price": the brand's or store's price with the currency ("$298").
 - "other_facts": other facts the page states about this item — closure, pockets, strap drop, lining, hardware, care, features.
-Empty string or [] for anything the page does not state.`;
+Empty string or [] for anything not found.`;
 
 /** The user turn: what was written about the item so far. */
 export function lookupMessage(l: ListingResult): string {
@@ -104,14 +130,25 @@ export function checkLookup(raw: Partial<ProductLookup> | null | undefined, bran
   const b = brand.trim().toLowerCase();
   const named = `${r.product_name ?? ""} ${source?.title ?? ""} ${source?.url ?? ""}`.toLowerCase();
   if (status === "found" && (!source || isResale(source.url))) {
-    if (source && isResale(source.url)) resale.unshift({ title: source.title, url: source.url });
+    if (source && isResale(source.url) && !isNeverUsed(source.url)) resale.unshift({ title: source.title, url: source.url });
     status = similar.length ? "similar" : "not_found";
   } else if (status === "found" && b && !/^unbranded|^handmade/.test(b) && !named.includes(b.split(/\s+/)[0])) {
     similar = [{ title: source?.title ?? "", url: source?.url ?? "" }, ...similar].filter((x) => x.url);
     status = "similar";
   }
-  similar = similar.filter((x) => !isResale(x.url));
-  const out: ProductLookup = { status, similar, resale: resale.slice(0, 5) };
+  similar = similar.filter((x) => !isResale(x.url) && !isNeverUsed(x.url));
+  const seen = new Set<string>();
+  const prices: PriceLink[] = (Array.isArray(r.prices) ? r.prices : [])
+    .map((x) => ({
+      site: str((x as PriceLink)?.site, 60) || hostOf(String((x as PriceLink)?.url ?? "")),
+      price: str((x as PriceLink)?.price, 30),
+      title: str((x as PriceLink)?.title, 200),
+      url: String((x as PriceLink)?.url ?? ""),
+    }))
+    .filter((x) => /^https?:\/\//.test(x.url) && !isNeverUsed(x.url) && /\d/.test(x.price))
+    .filter((x) => !seen.has(x.url) && Boolean(seen.add(x.url)))
+    .slice(0, 12);
+  const out: ProductLookup = { status, similar, resale: resale.filter((x) => !isNeverUsed(x.url)).slice(0, 5), prices };
   if (status === "found" && source) {
     Object.assign(out, {
       source,

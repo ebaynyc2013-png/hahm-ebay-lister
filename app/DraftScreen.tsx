@@ -299,7 +299,7 @@ function DoubtsBox({
     setBusy(field);
     setMsg(null);
     try {
-      const r = await reviseListing(l, facts);
+      const r = await reviseListing(l, facts, g.preparation?.aspects);
       onEdit(g.id, {
         ...r.patch,
         doubts: (l.doubts ?? []).filter((d) => d.field.toLowerCase() !== field.toLowerCase()),
@@ -405,8 +405,8 @@ function LookupBox({ lookup: r }: { lookup: ProductLookup }) {
           {cost}
         </p>
       )}
+      {r.status === "skipped" && <p className="hint">Not searched online — no brand.</p>}
       {r.status === "error" && <p className="warn">Online search did not work: {r.error}</p>}
-      {(r.resale ?? []).length > 0 && <p className="hint">On resale sites (not used): {links(r.resale)}</p>}
     </div>
   );
 }

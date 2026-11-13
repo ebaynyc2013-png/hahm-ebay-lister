@@ -109,7 +109,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
     setUpdating(true);
     setUpdateMsg(null);
     try {
-      const r = await reviseListing(l, notes);
+      const r = await reviseListing(l, notes, g.preparation?.aspects);
       d.edit({ ...r.patch, seller_notes: notes });
       setUpdateMsg({
         text: r.changed.length
@@ -444,14 +444,31 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
               )}
               <span className="hint">eBay declines lower offers for you</span>
             </div>
-            {g.lookup?.status === "found" && g.lookup.retail_price && g.lookup.source && (
-              <span className="hint retail-hint">
-                Retail {g.lookup.retail_price} at{" "}
-                <a href={g.lookup.source.url} target="_blank" rel="noopener noreferrer">
-                  {g.lookup.source.site} ↗
-                </a>
-              </span>
-            )}
+            {(() => {
+              // This exact item's prices online, each with its site (the
+              // seller, 13 Nov 2026): a guide only, never put in the listing.
+              const lk = g.lookup;
+              if (!lk) return null;
+              const store =
+                lk.status === "found" && lk.retail_price && lk.source
+                  ? [{ site: lk.source.site, price: lk.retail_price, url: lk.source.url }]
+                  : [];
+              const all = [...store, ...(lk.prices ?? []).filter((p) => !store.some((s) => s.url === p.url))];
+              if (!all.length) return null;
+              return (
+                <span className="hint retail-hint">
+                  Prices online:{" "}
+                  {all.map((p, i) => (
+                    <span key={p.url}>
+                      {i ? " · " : ""}
+                      <a href={p.url} target="_blank" rel="noopener noreferrer">
+                        {p.site} {p.price} ↗
+                      </a>
+                    </span>
+                  ))}
+                </span>
+              );
+            })()}
             {g.comps?.ok && g.comps.median !== undefined && (
               <span className="hint" title={g.comps.basis}>
                 Market: {g.comps.count} similar, ${g.comps.low?.toFixed(0)}–${g.comps.high?.toFixed(0)} ·{" "}

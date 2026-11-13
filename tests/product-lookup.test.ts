@@ -44,9 +44,43 @@ describe("finding the item online (12 Nov 2026)", () => {
     expect(f).not.toContain("$325");
     expect(lookupEvidence(checkLookup(saks, "Marc Jacobs"))).toContain("100% cotton");
   });
-  it("tells the searcher: 3 searches, no resale sites, strict match, no memory", () => {
+  it("tells the searcher: 3 searches, resale sites only for prices, strict match, no memory", () => {
     expect(LOOKUP_RULES).toContain("at most 3 searches");
-    expect(LOOKUP_RULES).toContain("NEVER use resale or marketplace sites as a source of facts");
+    expect(LOOKUP_RULES).toContain("never a source of facts, only of prices");
     expect(LOOKUP_RULES).toContain("Never fill a fact from your own memory");
+  });
+});
+
+describe("lookup of 13 Nov 2026: prices on every platform, no Amazon, no brand no search", () => {
+  it("keeps exact-item prices with their site, never Amazon", async () => {
+    const { checkLookup } = await import("@/lib/product-lookup");
+    const r = checkLookup(
+      {
+        status: "not_found",
+        prices: [
+          { site: "Poshmark", price: "$47", title: "x", url: "https://poshmark.com/listing/1" },
+          { site: "Amazon", price: "$20", title: "y", url: "https://www.amazon.com/dp/1" },
+          { site: "Mercari", price: "", title: "z", url: "https://www.mercari.com/us/item/2" },
+          { site: "", price: "$35", title: "w", url: "https://www.depop.com/products/3" },
+        ],
+      },
+      "Stella & Dot",
+    );
+    expect(r.prices).toEqual([
+      { site: "Poshmark", price: "$47", title: "x", url: "https://poshmark.com/listing/1" },
+      { site: "depop.com", price: "$35", title: "w", url: "https://www.depop.com/products/3" },
+    ]);
+  });
+  it("no brand, Unbranded, Handmade: not searched", async () => {
+    const { needsLookup } = await import("@/lib/product-lookup");
+    expect(needsLookup({ brand: "" })).toBe(false);
+    expect(needsLookup({ brand: "Unbranded" })).toBe(false);
+    expect(needsLookup({ brand: "Handmade" })).toBe(false);
+    expect(needsLookup({ brand: "Stella & Dot" })).toBe(true);
+  });
+  it("the rules name the stores and the platforms, and forbid Amazon", async () => {
+    const { LOOKUP_RULES } = await import("@/lib/product-lookup");
+    for (const w of ["H&M", "Forever 21", "Zalando", "Whatnot", "Fashionphile", "ThredUp", "The RealReal", "NEVER use Amazon"])
+      expect(LOOKUP_RULES).toContain(w);
   });
 });

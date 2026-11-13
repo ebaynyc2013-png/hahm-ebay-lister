@@ -10,6 +10,8 @@
 import { tidyConditionNotes } from "./condition-sync";
 import { formatDescription } from "./description-format";
 import { fitTitle } from "./title-fit";
+import { COLOR_SYNONYMS, isChoiceSet, isColorAspect, toAllowedValue } from "./ebay/aspects";
+import type { AspectMeta } from "./ebay/taxonomy";
 import type { ListingResult } from "./types";
 
 export const REVISE_SCHEMA = {
@@ -120,5 +122,62 @@ export function applyRevision(
     }
   }
   if (specificsChanged) patch.item_specifics = specifics;
+  return { patch, changed };
+}
+
+/**
+ * The fields eBay gives a list for take a word from that list (13 Nov 2026:
+ * "navy blue" in her notes put Color "Navy Blue" into the item specifics,
+ * while eBay's Color list has only "Blue"). Her words stay in the title and
+ * the description; the field gets eBay's word. A value with no word on the
+ * list is not applied, and the message says so.
+ */
+export function snapRevisionToLists(
+  before: ListingResult,
+  rev: { patch: Partial<ListingResult>; changed: string[] },
+  aspects: AspectMeta[] | undefined,
+): { patch: Partial<ListingResult>; changed: string[] } {
+  const next = rev.patch.item_specifics;
+  if (!next || !aspects?.length) return rev;
+  const old = before.item_specifics ?? {};
+  const specifics = { ...next };
+  let changed = [...rev.changed];
+  const say = (key: string, line: string | null) => {
+    changed = changed.filter((c) => !c.toLowerCase().startsWith(`${key.toLowerCase()}:`) && c !== `${key} removed`);
+    if (line) changed.push(line);
+  };
+  for (const [key, value] of Object.entries(next)) {
+    if (old[key] === value) continue;
+    const a = aspects.find((x) => x.name.toLowerCase() === key.toLowerCase());
+    if (!a || !a.values.length) continue;
+    if (!(a.mode === "SELECTION_ONLY" || isChoiceSet(a))) continue;
+    const synonyms = isColorAspect(a.name) ? COLOR_SYNONYMS : undefined;
+    const words = [
+      ...new Set(
+        String(value)
+          .split(" | ")
+          .map((v) => toAllowedValue(v.trim(), a.values, synonyms))
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ];
+    const was = old[key];
+    if (!words.length) {
+      // Not eBay's word: the field keeps what it had.
+      if (was) specifics[key] = was;
+      else delete specifics[key];
+      say(key, `${key}: "${value}" is not on eBay's list — ${was ? `kept ${was}` : "left empty"}`);
+      continue;
+    }
+    const word = words.join(" | ");
+    if (word === value) continue;
+    specifics[key] = word;
+    say(key, word === was ? `${key} stays ${word} (eBay's word for ${value})` : `${key}: ${was ? `${was} → ` : ""}${word} (eBay's word for ${value})`);
+  }
+  const same =
+    Object.keys(specifics).length === Object.keys(old).length &&
+    Object.entries(specifics).every(([k, v]) => old[k] === v);
+  const patch = { ...rev.patch };
+  if (same) delete patch.item_specifics;
+  else patch.item_specifics = specifics;
   return { patch, changed };
 }
