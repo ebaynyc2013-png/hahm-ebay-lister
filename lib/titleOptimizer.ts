@@ -3,6 +3,7 @@ import { NOT_IN_TITLE } from "@/lib/aesthetics";
 import { shoeSizesInTitle } from "@/lib/title-shoe-size";
 import { teeInTitle } from "@/lib/title-tee";
 import { foreignSizeInTitle } from "@/lib/foreign-size";
+import { fitTitle } from "@/lib/title-fit";
 
 export const EBAY_TITLE_LIMIT = 80;
 
@@ -62,7 +63,8 @@ export function xWords(title: string): string {
 }
 
 export function optimizeTitle(listing: ListingResult): string {
-  const normalized = String(listing.title || "").replace(/\s+/g, " ").trim();
+  // Too long: whole words go from the end, never half a word (13 Nov 2026).
+  const normalized = fitTitle(String(listing.title || ""), EBAY_TITLE_LIMIT);
   const stripped = xWords(stripNeverInTitle(normalized, listing.brand) || normalized);
   // The one thing this adds: a shoe's second size, read off eBay's chart.
   const title = foreignSizeInTitle(

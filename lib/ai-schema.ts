@@ -104,7 +104,10 @@ export const AI_LISTING_SCHEMA = {
     search_terms: strings,
     seo_keywords: strings,
     suggested_price: { type: "number" },
-    title: { type: "string", maxLength: 80 },
+    // No maxLength here: a hard limit in the answer's form cut a title off in
+    // the middle of a word (13 Nov 2026). The prompt asks for 80 at most, and
+    // fitTitle drops whole words from the end of a longer one.
+    title: { type: "string" },
     // Which of the seller's phrases the opening sentence is modelled on.
     style_phrase_id: string,
     description: string,

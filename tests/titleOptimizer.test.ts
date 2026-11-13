@@ -91,12 +91,12 @@ describe("optimizeTitle", () => {
     ).toBe("Pink Barbiecore Mini Skirt XS");
   });
 
-  test("rejects a title longer than eBay's 80-character limit", () => {
-    const title = "A".repeat(EBAY_TITLE_LIMIT + 1);
-
-    expect(() => optimizeTitle({ ...base, title })).toThrow(
-      "Generated title exceeds eBay's 80-character limit.",
-    );
+  test("a title longer than 80 loses whole words from its end, never half a word (13 Nov 2026)", () => {
+    const title =
+      "Sledge USA Navy Blue Rhinestone Crown V-Neck Long Sleeve T-Shirt Tee M Medium Rocker Biker";
+    const out = optimizeTitle({ ...base, title });
+    expect(out).toBe("Sledge USA Navy Blue Rhinestone Crown V-Neck Long Sleeve T-Shirt Tee M Medium");
+    expect(out.length).toBeLessThanOrEqual(EBAY_TITLE_LIMIT);
   });
 });
 

@@ -9,13 +9,14 @@
 
 import { tidyConditionNotes } from "./condition-sync";
 import { formatDescription } from "./description-format";
+import { fitTitle } from "./title-fit";
 import type { ListingResult } from "./types";
 
 export const REVISE_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    title: { type: "string", maxLength: 80 },
+    title: { type: "string" },
     description: { type: "string" },
     condition_notes: { type: "string" },
     changed_specifics: {
@@ -72,7 +73,7 @@ export function applyRevision(
 ): { patch: Partial<ListingResult>; changed: string[] } {
   const changed: string[] = [];
   const patch: Partial<ListingResult> = {};
-  const title = String(r.title ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+  const title = fitTitle(String(r.title ?? ""), 80);
   if (title && title !== l.title) {
     patch.title = title;
     changed.push("Title");

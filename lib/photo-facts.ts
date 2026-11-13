@@ -164,7 +164,8 @@ export function photoFactProblem(
         (v) =>
           normalize(s.quote).includes(normalize(v)) ||
           measurementInQuote(v, s.quote) ||
-          hallmarkInQuote(s.name, v, s.quote),
+          hallmarkInQuote(s.name, v, s.quote) ||
+          countryInQuote(s.name, v, s.quote),
       )
       ? null
       : "not what the label says";
@@ -244,6 +245,24 @@ const YES_WORDS: [RegExp, RegExp, RegExp][] = [
   // signature, a maker's mark, even only "925" or "STERLING" (6 Nov 2026).
   [/^signed$/i, /[\p{L}\p{N}]/u, /\bunsigned\b|\bno\s+(?:signature|marks?|stamps?|hallmarks?)\b/i],
 ];
+
+// A label names a country the short way — "MADE IN USA", "Made in UK" — and
+// eBay's list the long way: United States, United Kingdom (13 Nov 2026: a
+// Sledge USA tee's "MADE IN USA" was reported as not what the label says).
+const COUNTRY_FIELD = /country|region of manufacture|made in/i;
+const COUNTRY_NAMES: [RegExp, RegExp][] = [
+  [/^united states$/i, /\b(?:u\.?\s?s\.?\s?a\.?|u\.s\.|united states|america)(?![\p{L}])/iu],
+  [/^united kingdom$/i, /\b(?:u\.?k\.?|united kingdom|great britain|england|scotland|wales)(?![\p{L}])/iu],
+  [/^korea, south$|^south korea$/i, /\b(?:korea|r\.?o\.?k\.?)\b/i],
+  [/^china$/i, /\b(?:china|p\.?r\.?c\.?)\b/i],
+  [/^vietnam$|^viet nam$/i, /\bviet\s?nam\b/i],
+];
+
+export function countryInQuote(name: string, value: string, quote: string): boolean {
+  if (!COUNTRY_FIELD.test(name)) return false;
+  const rule = COUNTRY_NAMES.find(([v]) => v.test(value.trim()));
+  return Boolean(rule && rule[1].test(String(quote ?? "")));
+}
 
 export function yesInQuote(name: string, value: string, quote: string): boolean {
   if (!/^yes$/i.test(value.trim())) return false;
