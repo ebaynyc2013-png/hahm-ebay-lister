@@ -563,3 +563,5 @@ export async function enterCodeForCloud(): Promise<void> {
 
 /** "Sync now" from the screen. */
 export const syncNow = () => run(true);
+/** Where the cloud stands now — after syncNow(), whether it saved. */
+export const syncStateNow = (): SyncState => state;

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { loadDraft, saveDraft } from "@/lib/draft-store";
-import { enterCodeForCloud, note, onCloudChanges, onSyncState, startCloudSync, syncNow, type SyncState } from "@/lib/cloud-sync";
+import { enterCodeForCloud, note, onCloudChanges, onSyncState, startCloudSync, syncNow, syncStateNow, type SyncState } from "@/lib/cloud-sync";
 import {
   deleteFromHistory,
   historyPhotos,
@@ -1472,6 +1472,17 @@ export default function Home() {
           photoLimit={ITEM_PHOTO_LIMIT}
           onPost={postGroup}
           onPostAll={postAll}
+          onSaveHistory={async () => {
+            // "Save to History" (12 Nov 2026): save now, send to the cloud now,
+            // and say so. It is saved on every change anyway.
+            try {
+              await saveToHistory(groupsRef.current, photosRef.current);
+              await syncNow();
+              return syncStateNow().phase !== "error";
+            } catch {
+              return false;
+            }
+          }}
           onBack={() => setStep("review")}
         />
       )}

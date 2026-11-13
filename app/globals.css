@@ -2309,3 +2309,17 @@ input.no-spin::-webkit-inner-spin-button {
   display: block;
   font-size: 14px;
 }
+
+/* "Save to History" at the bottom of the draft (12 Nov 2026). */
+.draft-screen .draft-save {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 16px 0 6px;
+  font-size: 16px;
+}
+.draft-screen .draft-save .saved-mark {
+  color: var(--green);
+  font-weight: bold;
+}

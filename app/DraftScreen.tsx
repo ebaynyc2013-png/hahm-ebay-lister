@@ -28,6 +28,7 @@ interface Props {
   photoLimit: number;
   onPost: (groupId: string) => void;
   onPostAll: () => void;
+  onSaveHistory: () => Promise<boolean>;
   onBack: () => void;
 }
 
@@ -220,6 +221,8 @@ export function DraftScreen(p: Props) {
         photoLimit={p.photoLimit}
       />
 
+      <SaveToHistory key={`save-${g.id}`} onSave={p.onSaveHistory} />
+
       <div className="draft-footer">
         <button type="button" className="btn" disabled={index === 0} onClick={() => go(index - 1)}>
           ‹ Previous
@@ -404,6 +407,34 @@ function LookupBox({ lookup: r }: { lookup: ProductLookup }) {
       )}
       {r.status === "error" && <p className="warn">Online search did not work: {r.error}</p>}
       {(r.resale ?? []).length > 0 && <p className="hint">On resale sites (not used): {links(r.resale)}</p>}
+    </div>
+  );
+}
+
+/** "Save to History" at the bottom of the draft, then "Saved ✓" (12 Nov 2026). */
+function SaveToHistory({ onSave }: { onSave: () => Promise<boolean> }) {
+  const [state, setState] = useState<"" | "saving" | "saved" | "failed">("");
+  return (
+    <div className="draft-save">
+      <button
+        type="button"
+        className="btn"
+        disabled={state === "saving"}
+        onClick={async () => {
+          setState("saving");
+          setState((await onSave()) ? "saved" : "failed");
+        }}
+      >
+        {state === "saving" ? (
+          <>
+            <span className="spinner small" aria-hidden="true" /> Saving…
+          </>
+        ) : (
+          "Save to History"
+        )}
+      </button>
+      {state === "saved" && <span className="saved-mark">Saved ✓</span>}
+      {state === "failed" && <span className="hint warn">Not saved — check your internet.</span>}
     </div>
   );
 }
