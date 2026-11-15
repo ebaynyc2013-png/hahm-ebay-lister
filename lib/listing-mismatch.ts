@@ -10,6 +10,7 @@
 //
 // Client-safe: no server imports.
 
+import { statementDoubt } from "./statement";
 import type { ListingDoubt, ListingResult } from "./types";
 
 const METALS: [string, RegExp][] = [
@@ -99,6 +100,11 @@ export function listingMismatches(l: ListingResult): ListingDoubt[] {
       options: [sizeField, titleSize],
       why: `The title says ${titleSize}, Size says ${sizeField}. Which size is it?`,
     });
+
+  // A statement piece only by a measurement (15 Nov 2026): nothing measures
+  // a piece that may be big, or the text speaks of a big piece.
+  const statement = resolved.has("statement") ? null : statementDoubt(l);
+  if (statement) out.push(statement);
 
   return out;
 }

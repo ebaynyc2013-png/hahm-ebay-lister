@@ -52,6 +52,18 @@ export const AI_LISTING_SCHEMA = {
     // Named style aesthetics the item genuinely shows — the words buyers
     // browse by. Empty is a normal answer for a plain item.
     aesthetics: strings,
+    // A statement piece or not — only by a measurement (the seller's rule,
+    // 15 Nov 2026), and before the title: it decides the words the title,
+    // the description and the tags may use.
+    statement: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        answer: { type: "string", enum: ["yes", "no", "unsure", "not_jewelry"] },
+        measure: string,
+      },
+      required: ["answer", "measure"],
+    },
     // Which side of the item each photo shows, and where each detail named in
     // the listing is — written before the title, so the place of a detail
     // comes from the photos that show it (1 Nov 2026: tape on the back panels
@@ -141,6 +153,7 @@ export const AI_LISTING_SCHEMA = {
     "measurements",
     "key_features",
     "aesthetics",
+    "statement",
     "photo_views",
     "detail_places",
     "vintage",
@@ -167,6 +180,7 @@ export const FACTS_BEFORE_TITLE = [
   "material",
   "condition",
   "aesthetics",
+  "statement",
   "photo_views",
   "detail_places",
   "vintage",

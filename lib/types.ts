@@ -47,6 +47,11 @@ export interface ListingResult {
   /** Named style aesthetics the item shows — what buyers browse by. */
   aesthetics?: string[];
   /**
+   * Whether a piece of jewellery is a statement piece — decided only by a
+   * measurement (the seller's rule, 15 Nov 2026; see statement.ts).
+   */
+  statement?: StatementInfo;
+  /**
    * Contact details seen in the photos (a website on a label, a phone on a
    * tag) or taken out of the text. Never published — shown to the seller so
    * she crops or removes the photo; eBay hides listings that show them.
@@ -120,7 +125,7 @@ export interface AnalyzeRequestBody {
   /** The seller's corrections to tags on earlier cards (see tag-memory.ts). */
   lessons?: string[];
   /** The seller's own phrases, in turn (see style-rotation.ts). */
-  phrases?: { id: string; kind: string; stone?: string; text: string }[];
+  phrases?: { id: string; kind: string; stone?: string; scale?: "small" | "statement"; text: string }[];
   /** What she typed in the item's Notes box: facts she knows (12 Nov 2026). */
   sellerNotes?: string;
 }
@@ -289,6 +294,16 @@ export interface PreparedCategory {
    */
   fill?: string;
   issues: string[];
+}
+
+/**
+ * A statement piece or not: "yes" / "no" from a measurement or the seller,
+ * "unsure" while nothing measures a piece that may be big (she is asked),
+ * "not_jewelry" for anything else. `measure`: which measurement, from where.
+ */
+export interface StatementInfo {
+  answer: "yes" | "no" | "unsure" | "not_jewelry";
+  measure: string;
 }
 
 /** One thing the writer was not sure of — the field and the choices. */

@@ -11,6 +11,14 @@ import { acceptedPhotoFact } from "@/lib/photo-facts";
 import { notesSupport } from "@/lib/note-facts";
 import { sellerNotesBlocks } from "@/lib/seller-notes";
 import { cleanDoubts } from "@/lib/listing-mismatch";
+import {
+  isStatement,
+  statementApplies,
+  statementFromAnalysis,
+  statementOutOfTitle,
+  statementTags,
+  withoutStatementStyle,
+} from "@/lib/statement";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
 import {
   parseListing,
@@ -273,6 +281,7 @@ async function handle(req: NextRequest) {
         const listing = parseListing({
           ...raw,
           vintage: vintageFromAnalysis(raw.vintage),
+          statement: statementFromAnalysis(raw.statement),
           item_specifics: Object.fromEntries(
             supported.map((s: any) => [s.name, s.value]),
           ),
@@ -316,6 +325,13 @@ async function handle(req: NextRequest) {
         // without rewriting an era she wrote her own way.
         if (listing.vintage?.source === "note" && !/^vintage\b/i.test(listing.title))
           listing.title = vintageTitle(listing.title, listing.vintage.era, listing);
+        // Statement pieces (the seller, 15 Nov 2026): the word is never in a
+        // jewellery title, and Style takes it only for a measured statement
+        // piece — before the description's first line copies the title.
+        if (statementApplies(listing)) {
+          listing.title = statementOutOfTitle(listing.title, listing.brand ?? "");
+          if (!isStatement(listing)) listing.item_specifics = withoutStatementStyle(listing.item_specifics);
+        }
         const descriptionLines = (listing.description ?? "").trim().split(/\r?\n/);
 const firstContentIndex = descriptionLines.findIndex((line) => line.trim().length > 0);
 if (firstContentIndex >= 0) descriptionLines.splice(firstContentIndex, 1);
@@ -352,6 +368,9 @@ listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}`
         );
         listing.hashtags = cleanHashtags(listing.hashtags, marks, isAestheticHashtag);
         listing.etsy_tags = cleanEtsyTags(listing.etsy_tags, marks);
+        // A statement hashtag for a statement piece; no big-piece word on the
+        // tags of any other.
+        Object.assign(listing, statementTags(listing));
         listing.hashtags_original = [...listing.hashtags];
         // Only an id that was actually offered counts as used.
         if (!body.phrases?.some((p) => p.id === listing.style_phrase_id))

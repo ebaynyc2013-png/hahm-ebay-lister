@@ -62,6 +62,12 @@ title: z.string().trim().min(1).max(80),
   seo_keywords: z.array(text).max(10).optional(),
   key_features: z.array(text).max(10).optional(),
   aesthetics: z.array(text).max(10).optional(),
+  statement: z
+    .object({
+      answer: z.enum(["yes", "no", "unsure", "not_jewelry"]),
+      measure: z.string().max(300),
+    })
+    .optional(),
   contact_seen: z.array(text).max(20).optional(),
   maker_marks: z.array(text).max(10).optional(),
   brand_source: z.enum(["label", "note", "marks", "seller", "none"]).optional(),

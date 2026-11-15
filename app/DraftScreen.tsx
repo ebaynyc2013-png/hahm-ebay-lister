@@ -11,6 +11,7 @@ import { showPacific } from "@/lib/pacific-time";
 import type { EbayAccountInfo, ItemGroup, ListingResult, Photo } from "@/lib/types";
 import { DraftCard, fieldAnchor } from "./DraftCard";
 import { allDoubts } from "@/lib/listing-mismatch";
+import { settleStatement } from "@/lib/statement";
 import { requestText } from "@/lib/text-dialog";
 import { reviseListing, showCost } from "./reviseClient";
 import { hostOf, type LookupLink, type ProductLookup } from "@/lib/product-lookup";
@@ -287,9 +288,38 @@ function DoubtsBox({
     const typed = (await requestText(`${field} — type the right value`))?.trim();
     if (typed) setPicked((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), typed] }));
   };
+  // "Statement? Yes / No" (15 Nov 2026): the program sets Style and the tags
+  // itself, free; only big-piece words in the text need the few-cent update.
+  const applyStatement = async (field: string, yes: boolean) => {
+    const s = settleStatement(l, yes, g.preparation?.aspects?.find((a) => /^style$/i.test(a.name.trim())));
+    setBusy(field);
+    setMsg(null);
+    try {
+      let patch = s.patch;
+      let changed = s.changed;
+      let usd: number | undefined;
+      if (s.facts) {
+        const r = await reviseListing({ ...l, ...s.patch }, s.facts, g.preparation?.aspects);
+        patch = { ...s.patch, ...r.patch };
+        changed = [...new Set([...s.changed, ...r.changed])];
+        usd = r.usd;
+      }
+      onEdit(g.id, {
+        ...patch,
+        doubts: (l.doubts ?? []).filter((d) => d.field.toLowerCase() !== field.toLowerCase()),
+        doubts_resolved: [...new Set([...(l.doubts_resolved ?? []), field])],
+      });
+      setMsg({ text: `Updated: ${changed.join(" · ")}${usd ? ` · ${showCost(usd)}` : ""}` });
+    } catch (e) {
+      setMsg({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy("");
+    }
+  };
   const apply = async (field: string) => {
     const choice = picked[field] ?? [];
     if (!choice.length) return;
+    if (/^statement$/i.test(field)) return applyStatement(field, /^y/i.test(choice[0].trim()));
     const facts =
       choice.length === 1
         ? `${field}: ${choice[0]}. Use exactly this in the item specifics, the title and the description.`

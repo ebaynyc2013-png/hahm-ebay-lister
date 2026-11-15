@@ -44,6 +44,7 @@ import { fillShoeSizes } from "@/lib/shoe-sizes";
 import { pickSizeFromList } from "@/lib/clothing-size";
 import { womensForeignSize } from "@/lib/foreign-size";
 import { applyVintageAspects, isVintage } from "@/lib/vintage";
+import { applyStatementStyle } from "@/lib/statement";
 import {
   describeFill,
   fillRecommendedAspects,
@@ -182,6 +183,9 @@ const categoryPath =
           // Jewellery Features: Nickel-Free for silver, gold and stainless
           // steel; Engraved only for letters (the seller, 12 Nov 2026).
           applyJewelryFeatures(aspects, meta, listing, categoryPath);
+          // Style "Statement" only for a piece measured as one, or that she
+          // said is one (15 Nov 2026).
+          applyStatementStyle(aspects, meta, listing);
           // Height / width / depth from her notes or the measurement line;
           // "Imported" is never a country (12 Nov 2026).
           applyMeasuredDimensions(aspects, meta, listing);

@@ -11,6 +11,7 @@ export const phrasesSchema = z
       id: z.string().max(40),
       kind: z.string().max(20),
       stone: z.string().max(40).optional(),
+      scale: z.enum(["small", "statement"]).optional(),
       text: z.string().max(800),
     }),
   )
@@ -20,16 +21,19 @@ export type PhraseInput = z.infer<typeof phrasesSchema>;
 
 export function phraseBlocks(phrases: PhraseInput | undefined): Anthropic.ContentBlockParam[] {
   if (!phrases?.length) return [];
+  // The size mark (15 Nov 2026): see STATEMENT PIECES in the rules.
+  const size = (p: PhraseInput[number]) =>
+    p.scale === "statement" ? ", statement pieces only" : p.scale === "small" ? ", not for statement pieces" : "";
   const lines = phrases.map((p) =>
     p.kind === "gems"
       ? `[${p.id}] (only if the stone is ${p.stone}, named by a label or the seller's note) ${p.text}`
-      : `[${p.id}] (${p.kind}) ${p.text}`,
+      : `[${p.id}] (${p.kind}${size(p)}) ${p.text}`,
   );
   return [
     {
       type: "text",
       text: [
-        "THE SELLER'S OWN PHRASES, offered in turn. For jewellery, watches, keys, home goods and anything else that is not clothing, shoes or a bag: pick the ONE that paints the liveliest true picture of this item and use it as the opening sentence of the description IN HER WORDS — change only what must change to be true of this item (item word, brand, metal, stone, numbers); never carry over a fact that is not this item's. Put its id in \"style_phrase_id\". For clothing, shoes and bags: adapt none of them — they are samples of her voice; write your own sentence in that voice about this item and leave \"style_phrase_id\" empty.",
+        "THE SELLER'S OWN PHRASES, offered in turn. For jewellery, watches, keys, home goods and anything else that is not clothing, shoes or a bag: pick the ONE that paints the liveliest true picture of this item and use it as the opening sentence of the description IN HER WORDS — change only what must change to be true of this item (item word, brand, metal, stone, numbers); never carry over a fact that is not this item's. Put its id in \"style_phrase_id\". The size marks follow STATEMENT PIECES in the rules: a phrase marked \"statement pieces only\" opens the description ONLY when \"statement\" is \"yes\"; one marked \"not for statement pieces\" never does then; a phrase with no mark fits any size. For clothing, shoes and bags: adapt none of them — they are samples of her voice; write your own sentence in that voice about this item and leave \"style_phrase_id\" empty.",
         ...lines,
       ].join("\n"),
     },

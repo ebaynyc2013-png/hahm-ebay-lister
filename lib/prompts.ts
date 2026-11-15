@@ -105,6 +105,25 @@ WHERE A DETAIL IS (the seller's rule, 1 Nov 2026 — for every item and every de
 - "photo_views": for EVERY photo, which side of the item it shows — "front", "back", "side" (taken from the side), "detail" (a close-up), "label", "note" (the seller's note or a screenshot) or "other". Look at each photo on its own: a garment with its pockets, fly or neckline facing the camera is the front; with back pockets, a back zip or the back of the collar facing it is the back.
 - "detail_places": for every detail whose place you name anywhere (a trim, tape, pocket, zip, slit, panel, print, logo…), the detail, the place you give it, and the photos it is seen on. A detail seen only on back views has place "back"; the program corrects a "side" that no side view shows.
 
+STATEMENT PIECES (jewellery — the seller's rule, 15 Nov 2026). A statement piece is a large, eye-catching piece of jewellery of any kind. Whether a piece is one is decided ONLY by a MEASUREMENT: a ruler, tape or any measuring tool in a photo, the seller's photographed note, her typed notes, or the exact same item found online with its measurements. Never by eye.
+It IS a statement piece when a measurement shows any one of these:
+- a single stone or pearl 3/8" (1 cm) or larger across;
+- a face of many small stones (a cluster, pavé) 3/4" (1.9 cm) or larger across;
+- a bracelet or cuff 1" (2.5 cm) or wider;
+- a chain 3/8" (1 cm) or wider — a 6 mm chain is not;
+- a ring top without a big stone 1" (2.5 cm) or larger — 2 cm is not;
+- a pendant without a big stone 1.5" (3.8 cm) or longer;
+- earrings without a big stone at least 2" (5.1 cm) long AND at least 1/2" (1.3 cm) wide.
+A long chain or cord of about 30" or more with a big pendant is a hint, never proof: it still needs one of the measurements above. Statement pieces are common in fashion jewellery, rarer in men's jewellery, and children's jewellery is almost never one.
+Answer "statement" before the title:
+- "yes" — a measurement above shows it; "measure" says which and where from ("ruler, photo 4: pendant 2.25 in long").
+- "no" — measured below every threshold, or plainly small (a thin band, a small charm, studs, a fine chain); "measure" gives the measurement, or "".
+- "unsure" — nothing measures it and it may be big. The program asks the seller "Statement? Yes / No"; do not add a doubt about it yourself.
+- "not_jewelry" — the item is not jewellery.
+When the answer is "yes": eBay's Style may take Statement; one of the two what-the-item-is hashtags is the statement one ("#statementnecklace", "#statementring") and one Etsy tag is "statement necklace"; the opening sentence may come from one of her phrases marked "statement pieces only".
+When it is anything else ("no" or "unsure"): the words statement, bold, chunky, oversized and massive appear NOWHERE — not in the title, the description (the opening sentence included), the item specifics, the hashtags or the Etsy tags — and no phrase marked "statement pieces only" opens the description.
+The word "Statement" is NEVER in the title, even for a statement piece: buyers find statement pieces through the Style item specific.
+
 TITLE
 
 The title must NEVER exceed 80 characters.
@@ -135,6 +154,7 @@ NEVER IN THE TITLE:
 - Gender words — "Women's", "Womens", "Woman", "Ladies", "Men's", "Mens" — for women's and men's items alike. The seller never spends title space on them.
 - Condition wording such as "Excellent Condition", "Great Condition", "EUC", "Pre-owned". The only exceptions are "Damaged", "For Parts" and "New With Tags", placed as above.
 - "Barbie" or "Gypsy". Both are allowed in item specifics and never in the title: Barbie is a trademark and Gypsy a slur, and listings carrying either are taken down. An aesthetic name that merely contains a word, such as "Barbiecore", is fine.
+- "Statement", for any piece of jewellery — see STATEMENT PIECES.
 
 WHEN THE TITLE IS OVER 80 CHARACTERS, remove in this order, one step at a time, and stop as soon as it fits:
 1. a word that appears twice — remove the repeat and keep the first: "Denim Jacket Jeans Jacket" becomes "Denim Jacket Jeans", and a second "Silver" goes while the first stays. The second variant of the item word is NOT removed for being a variant; only a repeated word is.
@@ -282,6 +302,7 @@ The seller's phrases (jewellery and the rest, not clothing, shoes or bags):
 - Never carry over a fact that is not true of this item. A phrase that names Tiffany, a collection, a designer, a price, a retail price, a stone, a metal, a karat, a measurement or an era: drop or replace that fact with this item's own, or choose another phrase. A plain ring never becomes "Tiffany", a gold-tone piece never becomes "18 karat gold".
 - The seller's opinions may stay as opinions: "looks a lot more expensive than it cost", "perfect for a date night", "dress up your jeans and tees".
 - A gemstone line (what a stone is believed to do) only for a stone a label or the seller's note names — never for a stone recognised by its look — and always as a belief: "is believed to", "is said to".
+- Her phrases carry a size mark (STATEMENT PIECES): "statement pieces only" — only when "statement" is "yes"; "not for statement pieces" — never then; no mark — any size. A small piece never gets a big-piece phrase ("throw on this bold necklace", "a big chunky ring").
 - Put the id of the phrase you used in "style_phrase_id" ("" if none was supplied).
 
 SECTION ORDER — always this order, the same in every listing, so a buyer on a phone finds each thing in the same place. Leave out a section that has nothing true to say; never move one.
@@ -417,7 +438,7 @@ A hallmark or stamp is evidence of the visible marking but must not be turned in
 
 STYLE, AESTHETICS AND OCCASION
 
-When genuinely appropriate to the item, include useful buyer-facing style, aesthetic, occasion, or search language such as Classic, Romantic, Gothic, Goth, Boho, Art Deco, Minimalist, Statement, Resort, Vacation, Office, Casual, Evening, or other relevant terms.
+When genuinely appropriate to the item, include useful buyer-facing style, aesthetic, occasion, or search language such as Classic, Romantic, Gothic, Goth, Boho, Art Deco, Minimalist, Statement (for jewellery only when STATEMENT PIECES says "yes"), Resort, Vacation, Office, Casual, Evening, or other relevant terms.
 
 These terms must reasonably fit the actual item. Never force an aesthetic, occasion, or trend merely for SEO.
 
@@ -452,6 +473,7 @@ The seller also lists the item on Depop, Mercari and Etsy. These two fields are 
 "hashtags": exactly 5 hashtags for Depop, Mercari and Poshmark, in THIS ORDER (Mercari takes only the first 3). Each is # followed by words joined with no spaces, lowercase letters and digits only.
 - 1st and 2nd — WHAT THE ITEM IS: its full name plus its main visible feature, two or three words joined: #pendantnecklace, #cordnecklace, #cigarettecase, #denimshorts, #highwaistshorts, #strappysandals. Name the item in full, never a fragment that could mean another thing (#vintagecase or #engravedcase read as a suitcase — write #cigarettecase). Never one bare generic word (#necklace, #ring, #shorts, #boho, #vintage). No brand. No size, length, measurement or heel height.
 - 3rd, 4th and 5th — AESTHETICS: the aesthetics you returned in "aesthetics", best first, as the name joined: #mobwife, #phoebebuffaystyle, #bohemian, #oldmoney, #retroglam. If fewer than three honestly fit, use another what-the-item-is hashtag instead of forcing one.
+- Statement pieces (STATEMENT PIECES): "yes" — one of the two what-the-item-is hashtags is the statement one (#statementnecklace); anything else — no hashtag or Etsy tag with statement, bold, chunky, oversized or massive.
 - Metals: never "gold" or "silver" as a material unless a karat stamp (10K, 14K, 18K, 375, 585, 750) or a 925/sterling mark is visible or on the seller's note — otherwise goldtone or silvertone (#goldtonenecklace, never #goldnecklace).
 
 "etsy_tags": exactly 13 Etsy tags, the three most important FIRST. Each at most 20 characters counting spaces; only letters, digits, spaces, hyphens and apostrophes — no &, /, commas, periods or #. No tag twice. Short phrases a buyer types: "cord necklace", "boho necklace", "gift for her". The same metal rule: "gold" or "silver" only with a karat or 925/sterling mark, otherwise "gold tone" or "silver tone".

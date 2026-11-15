@@ -19,6 +19,13 @@ const KEY = "phraseuse";
 /** How many of each kind go along with an analysis. */
 export const PER_KIND = 6;
 
+/**
+ * And how many of its phrases for statement pieces besides (15 Nov 2026).
+ * Most pieces are not statement pieces, so those phrases are used less; taken
+ * apart from the rest, they never crowd out the ones a small piece can use.
+ */
+export const STATEMENT_PER_KIND = 3;
+
 export type PhraseUses = Record<string, number>;
 
 const KINDS: PhraseKind[] = [
@@ -32,18 +39,25 @@ const KINDS: PhraseKind[] = [
   "general",
 ];
 
-/** The least-used phrases of each kind, plus every gemstone line. */
+/**
+ * The least-used phrases of each kind that any piece may take, the least-used
+ * few of its phrases for statement pieces, plus every gemstone line.
+ */
 export function pickPhrases(
   uses: PhraseUses,
   bank: StylePhrase[] = STYLE_PHRASES,
   perKind = PER_KIND,
+  statementPerKind = STATEMENT_PER_KIND,
 ): StylePhrase[] {
   const order = new Map(bank.map((p, i) => [p.id, i]));
   const byUse = (a: StylePhrase, b: StylePhrase) =>
     (uses[a.id] ?? 0) - (uses[b.id] ?? 0) || order.get(a.id)! - order.get(b.id)!;
   const out: StylePhrase[] = [];
-  for (const kind of KINDS)
-    out.push(...bank.filter((p) => p.kind === kind).sort(byUse).slice(0, perKind));
+  for (const kind of KINDS) {
+    const ofKind = bank.filter((p) => p.kind === kind).sort(byUse);
+    out.push(...ofKind.filter((p) => p.scale !== "statement").slice(0, perKind));
+    out.push(...ofKind.filter((p) => p.scale === "statement").slice(0, statementPerKind));
+  }
   out.push(...bank.filter((p) => p.kind === "gems"));
   return out;
 }

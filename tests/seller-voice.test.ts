@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { STYLE_PHRASES } from "@/lib/style-phrases";
-import { pickPhrases, PER_KIND } from "@/lib/style-rotation";
+import { pickPhrases, PER_KIND, STATEMENT_PER_KIND } from "@/lib/style-rotation";
 import { phraseBlocks, phrasesSchema } from "@/lib/style-phrase-blocks";
 import { formatDescription } from "@/lib/description-format";
 
@@ -21,24 +21,35 @@ describe("phrases are used in turn", () => {
   it("offers the never-used ones first, a few of every kind, and every stone line", () => {
     const first = pickPhrases({});
     const rings = first.filter((p) => p.kind === "rings");
-    expect(rings.map((p) => p.id)).toEqual(["rings-1", "rings-2", "rings-3", "rings-4", "rings-5", "rings-6"]);
+    // Since 15 Nov 2026: the phrases any piece may take first, then three
+    // for statement pieces (statement.test.ts).
+    expect(rings.map((p) => p.id)).toEqual([
+      "rings-2", "rings-4", "rings-5", "rings-6", "rings-8", "rings-11",
+      "rings-1", "rings-3", "rings-7",
+    ]);
     expect(first.filter((p) => p.kind === "gems")).toHaveLength(8);
     expect(phrasesSchema.safeParse(first).success).toBe(true);
-    expect(first.length).toBeLessThanOrEqual(8 * PER_KIND + 8);
+    expect(first.length).toBeLessThanOrEqual(8 * PER_KIND + 5 * STATEMENT_PER_KIND + 8);
   });
 
   it("does not offer a used phrase again until the rest of its kind has had a turn", () => {
-    const uses: Record<string, number> = {};
-    const seen: string[] = [];
-    const total = STYLE_PHRASES.filter((p) => p.kind === "rings").length;
-    for (let i = 1; i <= total; i++) {
-      const next = pickPhrases(uses).find((p) => p.kind === "rings")!;
-      expect(seen).not.toContain(next.id);
-      seen.push(next.id);
-      uses[next.id] = i;
+    // In each group of a kind on its own: the phrases any piece may take, and
+    // those for statement pieces only.
+    for (const statement of [false, true]) {
+      const inGroup = (p: (typeof STYLE_PHRASES)[number]) =>
+        p.kind === "rings" && (p.scale === "statement") === statement;
+      const uses: Record<string, number> = {};
+      const seen: string[] = [];
+      const total = STYLE_PHRASES.filter(inGroup).length;
+      for (let i = 1; i <= total; i++) {
+        const next = pickPhrases(uses).find(inGroup)!;
+        expect(seen).not.toContain(next.id);
+        seen.push(next.id);
+        uses[next.id] = i;
+      }
+      // Every phrase of the group used once; the round starts again with the oldest.
+      expect(pickPhrases(uses).find(inGroup)!.id).toBe(seen[0]);
     }
-    // Every ring phrase used once; the round starts again with the oldest.
-    expect(pickPhrases(uses).find((p) => p.kind === "rings")!.id).toBe(seen[0]);
   });
 
   it("tells the model: the tone, not the facts; stones only when named", () => {
