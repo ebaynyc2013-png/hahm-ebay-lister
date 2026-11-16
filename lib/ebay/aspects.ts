@@ -267,8 +267,8 @@ export function snapToVocabulary(
  * Nine shades that sit between two of eBay's colours were held back until the
  * seller, who knows how her buyers search, decided where each belongs. She
  * did: turquoise, teal and aqua are Blue; coral and fuchsia are Pink; rust is
- * Orange; mustard is Yellow; taupe is Beige; plum is Purple. Magenta was not
- * among them and stays as written.
+ * Orange; mustard is Yellow; taupe is Beige; plum is Purple; and on 16 Nov
+ * 2026, magenta and hot pink are Pink.
  */
 export const COLOR_SYNONYMS: Record<string, string> = {
   // The seller's own decisions on the in-between shades.
@@ -281,6 +281,9 @@ export const COLOR_SYNONYMS: Record<string, string> = {
   mustard: "Yellow",
   taupe: "Beige",
   plum: "Purple",
+  // Magenta and hot pink are Pink (the seller, 16 Nov 2026).
+  magenta: "Pink",
+  "hot pink": "Pink",
   navy: "Blue",
   cobalt: "Blue",
   indigo: "Blue",

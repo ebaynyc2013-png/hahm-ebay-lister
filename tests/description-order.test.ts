@@ -183,3 +183,25 @@ describe("the stone: the same name in the title, the description and the item sp
     expect(p).not.toContain("IN THE TITLE the old rule stands");
   });
 });
+
+describe("the seller's answers of 16 Nov 2026 (list items 0, 21, 25, 29)", () => {
+  it("no hallucinations: the writer verifies itself, a 7 stays a 7", () => {
+    const p = buildProfiledAnalysisPrompt("auto");
+    expect(p).toContain("NO HALLUCINATIONS — VERIFY YOURSELF");
+    expect(p).toContain('a label that says 7 is "7" — never "7 1/2"');
+  });
+  it("Victorian is an aesthetic the writer may name", async () => {
+    const { AESTHETICS } = await import("@/lib/aesthetics");
+    expect(AESTHETICS.some((a) => a.name === "Victorian")).toBe(true);
+  });
+  it("Magenta and hot pink are Pink", async () => {
+    const { COLOR_SYNONYMS } = await import("@/lib/ebay/aspects");
+    expect(COLOR_SYNONYMS.magenta).toBe("Pink");
+    expect(COLOR_SYNONYMS["hot pink"]).toBe("Pink");
+  });
+  it("a dress always gets its Silhouette from eBay's list", () => {
+    const fill = readFileSync("lib/ebay/aspectFill.ts", "utf8");
+    expect(fill).toContain("Silhouette for dresses");
+    expect(fill).toContain("ALWAYS answer it from eBay's list — A-Line, Sheath, Fit & Flare");
+  });
+});

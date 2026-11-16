@@ -90,8 +90,8 @@ describe("bare shades", () => {
   });
 
   it("still leaves an undecided or contradictory shade alone", () => {
-    // Magenta was not among her decisions.
-    expect(snap("Magenta")).toBe("Magenta");
+    // Magenta is Pink since 16 Nov 2026 (her decision).
+    expect(snap("Magenta")).toBe("Pink");
     // Two shades pointing different ways is no answer either.
     expect(snap("Navy Burgundy")).toBe("Navy Burgundy");
   });

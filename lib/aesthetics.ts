@@ -24,6 +24,8 @@ export interface Aesthetic {
 export const AESTHETICS: Aesthetic[] = [
   { name: "Academia", aliases: ["Light Academia"], cues: "plaid skirts, trench coats, cable knits, loafers, pleated trousers, tweed blazers, light neutrals; gold-tone accessories" },
   { name: "Dark Academia", cues: "tweed, wool coats, pleated skirts, oxford shirts, leather satchels; brown, charcoal, olive, burgundy" },
+  // The seller's wish, 16 Nov 2026 (list item 29).
+  { name: "Victorian", cues: "high lace collars, ruffles and jabots, puff or leg-of-mutton sleeves, corset-style bodices, velvet, brocade, dark florals; cameos, lockets, filigree, jet, garnets and seed pearls; home: ornate carved frames, gilded mirrors, damask" },
   { name: "Athleisure", cues: "leggings, biker shorts, matching sets, performance jackets, athletic dresses, trainers worn as everyday wear" },
   { name: "Balletcore", cues: "wrap tops, ballet flats, soft pink and ivory, satin, lace, ribbons, tulle, fitted knitwear" },
   { name: "Barbiecore", cues: "hot pink, coordinated sets, statement accessories, bright playful prints" },
