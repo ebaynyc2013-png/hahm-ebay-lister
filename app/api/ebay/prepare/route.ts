@@ -46,6 +46,7 @@ import { womensForeignSize } from "@/lib/foreign-size";
 import { applyVintageAspects, isVintage } from "@/lib/vintage";
 import { applyStatementStyle } from "@/lib/statement";
 import { applyRingSize } from "@/lib/ring-size";
+import { applyClipEarrings } from "@/lib/clip-earrings";
 import { otherSizeForList } from "@/lib/size-conversions";
 import {
   describeFill,
@@ -188,6 +189,9 @@ const categoryPath =
           // Style "Statement" only for a piece measured as one, or that she
           // said is one (15 Nov 2026).
           applyStatementStyle(aspects, meta, listing);
+          // Clip-on earrings: never Style "Stud"; "Clip-On" in the field
+          // whose eBay list has it (the seller, 16 Nov 2026).
+          applyClipEarrings(aspects, meta, listing, categoryPath);
           // Height / width / depth from her notes or the measurement line;
           // "Imported" is never a country (12 Nov 2026).
           applyMeasuredDimensions(aspects, meta, listing);

@@ -37,9 +37,9 @@ const listing = (over: Partial<ListingResult> = {}): ListingResult =>
 
 describe("her phrases carry a size mark (her check, 15 Nov 2026)", () => {
   const scale = (id: string) => STYLE_PHRASES.find((p) => p.id === id)?.scale;
-  it("28 for statement pieces, 36 not for them, the rest any size", () => {
-    expect(STYLE_PHRASES.filter((p) => p.scale === "statement")).toHaveLength(28);
-    expect(STYLE_PHRASES.filter((p) => p.scale === "small")).toHaveLength(36);
+  it("26 for statement pieces, 35 not for them (three broken ones deleted 16 Nov 2026), the rest any size", () => {
+    expect(STYLE_PHRASES.filter((p) => p.scale === "statement")).toHaveLength(26);
+    expect(STYLE_PHRASES.filter((p) => p.scale === "small")).toHaveLength(35);
     expect(STYLE_PHRASES.filter((p) => ["keys", "home", "clothing", "gems"].includes(p.kind)).every((p) => !p.scale)).toBe(true);
   });
   it("her answers on the five doubtful ones", () => {

@@ -12,6 +12,7 @@ import { formatDescription } from "./description-format";
 import { fitTitle } from "./title-fit";
 import { COLOR_SYNONYMS, isChoiceSet, isColorAspect, toAllowedValue } from "./ebay/aspects";
 import { isStatement, statementApplies, statementOutOfTitle, statementTagPatch, withoutStatementStyle } from "./statement";
+import { withoutStudForClips } from "./clip-earrings";
 import type { AspectMeta } from "./ebay/taxonomy";
 import type { ListingResult } from "./types";
 
@@ -145,6 +146,14 @@ export function applyRevision(
       Object.assign(specifics, kept);
       specificsChanged = true;
     }
+  }
+  // Clip-on earrings are never Style "Stud" (the seller, 16 Nov 2026).
+  const noStud = withoutStudForClips(specifics, { ...l, title: finalTitle });
+  if (Object.keys(noStud).length !== Object.keys(specifics).length || Object.entries(noStud).some(([k, v]) => specifics[k] !== v)) {
+    changed.push("Style: Stud removed (clip-on earrings)");
+    for (const k of Object.keys(specifics)) delete specifics[k];
+    Object.assign(specifics, noStud);
+    specificsChanged = true;
   }
   if (specificsChanged) patch.item_specifics = specifics;
   // The tags follow: a statement hashtag, or no big-piece word.

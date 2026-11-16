@@ -6,8 +6,9 @@ import { formatDescription } from "@/lib/description-format";
 
 describe("the seller's phrase bank (her drafts, 28 Oct 2026)", () => {
   it("holds all her phrases once each, sorted by kind", () => {
-    expect(STYLE_PHRASES.length).toBe(141);
-    expect(new Set(STYLE_PHRASES.map((p) => p.id)).size).toBe(141);
+    // 141 less three broken ones (a fragment and two repeats), deleted 16 Nov 2026.
+    expect(STYLE_PHRASES.length).toBe(138);
+    expect(new Set(STYLE_PHRASES.map((p) => p.id)).size).toBe(138);
     const kinds = new Set(STYLE_PHRASES.map((p) => p.kind));
     for (const k of ["rings", "necklaces", "earrings", "bracelets", "keys", "home", "clothing", "general", "gems"])
       expect(kinds.has(k as never), k).toBe(true);

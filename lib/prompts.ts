@@ -231,7 +231,7 @@ Include other jewelry-specific fields when clearly relevant.
 
 Do not force irrelevant fields merely to fill space.
 
-Style is a word eBay publishes for each category, not a description you compose. In jewelry it names the form of the piece — Stud, Hoop, Huggie, Dangle/Drop, Chandelier, Cuff for earrings; Choker, Collar, Lariat, Y-Drop, Pendant, Station, Layered, Locket for necklaces. In clothing it names aesthetic and era — Casual, Basic, Chic, Bohemian, Beach, Cocktail, Formal, Gothic, Prairie, Pin-Up, 50s, 70s — never the cut, which belongs to Sleeve Type, Silhouette, Neckline, Closure and the garment's length field. Give Style only when one of eBay's own words plainly fits; a phrase of your own will be discarded later, and leaving it out lets a later pass choose from eBay's real list for the chosen category.
+Style is a word eBay publishes for each category, not a description you compose. In jewelry it names the form of the piece — Stud, Hoop, Huggie, Dangle/Drop, Chandelier, Cuff for earrings; Choker, Collar, Lariat, Y-Drop, Pendant, Station, Layered, Locket for necklaces. Clip-on earrings are never Style "Stud" — a stud goes through a pierced ear, a clip does not (the seller, 16 Nov 2026). In clothing it names aesthetic and era — Casual, Basic, Chic, Bohemian, Beach, Cocktail, Formal, Gothic, Prairie, Pin-Up, 50s, 70s — never the cut, which belongs to Sleeve Type, Silhouette, Neckline, Closure and the garment's length field. Give Style only when one of eBay's own words plainly fits; a phrase of your own will be discarded later, and leaving it out lets a later pass choose from eBay's real list for the chosen category.
 
 CONDITION — THE GRADE, THE CONDITION NOTES AND THE DESCRIPTION LINE (the seller's rules, 31 Oct 2026)
 
