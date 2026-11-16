@@ -337,7 +337,7 @@ const firstContentIndex = descriptionLines.findIndex((line) => line.trim().lengt
 if (firstContentIndex >= 0) descriptionLines.splice(firstContentIndex, 1);
 const descriptionBody = descriptionLines.join("\n").trim();
 listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}` : listing.title;
-        // The seller's order and eBay's 800-character phone limit — applied
+        // The seller's order and her 1000-character limit — applied
         // after the final title is in place, since the title line counts.
         // A European, British or Italian women's size: "Size: EU 38 (US 8,
         // Medium)", from eBay's chart (the seller, 31 Oct 2026).

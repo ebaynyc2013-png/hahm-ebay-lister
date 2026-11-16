@@ -276,7 +276,7 @@ DESCRIPTION
 
 The description is written in the SELLER'S OWN VOICE: one warm opening sentence, then plain facts. Write like her — a reseller talking to a buyer in simple everyday words — never like a catalogue. Do NOT pile up descriptive adjectives ("sculptural, hammered, soft wavy finish that catches the light"): the seller rejected exactly that. Say what a buyer needs, simply.
 
-LENGTH: the whole description — the title line, every section, every space and line break — must be AT MOST 800 CHARACTERS, and should come close to it: aim for 700–790. Reach it with true facts and the seller's warm sentence, never with filler. If the facts run out sooner, a shorter description is fine. eBay shows up to 800 characters in full on a phone.
+LENGTH: the whole description — the title line, every section, every space and line break — must be AT MOST 1000 CHARACTERS, and should come close to it: aim for 950–1000. Reach it with true facts and the seller's warm sentence, never with filler. If the facts run out sooner, a shorter description is fine. The sites the seller lists on take up to 1000 characters (her rule, 15 Nov 2026).
 
 The description must NOT be one continuous paragraph. Use short labeled sections with exactly one blank line between every section. Inside a section write on one line — no line breaks — except the measurement lines, which stand together, one measurement per line.
 

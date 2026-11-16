@@ -6,8 +6,10 @@ import { scrubContactInfo } from "@/lib/contact-info";
 describe("the model is told the description rules of 27 Oct 2026", () => {
   const prompt = buildProfiledAnalysisPrompt("auto");
 
-  it("asks for at most 800 characters, in the agreed order, without Keywords", () => {
-    expect(prompt).toContain("AT MOST 800 CHARACTERS");
+  it("asks for at most 1000 characters (15 Nov 2026), in the agreed order, without Keywords", () => {
+    expect(prompt).toContain("AT MOST 1000 CHARACTERS");
+    expect(prompt).toContain("aim for 950–1000");
+    expect(prompt).not.toContain("AT MOST 800 CHARACTERS");
     expect(prompt).not.toContain("1000 words");
     const order = [
       "1. The exact title",
@@ -30,7 +32,7 @@ describe("the model is told the description rules of 27 Oct 2026", () => {
     const m = prompt.match(/Example \((\d+) characters\):\n\n([\s\S]*?)\n\nUse other clear/);
     expect(m).not.toBeNull();
     expect(m![2].length).toBe(Number(m![1]));
-    expect(m![2].length).toBeLessThanOrEqual(800);
+    expect(m![2].length).toBeLessThanOrEqual(1000);
     // The seller's approved example (28 Oct 2026): her voice, then facts.
     expect(m![2]).toContain("can be given some extra pizzazz");
     expect(m![2]).toContain('Length: Approximately 35-40" (88.9-101.6 cm), adjustable');
@@ -73,7 +75,7 @@ describe("the seller's voice (28 Oct 2026)", () => {
     expect(prompt).toContain('A plain ring never becomes "Tiffany"');
     expect(prompt).toContain('"looks a lot more expensive than it cost"');
     expect(prompt).toContain("never for a stone recognised by its look");
-    expect(prompt).toContain("aim for 700–790");
+    expect(prompt).toContain("aim for 950–1000");
     expect(prompt).toContain("Do NOT pile up descriptive adjectives");
   });
 

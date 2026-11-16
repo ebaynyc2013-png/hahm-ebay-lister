@@ -1,9 +1,10 @@
 /**
  * The description's shape — the seller's rules of 27 Oct 2026.
  *
- * At most 800 characters: eBay shows a description of that length in full on
- * a phone ("a listing description on a mobile device cannot exceed 800
- * characters" — eBay's mobile guide). Labeled sections, a blank line between
+ * At most 1000 characters (the seller, 15 Nov 2026: the sites she lists on,
+ * Vendoo among them, take up to 1000; it was 800, what eBay shows in full on a
+ * phone — "a listing description on a mobile device cannot exceed 800
+ * characters", eBay's mobile guide). Labeled sections, a blank line between
  * them, always in the same order, so a buyer on a phone finds what she
  * looks for in the same place every time:
  *
@@ -24,7 +25,7 @@
  * Size, the measurements, Material, the stones or the hallmarks.
  */
 
-export const DESCRIPTION_LIMIT = 800;
+export const DESCRIPTION_LIMIT = 1000;
 
 // The measurements: right after Condition, before Size (12 Nov 2026).
 const MEASURE_RANK = 2.5;

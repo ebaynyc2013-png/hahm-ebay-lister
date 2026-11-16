@@ -131,7 +131,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
   const a = (field: string) => fieldAnchor(g.id, field);
 
   // The whole description, always: the box grows with the text (no scrolling
-  // inside it — the seller reads 800 characters at a glance).
+  // inside it — the seller reads the whole description at a glance).
   const descRef = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
     const t = descRef.current;
@@ -557,7 +557,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
           />
           {l.description.length > DESCRIPTION_LIMIT && (
             <p className="hint warn">
-              {l.description.length} characters — buyers on a phone see {DESCRIPTION_LIMIT} in full.
+              Over {DESCRIPTION_LIMIT} by {l.description.length - DESCRIPTION_LIMIT} characters — shorten it to fit.
             </p>
           )}
           {!!l.contact_seen?.length && (

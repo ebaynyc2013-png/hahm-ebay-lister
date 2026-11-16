@@ -74,7 +74,7 @@ describe("the description keeps her opening first and a true closing line last",
 
   it("leaves out the closing line before a design paragraph, and never the opening", () => {
     const r = formatDescription(
-      `T\n\nYou can wear this lovely piece to dress up your basic jeans and tees.\n\nBrand: B\n\nCondition: ${"x".repeat(600)}\n\nDesign: ${"y".repeat(60)}\n\nDiscontinued design. There will be no more like this one.`,
+      `T\n\nYou can wear this lovely piece to dress up your basic jeans and tees.\n\nBrand: B\n\nCondition: ${"x".repeat(800)}\n\nDesign: ${"y".repeat(60)}\n\nDiscontinued design. There will be no more like this one.`,
     );
     expect(r.dropped[0]).toBe("the closing line");
     expect(r.text).toContain("You can wear this lovely piece");

@@ -715,8 +715,8 @@ test("the description shows its length, and tags for other shops sit apart from 
     }),
   );
   await draft(page);
-  await expect(page.getByText(`${description.length}/800`)).toBeVisible();
-  await expect(page.getByText("Left out to fit 800 characters: Occasion.")).toBeVisible();
+  await expect(page.getByText(`${description.length}/1000`)).toBeVisible();
+  await expect(page.getByText("Left out to fit 1000 characters: Occasion.")).toBeVisible();
   const tags = page.getByRole("region", { name: "Tags for other shops" });
   await expect(tags.getByLabel("Hashtags for Depop, Mercari and Poshmark")).toHaveValue(
     "#pendantnecklace #cordnecklace #mobwife",

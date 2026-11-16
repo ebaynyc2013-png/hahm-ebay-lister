@@ -74,7 +74,7 @@ export interface ListingResult {
   /** This card's mark has been kept in the brand memory. */
   brand_remembered?: boolean;
   /**
-   * Sections left out of the description to keep it within 800 characters
+   * Sections left out of the description to keep it within 1000 characters
    * (eBay shows that much in full on a phone). Shown on the card.
    */
   description_dropped?: string[];

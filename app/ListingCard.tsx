@@ -547,9 +547,8 @@ export function ListingCard({
             />
             {listing.description.length > DESCRIPTION_LIMIT && (
               <p className="size-warning" role="alert">
-                ⚠️ The description is {listing.description.length} characters.
-                eBay shows only {DESCRIPTION_LIMIT} in full on a phone —
-                shorten it to fit.
+                ⚠️ The description is {listing.description.length} characters —
+                over the {DESCRIPTION_LIMIT} limit. Shorten it to fit.
               </p>
             )}
             {!!listing.description_dropped?.length && (

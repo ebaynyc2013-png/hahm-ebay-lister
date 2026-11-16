@@ -30,7 +30,9 @@ const labels = (text: string) =>
     .map((b) => b.split(":")[0]);
 
 describe("the description fits a phone screen, in the seller's order", () => {
-  it("brings the necklace within 800 characters, title, brand and condition first", () => {
+  it("brings the necklace within the limit, title, brand and condition first", () => {
+    // The limit is 1000 since 15 Nov 2026 (it was 800).
+    expect(DESCRIPTION_LIMIT).toBe(1000);
     expect(NECKLACE.length).toBe(1381);
     const r = formatDescription(NECKLACE);
     expect(r.length).toBeLessThanOrEqual(DESCRIPTION_LIMIT);
@@ -102,7 +104,7 @@ describe("the description fits a phone screen, in the seller's order", () => {
   });
 
   it("never leaves out the title, Brand, Condition, Size or the measurements", () => {
-    const long = "x".repeat(900);
+    const long = "x".repeat(1100);
     const r = formatDescription(
       `T\n\nBrand: B\n\nCondition: ${long}\n\nSize: M\n\nActual Measurements:\n• Length: 1 in\n\nMaterial: Silk\n\nHallmarks: 925\n\nDesign: Pretty.`,
     );
