@@ -165,3 +165,12 @@ describe("eBay's condition menu in words, every category (12 Nov 2026)", () => {
     ]);
   });
 });
+
+describe("a point that says what is NOT there is no flaw (list item 36, 16 Nov 2026)", () => {
+  it('"no scratches" in the middle of a point is not a flaw', () => {
+    expect(flawLines("Excellent pre-owned condition: • Bright polish, no scratches • Clasp works")).toEqual([]);
+    expect(flawLines("Excellent pre-owned condition: • Stones all in place, no chips or cracks")).toEqual([]);
+    // A real scratch still counts.
+    expect(flawLines("Good pre-owned condition: • Light scratches on the back")).toEqual(["Light scratches on the back"]);
+  });
+});

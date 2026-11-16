@@ -172,6 +172,10 @@ export function photoFactProblem(
   }
   if (s.basis !== "visible_feature") return "no reason given";
   if (isStoneAbsence(s.value, aspect)) return null;
+  // Which stone it is, named from the photos like the title and the
+  // description name it (the seller's rule, 16 Nov 2026). Its creation,
+  // treatment, clarity or carats still need a label.
+  if (isStoneNameField(s.name)) return null;
   return visible.has(s.name.toLowerCase()) || choosableFromPhoto(aspect)
     ? null
     : "needs a label or your note, not just a look";
@@ -329,6 +333,12 @@ const STONE_FIELD = /\b(?:gem)?stones?\b/i;
 const STONE_DETAIL =
   /\b(?:colou?r|shape|creation|treatment|clarity|depth|length|width|size|weight|number|count|grade|cut|setting)\b/i;
 const ABSENCE = /^(?:no(?:\s+main)?\s+stones?|none)$/i;
+
+/** Main Stone, Secondary Stone, Gemstone — the field that asks which stone. */
+export function isStoneNameField(name: string): boolean {
+  const n = String(name ?? "");
+  return STONE_FIELD.test(n) && !STONE_DETAIL.test(n);
+}
 
 /**
  * "No Stone" from a photo — for every kind of jewellery, in every category

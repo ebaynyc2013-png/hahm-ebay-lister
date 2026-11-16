@@ -80,7 +80,7 @@ export function gradeForEbayCondition(value: string, accepted: string[]): Grade 
 const FLAW =
   /\b(?:spots?|stain\w*|marks?|mark(?:ed|ings)|fad(?:e|ed|ing)|pill\w*|bobbl\w*|holes?|snag\w*|pulls?|pulled|tears?|torn|rips?|ripped|wear|worn|scratch\w*|scuff\w*|crack\w*|chip\w*|missing|discolou?r\w*|yellow(?:ed|ing)|fray\w*|loose|odou?r|smell\w*|dent\w*|tarnish\w*|repair\w*|mended|thinning|shrunk|shrinkage|damage\w*|defects?|flaws?|stretched|lint|uneven|bent|broken|peel\w*|cloudy|dull\w*|patina|residue|blemish\w*|imperfect\w*)\b/i;
 const NOT_A_FLAW =
-  /^\s*no\b|\bno (?:[\w-]+ ){0,4}(?:spots?|stains?|holes?|pulls?|snags?|tears?|marks?|odou?rs?|flaws?|damage|wear|pilling)\b|\bintact\b|\bpart of the design\b|\bby design\b|\bintended\b|\bin (?:good|great|excellent) shape\b|\bfree of\b|\bwithout\b/i;
+  /^\s*no\b|\bno (?:[\w-]+ ){0,4}(?:spots?|stains?|holes?|pulls?|snags?|tears?|marks?|odou?rs?|flaws?|damage|wear|pilling|scratch(?:es)?|scuffs?|chips?|cracks?|dents?|tarnish(?:ing)?|fading|fraying|rips?|discolou?ration|repairs?)\b|\bintact\b|\bpart of the design\b|\bby design\b|\bintended\b|\bin (?:good|great|excellent) shape\b|\bfree of\b|\bwithout\b/i;
 
 /**
  * The notes split into the grade phrase and its points. Reads both the

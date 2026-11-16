@@ -62,8 +62,7 @@ describe("facts seen in a photo, against eBay's own menus", () => {
       "Metal",
       "Metal Purity",
       "Base Metal",
-      "Main Stone",
-      "Secondary Stone",
+      // Main Stone and Secondary Stone: named from the photos since 16 Nov 2026.
     ])
       expect(
         acceptedPhotoFact(seen(name, "Silk"), 1, menu(name, ["Silk"])),

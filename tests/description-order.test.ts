@@ -175,3 +175,11 @@ describe("the draft screen shows the overflow in red", () => {
     expect(css).toMatch(/\.df-label \.desc-count\.over \{\s*color: var\(--color-danger\);/);
   });
 });
+
+describe("the stone: the same name in the title, the description and the item specifics (16 Nov 2026)", () => {
+  it("the writer names it the same way everywhere", () => {
+    const p = buildProfiledAnalysisPrompt("auto");
+    expect(p).toContain("IN THE TITLE, THE DESCRIPTION'S STONES SECTION AND THE ITEM SPECIFICS ALIKE");
+    expect(p).not.toContain("IN THE TITLE the old rule stands");
+  });
+});

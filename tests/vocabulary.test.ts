@@ -225,7 +225,7 @@ describe("choosing from a vocabulary eBay supplied", () => {
     for (const [name, value] of [
       ["Material", "Cotton"],
       ["Metal", "Sterling Silver"],
-      ["Main Stone", "Onyx"],
+      // Main Stone is named from the photos since 16 Nov 2026 (the seller's rule).
       ["Vintage", "Yes"],
       ["Handmade", "Yes"],
       ["Country of Origin", "Italy"],

@@ -22,8 +22,9 @@ describe("'No Stone' is read from a photo, for every kind of jewellery", () => {
       expect(photoFactProblem(fact(name, "No Stone"), 2, field(name, STONES)), name).toBeNull();
   });
 
-  it("still never names a stone from its look", () => {
-    expect(photoFactProblem(fact("Main Stone", "Topaz"), 2, field("Main Stone", STONES))).toBe(
+  it("names a stone from its look since 16 Nov 2026 (the seller's rule); its treatment still needs a label", () => {
+    expect(photoFactProblem(fact("Main Stone", "Topaz"), 2, field("Main Stone", STONES))).toBeNull();
+    expect(photoFactProblem(fact("Main Stone Treatment", "Not Enhanced"), 2, field("Main Stone Treatment", ["Not Enhanced"]))).toBe(
       "needs a label or your note, not just a look",
     );
   });

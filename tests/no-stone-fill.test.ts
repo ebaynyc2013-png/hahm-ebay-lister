@@ -57,18 +57,17 @@ describe("a plain metal piece gets eBay's 'No Stone'", () => {
     expect(r.refusedWords).toEqual([]);
   });
 
-  it("still refuses a stone named by its look", async () => {
+  it("names the stone the photos show, like the title and the description (16 Nov 2026)", async () => {
     reply = { facts: [fact("Main Stone", "Topaz")] };
     const aspects: Record<string, string[]> = {};
-    const r = await fillRecommendedAspects(
+    await fillRecommendedAspects(
       { title: "Gold ring", description: "" },
       aspects,
       META,
       "SKU-2",
       [{ mediaType: "image/png", data: PNG }],
     );
-    expect(aspects["Main Stone"]).toBeUndefined();
-    expect(r.refusedWords[0]).toMatchObject({ aspect: "Main Stone", value: "Topaz" });
+    expect(aspects["Main Stone"]).toEqual(["Topaz"]);
   });
 
   it("tells the AI the rule, for every kind of jewellery", () => {
