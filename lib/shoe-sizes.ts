@@ -16,7 +16,7 @@
 import { matchAllowed } from "./ebay/aspects";
 import type { AspectMeta } from "./ebay/taxonomy";
 
-export type ShoeDepartment = "Women" | "Men";
+export type ShoeDepartment = "Women" | "Men" | "Kids" | "Baby";
 
 export interface ShoeSizeRow {
   us: string;
@@ -104,6 +104,50 @@ const MENS: Raw[] = [
   ["20", "19.5", "19.5", "56", "56.5"],
 ];
 
+// Kids and baby, from the same eBay page ("Kids & Baby size chart", read 16 Nov
+// 2026 — the seller's go). Toddler sizes 10–13.5 run on into big-kid sizes
+// 1–7. Where eBay's baby chart puts two US sizes on one European size, the
+// row says both — "Size: EU 17 (US 1.5-2)" (the seller, 16 Nov 2026); eBay
+// lists EU 16 for both US 0.5 and US 1, so that row is "0.5-1".
+const KIDS: Raw[] = [
+  ["10", "9", "9", "27", "27 1/3"],
+  ["10.5", "9.5", "9.5", "28", "28 1/3"],
+  ["11", "10", "10", "29", "29 1/3"],
+  ["11.5", "10.5", "10.5", "30", "30 2/3"],
+  ["12", "11", "11", "31", "31 1/3"],
+  ["12.5", "11.5", "11.5", "32"],
+  ["13", "12", "12", "32.5", "32 2/3"],
+  ["13.5", "12.5", "12.5", "33", "33 1/3"],
+  ["1", "13", "13", "33.5"],
+  ["1.5", "13.5", "13.5", "34"],
+  ["2", "1", "1", "34.5", "34 2/3"],
+  ["2.5", "1.5", "1.5", "35", "35 1/3"],
+  ["3", "2", "2", "35.5"],
+  ["3.5", "2.5", "2.5", "36"],
+  ["4", "3", "3", "36.5", "36 2/3"],
+  ["4.5", "3.5", "3.5", "37", "37 1/3"],
+  ["5", "4", "4", "37.5"],
+  ["5.5", "4.5", "4.5", "38"],
+  ["6", "5", "5", "38.5", "38 2/3"],
+  ["6.5", "5.5", "5.5", "39", "39 1/3"],
+  ["7", "6", "6", "39.5"],
+];
+
+const BABY: Raw[] = [
+  ["0.5-1", "0", "0", "16"],
+  ["1.5-2", "0.5-1", "0.5-1", "17"],
+  ["2.5-3", "1.5-2", "1.5-2", "18"],
+  ["3.5-4", "2.5-3", "2.5-3", "19"],
+  ["4.5-5", "3.5-4", "3.5-4", "20"],
+  ["5.5-6", "4.5-5", "4.5-5", "21"],
+  ["6.5", "5.5", "5.5", "22"],
+  ["7-7.5", "6-6.5", "6-6.5", "23"],
+  ["8", "7", "7", "24"],
+  ["8.5", "7.5", "7.5", "25"],
+  ["9-9.5", "8-8.5", "8-8.5", "26"],
+  ["10", "9", "9", "27"],
+];
+
 function toRows(raw: Raw[]): ShoeSizeRow[] {
   return raw.map(([us, uk, au, ...eu]) => ({ us, uk, au, eu }));
 }
@@ -111,6 +155,8 @@ function toRows(raw: Raw[]): ShoeSizeRow[] {
 const TABLE: Record<ShoeDepartment, ShoeSizeRow[]> = {
   Women: toRows(WOMENS),
   Men: toRows(MENS),
+  Kids: toRows(KIDS),
+  Baby: toRows(BABY),
 };
 
 /** The eBay aspect names this module knows how to fill. */
@@ -166,7 +212,7 @@ export function findShoeSizeRow(
 ): ShoeSizeRow | null {
   const value = normalizeSize(size);
   if (!value) return null;
-  const column = system ?? guessSizeSystem(value);
+  const column = system ?? guessSizeSystem(value, department);
   if (!column) return null;
   return (
     TABLE[department].find((row) =>
@@ -204,10 +250,21 @@ export function shoeSizesFor(
  * European size and nothing else. Anything smaller is ambiguous between US and
  * UK, and ambiguous means we say so rather than pick.
  */
-export function guessSizeSystem(size: string): SizeSystem | null {
+export function guessSizeSystem(size: string, department?: ShoeDepartment): SizeSystem | null {
   const value = parseSizeNumber(size);
   if (!Number.isFinite(value)) return null;
+  // Baby shoes: European sizes start at 16, American ones stop at 10.
+  if (department === "Baby") return value >= 15 ? "eu" : null;
   return value >= 25 ? "eu" : null;
+}
+
+/** eBay's Department for shoes, read as one of the charts. */
+export function chartForDepartment(department: string | undefined): ShoeDepartment | null {
+  const d = String(department ?? "").trim();
+  if (d === "Women" || d === "Men") return d;
+  if (/\bbaby\b/i.test(d)) return "Baby";
+  if (/\b(?:boys?|girls?|kids?|youth|toddlers?)\b/i.test(d)) return "Kids";
+  return null;
 }
 
 /**
@@ -224,8 +281,8 @@ export function fillShoeSizes(
   meta: AspectMeta[],
   rawSize?: unknown,
 ): void {
-  const department = aspects.Department?.[0];
-  if (department !== "Women" && department !== "Men") return;
+  const department = chartForDepartment(aspects.Department?.[0]);
+  if (!department) return;
 
   const wanted = (
     Object.entries(SHOE_SIZE_ASPECTS) as [SizeSystem, string][]

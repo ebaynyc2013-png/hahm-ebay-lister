@@ -30,6 +30,10 @@ export function isFootwear(l: ListingResult): boolean {
  */
 export function shoeDepartment(l: ListingResult): ShoeDepartment {
   const d = expectedDepartment(l) || l.item_specifics?.Department || "";
+  // Kids' and baby shoes have their own eBay charts (16 Nov 2026).
+  const said = [d, l.category_path, l.item_type].filter(Boolean).join(" ");
+  if (/\b(?:baby|babies|infants?|newborn|crib)\b/i.test(said)) return "Baby";
+  if (/\b(?:boys?|girls?|kids?|youth|toddlers?|children'?s?)\b/i.test(said)) return "Kids";
   return /^men\b/i.test(d.trim()) ? "Men" : "Women";
 }
 
@@ -54,10 +58,13 @@ export function shoeSizesInTitle(
 ): string {
   if (!isFootwear(listing)) return title;
   const dept = shoeDepartment(listing);
+  // Baby shoes keep the size as written in the title: eBay's chart gives some
+  // of them two US sizes; the description says both (16 Nov 2026).
+  if (dept === "Baby") return title;
   const usFor = (eu: string) => findShoeSizeRow(eu, dept, "eu")?.us;
   const euFor = (us: string) => findShoeSizeRow(us, dept, "us")?.eu[0];
   const isUs = (n: string) => Number(n) >= 1 && Number(n) <= 16;
-  const isEu = (n: string) => Number(n) >= 33 && Number(n) <= 50;
+  const isEu = (n: string) => (dept === "Kids" ? Number(n) >= 26 && Number(n) <= 40 : Number(n) >= 33 && Number(n) <= 50);
 
   let out = title;
   // A pair already written, with or without "EU" (and a stray "US" in front):

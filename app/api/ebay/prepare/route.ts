@@ -45,6 +45,8 @@ import { pickSizeFromList } from "@/lib/clothing-size";
 import { womensForeignSize } from "@/lib/foreign-size";
 import { applyVintageAspects, isVintage } from "@/lib/vintage";
 import { applyStatementStyle } from "@/lib/statement";
+import { applyRingSize } from "@/lib/ring-size";
+import { otherSizeForList } from "@/lib/size-conversions";
 import {
   describeFill,
   fillRecommendedAspects,
@@ -212,7 +214,10 @@ const categoryPath =
           fillShoeSizes(aspects, meta, listing.size);
           // Size from eBay's own list ("M", not "M Medium"), or empty so the
           // card asks — the seller's rule, 31 Oct 2026.
-          pickSizeFromList(aspects, meta, listing.size, womensForeignSize(listing));
+          pickSizeFromList(aspects, meta, listing.size, womensForeignSize(listing) ?? otherSizeForList(listing));
+          // Ring Size: the nearest value on eBay's list to the American size
+          // (the seller, 16 Nov 2026).
+          applyRingSize(aspects, meta, listing);
           applyAspectAliases(aspects, meta);
           enforceCardinality(aspects, meta);
           sanitizeNumericAspects(aspects, meta);

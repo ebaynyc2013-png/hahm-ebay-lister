@@ -45,6 +45,9 @@ import {
 import { toImageBlock, type ImageBlock } from "@/lib/images";
 import { optimizeTitle } from "@/lib/titleOptimizer";
 import { foreignSizeInDescription, italianSizeFix } from "@/lib/foreign-size";
+import { ringSizeInDescription, ringSizeInTitle } from "@/lib/ring-size";
+import { otherSizeInDescription } from "@/lib/size-conversions";
+import { fitTitle } from "@/lib/title-fit";
 import { vintageFromAnalysis, vintageTitle } from "@/lib/vintage";
 import { excellentWithoutFlaw, tidyConditionNotes } from "@/lib/condition-sync";
 import { fixDetailPlaces } from "@/lib/detail-places";
@@ -332,6 +335,9 @@ async function handle(req: NextRequest) {
           listing.title = statementOutOfTitle(listing.title, listing.brand ?? "");
           if (!isStatement(listing)) listing.item_specifics = withoutStatementStyle(listing.item_specifics);
         }
+        // A European or British ring size: the title says the American one,
+        // "Size 7", from Pandora's chart (the seller, 16 Nov 2026).
+        listing.title = fitTitle(ringSizeInTitle(listing.title, listing), 80);
         const descriptionLines = (listing.description ?? "").trim().split(/\r?\n/);
 const firstContentIndex = descriptionLines.findIndex((line) => line.trim().length > 0);
 if (firstContentIndex >= 0) descriptionLines.splice(firstContentIndex, 1);
@@ -342,6 +348,11 @@ listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}`
         // A European, British or Italian women's size: "Size: EU 38 (US 8,
         // Medium)", from eBay's chart (the seller, 31 Oct 2026).
         listing.description = foreignSizeInDescription(listing.description, listing);
+        // Every other size not made in America: rings, men's tailoring and
+        // shirts, children's clothing, kids' and baby shoes — "Size: EU 54
+        // (US 7)" (the seller, 16 Nov 2026).
+        listing.description = ringSizeInDescription(listing.description, listing);
+        listing.description = otherSizeInDescription(listing.description, listing);
         // A letter size is one value outside the title: the card's Size,
         // eBay's Size and the description's Size line say "M", the title
         // keeps "M Medium" (the seller, 10 Nov 2026).
