@@ -26,7 +26,7 @@
 import { expectedDepartment } from "./category-selection";
 import { findShoeSizeRow } from "./shoe-sizes";
 import { isFootwear, shoeDepartment } from "./title-shoe-size";
-import type { ForeignSize } from "./foreign-size";
+import { sizesInTitle, type ForeignSize } from "./foreign-size";
 import type { ListingResult } from "./types";
 
 export interface OtherSize {
@@ -153,6 +153,26 @@ export function otherSizeInDescription(description: string, l: ListingResult): s
   if (at >= 0) blocks[at] = s.line;
   else blocks.push(s.line);
   return blocks.join("\n\n");
+}
+
+/**
+ * The title says both sizes, the label's first (the seller, 16 Nov 2026 —
+ * "we sell in America"): "EU 50 US 40", "EU 104 US 4T", a baby shoe "EU 17
+ * US 1.5-2". Kids' shoes are left to the shoe rule ("10.5 28", like adults').
+ * Tight for 80: the aesthetic tail goes first; last of all, the US size alone.
+ */
+export function otherSizeInTitle(title: string, l: ListingResult, limit = 80): string {
+  const s = otherForeignSize(l);
+  if (!s) return title;
+  if (s.kind === "kids-shoes" && shoeDepartment(l) !== "Baby") return title;
+  const v = s.value.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+  const usAfter = String.raw`(?:\s+US\s+[\w.\-]+)?`;
+  const marked = new RegExp(
+    String.raw`\b(?:Size\s+)?(?:EU|EUR|IT|DE|FR)\s?${v}(?![\w/])${usAfter}|\b${v}\s?(?:EU|EUR|IT)\b` +
+      (s.kind === "kids" ? String.raw`|\bSize\s+${v}(?![\w/])` : ""),
+    "i",
+  );
+  return sizesInTitle(title, l, marked, `EU ${s.value} US ${s.us}`, `US ${s.us}`, limit);
 }
 
 /** For eBay's Size field at Prepare: the American size, chosen from eBay's list. */

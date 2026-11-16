@@ -11,7 +11,8 @@ import {
 } from "@/lib/ring-size";
 import { chartForDepartment, fillShoeSizes, findShoeSizeRow } from "@/lib/shoe-sizes";
 import { shoeSizesInTitle } from "@/lib/title-shoe-size";
-import { otherForeignSize, otherSizeForList, otherSizeInDescription } from "@/lib/size-conversions";
+import { otherForeignSize, otherSizeForList, otherSizeInDescription, otherSizeInTitle } from "@/lib/size-conversions";
+import { foreignSizeInTitle } from "@/lib/foreign-size";
 import { pickSizeFromList } from "@/lib/clothing-size";
 import { buildProfiledAnalysisPrompt } from "@/lib/prompts";
 import type { ListingResult } from "@/lib/types";
@@ -62,9 +63,11 @@ describe("rings: Pandora's chart for every brand", () => {
     size: "EU 54",
     description: "Pandora Sterling Silver Heart Ring Size EU 54\n\nBrand: Pandora\n\nSize: EU 54",
   });
-  it("title: the American size", () => {
-    expect(ringSizeInTitle(ring.title, ring)).toBe("Pandora Sterling Silver Heart Ring Size 7");
-    expect(ringSizeInTitle("Pandora Heart Ring Size 54", ring)).toBe("Pandora Heart Ring Size 7");
+  it("title: both sizes, the ring's own first (16 Nov 2026)", () => {
+    expect(ringSizeInTitle(ring.title, ring)).toBe("Pandora Sterling Silver Heart Ring Size EU 54 US 7");
+    expect(ringSizeInTitle("Pandora Heart Ring Size 54", ring)).toBe("Pandora Heart Ring Size EU 54 US 7");
+    // Already complete — left as it is.
+    expect(ringSizeInTitle("Pandora Heart Ring Size EU 54 US 7", ring)).toBe("Pandora Heart Ring Size EU 54 US 7");
   });
   it("description: as marked, then American", () => {
     expect(ringSizeInDescription(ring.description, ring)).toContain("Size: EU 54 (US 7)");
@@ -161,6 +164,41 @@ describe("children's clothing: the height beside the American size", () => {
     const aspects: Record<string, string[]> = {};
     pickSizeFromList(aspects, [{ name: "Size", values: ["3T", "4T", "5"] }] as never, "104", otherSizeForList(kid("104")));
     expect(aspects.Size).toEqual(["4T"]);
+  });
+});
+
+describe("the title says both sizes — we sell in America (16 Nov 2026)", () => {
+  it("men's jacket: EU 50 US 40", () => {
+    const l = item({ item_type: "Blazer", size: "EU 50", item_specifics: { Department: "Men" } });
+    expect(otherSizeInTitle("Hugo Boss Navy Wool Blazer EU 50 Two Button", l)).toBe("Hugo Boss Navy Wool Blazer EU 50 US 40 Two Button");
+  });
+  it("children's: EU 104 US 4T; baby shoes: EU 17 US 1.5-2", () => {
+    const dress = item({ item_type: "Dress", size: "104", item_specifics: { Department: "Girls" } });
+    expect(otherSizeInTitle("Zara Kids Floral Dress Size 104", dress)).toBe("Zara Kids Floral Dress EU 104 US 4T");
+    const shoe = item({ item_type: "Baby Shoes", size: "EU 17" });
+    expect(otherSizeInTitle("Robeez Pink Leather Shoes EU 17", shoe)).toBe("Robeez Pink Leather Shoes EU 17 US 1.5-2");
+  });
+  it("kids' shoes are left to the shoe rule", () => {
+    const shoe = item({ item_type: "Kids Sneakers", size: "EU 28" });
+    expect(otherSizeInTitle("Nike Sneakers 10.5 28", shoe)).toBe("Nike Sneakers 10.5 28");
+  });
+  it("tight for 80: the aesthetic tail goes first, both sizes stay", () => {
+    const l = item({
+      item_type: "Blazer",
+      size: "EU 50",
+      item_specifics: { Department: "Men" },
+      aesthetics: ["Old Money"],
+    });
+    const t = `${"Word ".repeat(12)}Blazer EU 50 Old Money`; // 81 with US 40 and the tail
+    const out = otherSizeInTitle(t, l);
+    expect(out.length).toBeLessThanOrEqual(80);
+    expect(out.endsWith("Blazer EU 50 US 40")).toBe(true);
+  });
+  it("women's clothing too: the tail goes before EU 38", () => {
+    const top = item({ item_type: "Top", size: "EU 38", aesthetics: ["Boho"] });
+    const t = `${"Word ".repeat(12)}Top EU 38 Boho`; // too long with M Medium and Boho
+    const out = foreignSizeInTitle(t, top);
+    expect(out.endsWith("Top EU 38 M Medium")).toBe(true);
   });
 });
 

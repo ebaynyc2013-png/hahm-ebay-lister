@@ -113,25 +113,41 @@ export function foreignSizeInTitle(title: string, l: ListingResult, limit = 80):
       String.raw`\b${f.value}\s?(?:${f.system}|EUR)\b(?:\s+${LETTERS}\b)?(?:\s+${WORDS}\b)?`,
     "i",
   );
-  if (!marked.test(title)) return title;
   const letterWord = f.word === f.letter ? f.letter : `${f.letter} ${f.word}`;
+  return sizesInTitle(title, l, marked, `${f.system} ${f.value} ${letterWord}`, letterWord, limit);
+}
+
+/**
+ * Both sizes in the title — the one on the label and the American one ("we
+ * sell in America", the seller, 16 Nov 2026). When 80 is tight, the aesthetic
+ * tail ("Office Siren") goes first, one aesthetic at a time from the end, and
+ * both sizes stay; only when even that is not enough does the label's size
+ * give way and the American one stay. A title without the marked size is
+ * left as it is.
+ */
+export function sizesInTitle(
+  title: string,
+  l: ListingResult,
+  marked: RegExp,
+  both: string,
+  usOnly: string,
+  limit = 80,
+): string {
+  if (!marked.test(title)) return title;
   const tidy = (s: string) => s.replace(/\s{2,}/g, " ").trim();
-  const fit = (t: string): string | null => {
-    const full = tidy(t.replace(marked, `${f.system} ${f.value} ${letterWord}`));
-    if (full.length <= limit) return full;
-    const short = tidy(t.replace(marked, letterWord));
-    return short.length <= limit ? short : null;
-  };
-  const first = fit(title);
-  if (first) return first;
-  // The American size matters more than the aesthetic tail ("Office Siren"):
-  // when it does not fit, the tail goes, one aesthetic at a time, from the end
-  // (the seller's go, 1 Nov 2026 — "IT 36" alone went out without "XS X-Small").
-  let t = title;
+  const trims = [title];
+  let t = title.trim();
   for (const tail of aestheticTail(t, l)) {
     t = tidy(t.slice(0, t.length - tail.length));
-    const fitted = fit(t);
-    if (fitted) return fitted;
+    trims.push(t);
+  }
+  for (const x of trims) {
+    const v = tidy(x.replace(marked, both));
+    if (v.length <= limit) return v;
+  }
+  for (const x of trims) {
+    const v = tidy(x.replace(marked, usOnly));
+    if (v.length <= limit) return v;
   }
   return title;
 }

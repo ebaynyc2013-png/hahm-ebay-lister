@@ -2,7 +2,7 @@
 // inside circumference in millimetres, the same scale for every brand; a
 // British one is a letter. Buyers on eBay US look for the American number, so:
 //
-//   title          Size 7                     (American)
+//   title          Size EU 54 US 7            (as marked, then American)
 //   description    Size: EU 54 (US 7)         (as marked, then American)
 //   Ring Size      the nearest value on eBay's list for the category
 //
@@ -19,6 +19,7 @@
 //
 // Client-safe: no server imports.
 
+import { sizesInTitle } from "./foreign-size";
 import type { ListingResult } from "./types";
 
 /** Pandora's chart: European size, American size, British letter(s). */
@@ -154,17 +155,20 @@ export function ringSizeInDescription(description: string, l: ListingResult): st
   return blocks.join("\n\n");
 }
 
-/** The title says the American size: "Size EU 54", "EU 54", "Size 54", "UK N" → "Size 7". */
-export function ringSizeInTitle(title: string, l: ListingResult): string {
+/**
+ * The title says both sizes, the ring's own first (16 Nov 2026): "Size EU 54",
+ * "EU 54", "Size 54", "UK N" → "Size EU 54 US 7". Tight for 80: the aesthetic
+ * tail goes first; last of all, "Size 7" alone.
+ */
+export function ringSizeInTitle(title: string, l: ListingResult, limit = 80): string {
   const r = ringSize(l);
   if (!r) return title;
   const value = r.system === "UK" ? String.raw`${r.value[0]}(?:${HALF}|1\/2)?` : r.value;
   const marked = new RegExp(
-    String.raw`\b(?:Size\s+)?(?:${r.system}|EUR)\s?${value}(?![\w/])|\bSize\s+${value}(?![\w/])|\b${value}\s?(?:${r.system}|EUR)\b`,
+    String.raw`\b(?:Size\s+)?(?:${r.system}|EUR)\s?${value}(?![\w/])(?:\s+US\s+\d{1,2}(?:\.\d+)?\b)?|\bSize\s+${value}(?![\w/])|\b${value}\s?(?:${r.system}|EUR)\b`,
     "i",
   );
-  if (!marked.test(title)) return title;
-  return title.replace(marked, `Size ${r.us}`).replace(/\s{2,}/g, " ").trim();
+  return sizesInTitle(title, l, marked, `Size ${r.system} ${r.value} US ${r.us}`, `Size ${r.us}`, limit);
 }
 
 // "7", "7.25", "7 1/4", "7½" → 7.25.
