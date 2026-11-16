@@ -543,7 +543,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
         <div className="df" id={a("description")}>
           <label htmlFor={`${a("description")}-in`} className="df-label">
             Description{" "}
-            <span className={`count${l.description.length > DESCRIPTION_LIMIT ? " over" : ""}`}>
+            <span className={`count desc-count${l.description.length > DESCRIPTION_LIMIT ? " over" : ""}`}>
               {l.description.length} / {DESCRIPTION_LIMIT}
             </span>
             <CopyButton text={l.description} label="description" />
@@ -556,7 +556,7 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
             onChange={(e) => onEdit(g.id, { description: e.target.value })}
           />
           {l.description.length > DESCRIPTION_LIMIT && (
-            <p className="hint warn">
+            <p className="hint over-limit">
               Over {DESCRIPTION_LIMIT} by {l.description.length - DESCRIPTION_LIMIT} characters — shorten it to fit.
             </p>
           )}

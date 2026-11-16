@@ -6,12 +6,16 @@
  * phone — "a listing description on a mobile device cannot exceed 800
  * characters", eBay's mobile guide). Labeled sections, a blank line between
  * them, always in the same order, so a buyer on a phone finds what she
- * looks for in the same place every time:
+ * looks for in the same place every time (the seller's order, 15–16 Nov 2026):
  *
- *   title → Brand → Condition → measurements → Size → everything else
+ *   title → opening sentence → Brand → Condition → measurements → Size →
+ *   Color → Material → stones → Hallmarks / Model → Details → Style →
+ *   closing line
  *
  * The measurements stand right after Condition, one per line, no heading
  * and no bullets: "Length: Approximately 1.5 in (3.8 cm)" (12 Nov 2026).
+ * Details is ONE paragraph: a Design, Closure, Fit, Chain or Bail section
+ * joins it. There is no Occasion section.
  *
  * No "Keywords" section and no hashtags in the description: eBay's search
  * gives the description little weight, and the space is worth more to the
@@ -19,10 +23,11 @@
  * and never reach eBay.
  *
  * The model is told all this; this file is the guarantee. It reorders the
- * sections, takes out what does not belong, and — only when the text is still
- * too long — leaves out whole sections from the least needed end. It never
- * cuts a sentence in half and never touches the title, Brand, Condition,
- * Size, the measurements, Material, the stones or the hallmarks.
+ * sections and takes out what does not belong. It never leaves out a whole
+ * section (16 Nov 2026) — only a true closing line ("Discontinued design…"),
+ * and only when the text is still over the limit; whatever is over after
+ * that, the seller shortens herself, by the red "Over 1000 by N" on the
+ * draft. It never cuts a sentence in half.
  */
 
 export const DESCRIPTION_LIMIT = 1000;
@@ -38,8 +43,14 @@ interface Rank {
   rank: number;
 }
 
-// Where each labeled section stands. Anything not named here goes just
-// before the hallmarks and label details, in the order the model wrote it.
+// The Details paragraph and the piece's own name, last before the closing line.
+const DETAILS_RANK = 8;
+const STYLE_RANK = 9;
+
+// Where each labeled section stands (the seller's order, 15–16 Nov 2026).
+// Anything not named here goes just after Details, in the order the model
+// wrote it. The array order matters where two lists share a word: the first
+// that matches wins ("Collection" is the piece's name, so Style).
 const RANKS: Rank[] = [
   { test: /^brand$/i, rank: 1 },
   { test: /^condition$/i, rank: 2 },
@@ -48,42 +59,38 @@ const RANKS: Rank[] = [
     test: /^(?:actual measurements|measurements|dimensions|length|width|height|depth|diameter|weight|pit to pit|pit-to-pit|chest|bust|waist|hips?|inseam|rise|shoulders?|sleeves?|sleeve length|drop|strap drop|handle drop|heel height|circumference)$/i,
     rank: MEASURE_RANK,
   },
-  // The piece's own name or collection, where "Type" used to stand — the
-  // seller's rule of 28 Oct 2026 ("Style: Good As Gold").
-  { test: /^(?:style|style name|collection)$/i, rank: 5 },
-  { test: /^colou?rs?$/i, rank: 6 },
-  { test: /^(?:materials?|fabric|metal|metal purity|metal type)$/i, rank: 7 },
+  // The piece's own name or collection — the seller's rule of 28 Oct 2026
+  // ("Style: Good As Gold"), last since 16 Nov 2026.
+  { test: /^(?:style|style name|collection)$/i, rank: STYLE_RANK },
+  { test: /^colou?rs?$/i, rank: 4 },
+  { test: /^(?:materials?|fabric|metal|metal purity|metal type)$/i, rank: 5 },
   {
     test: /^(?:the stones?|stones?|main stone|secondary stones?|accent stones?|gemstones?)$/i,
-    rank: 8,
+    rank: 6,
   },
   {
-    test: /^(?:design|details|the pendant|pendant|setting|pattern|features?|construction)$/i,
-    rank: 9,
+    test: /^(?:hallmarks?|marks?|markings?|stamps?|labels?|tags?|style\/model name|style\/model code|model|model name|model number|reference number|upc|country of manufacture|made in|care)$/i,
+    rank: 7,
   },
-  { test: /^(?:closure|clasp|fit|chain or bail|chain|bail|backs?)$/i, rank: 10 },
-  { test: /^(?:occasion|aesthetic|styling)$/i, rank: 11 },
   {
-    test: /^(?:hallmarks?|marks?|markings?|stamps?|labels?|tags?|collection|style\/model name|style\/model code|model|model name|model number|reference number|upc|country of manufacture|made in|care)$/i,
-    rank: 13,
+    test: /^(?:design|details|the pendant|pendant|setting|pattern|features?|construction|closure|clasp|fit|chain or bail|chain|bail|backs?)$/i,
+    rank: DETAILS_RANK,
   },
 ];
-const UNKNOWN_RANK = 12;
+const UNKNOWN_RANK = 8.5;
 
 // Never part of an eBay description.
 // "Type" too: the title already says what the item is, and the seller does
-// not want the line (28 Oct 2026).
+// not want the line (28 Oct 2026). Occasion neither (16 Nov 2026).
 const NOT_IN_DESCRIPTION =
-  /^(?:keywords?|search terms?|seo|seo keywords|hashtags?|tags for other sites|etsy tags?|type|item type)$/i;
+  /^(?:keywords?|search terms?|seo|seo keywords|hashtags?|tags for other sites|etsy tags?|type|item type|occasions?)$/i;
 const HASHTAG_LINE = /^(?:#[\p{L}\p{N}_]+[\s,]*)+$/u;
 
-// Left out first when the text is too long — least needed first. Anything
-// not listed is never left out.
-// The seller's opening sentence stays first and is never left out; a true
-// closing line ("Discontinued design…") stays last and goes early.
+// The seller's opening sentence stays first; a true closing line
+// ("Discontinued design…") stays last, and is the only thing ever left out —
+// when the text is still over the limit.
 const OPENING_RANK = 0.5;
 const CLOSING_RANK = 15;
-const DROP_ORDER = [11, CLOSING_RANK, UNKNOWN_RANK, 9, 10, 6, 5];
 
 
 interface Section {
@@ -155,7 +162,7 @@ export function formatDescription(
     let rank = rankOf(label);
     if (
       label &&
-      (rank === 9 || rank === UNKNOWN_RANK) &&
+      (rank === DETAILS_RANK || rank === UNKNOWN_RANK) &&
       MEASURED_VALUE.test(block.slice(block.indexOf(":") + 1))
     )
       rank = MEASURE_RANK;
@@ -180,27 +187,41 @@ export function formatDescription(
   const b = brand.trim();
   if (b && !/^unbranded$/i.test(b))
     for (const s of sections)
-      if (s.rank === 5) {
+      if (s.rank === STYLE_RANK) {
         const esc = b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         s.text = s.text.replace(new RegExp(`^(\\s*[^:]+:\\s*)${esc}\\s*`, "i"), "$1");
       }
 
   sections.sort((a, b) => a.rank - b.rank || a.index - b.index);
 
+  // Details is one paragraph (16 Nov 2026): a Design, Closure, Fit, Chain or
+  // Bail section joins it on one line — the details first, then the closure,
+  // fit, chain and bail, each in the order written.
+  const details = sections.filter((s) => s.rank === DETAILS_RANK);
+  if (details.length) {
+    const fastening = (s: Section) => (/^(?:closure|clasp|fit|chain or bail|chain|bail|backs?)$/i.test(s.label) ? 1 : 0);
+    const body = [...details]
+      .sort((a, b) => fastening(a) - fastening(b) || a.index - b.index)
+      .map((s) => {
+        const said = s.text.replace(LABEL, "").replace(/\s*\n\s*/g, " ").trim();
+        return /[.!?…)"]$/.test(said) ? said : `${said}.`;
+      })
+      .filter((t) => t !== ".")
+      .join(" ");
+    details[0].label = "Details";
+    details[0].text = `Details: ${body}`;
+    for (const s of details.slice(1)) sections.splice(sections.indexOf(s), 1);
+  }
+
   const join = (ss: Section[]) => [title, ...ss.map((s) => s.text)].join("\n\n");
   let kept = sections;
   const dropped: string[] = [];
-  for (const rank of DROP_ORDER) {
-    while (join(kept).length > limit) {
-      const last = [...kept].reverse().find((s) => s.rank === rank);
-      if (!last) break;
-      kept = kept.filter((s) => s !== last);
-      dropped.push(
-        last.label ||
-          (last.rank === CLOSING_RANK ? "the closing line" : "an unlabeled paragraph"),
-      );
-    }
-    if (join(kept).length <= limit) break;
+  // Over the limit: only the closing line goes. Nothing else is ever left
+  // out; the seller sees how far over it is and shortens it herself.
+  const closing = kept.find((s) => s.rank === CLOSING_RANK);
+  if (closing && join(kept).length > limit) {
+    kept = kept.filter((s) => s !== closing);
+    dropped.push("the closing line");
   }
   const text = join(kept);
   return { text, dropped, length: text.length, over: text.length > limit };

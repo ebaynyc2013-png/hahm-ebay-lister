@@ -122,9 +122,10 @@ describe("condition: the grade, detailed notes beside the price, a short line in
     expect(p).toContain("start from EXCELLENT");
     expect(p).toContain("what shape is THIS piece in — what is good and what is not. Nothing else.");
     expect(p).toContain("• Faded, distressed print is part of the design");
-    expect(p).toContain('"Condition: Pre-owned, excellent, nothing is wrong with it."');
+    // The description's Condition since 16 Nov 2026: the exact condition, then three more.
+    expect(p).toContain('"Pre-owned, still in excellent condition."');
     expect(p).toContain('ONLY when the seller\'s note says so ("zip works great", "clips ok")');
-    expect(p).toContain("Condition: Pre-owned, excellent, worn only a couple of times.");
+    expect(p).toContain("Condition: Pre-owned, still in excellent condition, worn only a couple of times.");
   });
 });
 

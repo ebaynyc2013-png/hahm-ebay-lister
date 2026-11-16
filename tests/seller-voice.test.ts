@@ -88,15 +88,16 @@ describe("Style instead of Type, without the brand again (28 Oct 2026)", () => {
       undefined,
       "Premier Designs",
     );
+    // Style stands last since 16 Nov 2026, after Color.
     expect(r.text).toBe(
-      "T\n\nOne good thing about this necklace is that you don't need much more.\n\nBrand: Premier Designs\n\nLength: 35-40 in\n\nStyle: Good As Gold\n\nColor: Gold tone.",
+      "T\n\nOne good thing about this necklace is that you don't need much more.\n\nBrand: Premier Designs\n\nLength: 35-40 in\n\nColor: Gold tone.\n\nStyle: Good As Gold",
     );
   });
 
   it("tells the model the same", async () => {
     const { buildProfiledAnalysisPrompt } = await import("@/lib/prompts");
     const prompt = buildProfiledAnalysisPrompt("auto");
-    expect(prompt).toContain("7. Style — the piece's OWN NAME or collection, WITHOUT the brand");
+    expect(prompt).toContain("12. Style — the piece's OWN NAME or collection, WITHOUT the brand");
     expect(prompt).toContain('Never write a "Type" line');
     expect(prompt).toContain("Style: Good As Gold");
     expect(prompt).not.toContain("Type: Long pendant necklace");

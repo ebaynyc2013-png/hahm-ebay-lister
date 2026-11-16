@@ -30,18 +30,17 @@ const labels = (text: string) =>
     .map((b) => b.split(":")[0]);
 
 describe("the description fits a phone screen, in the seller's order", () => {
-  it("brings the necklace within the limit, title, brand and condition first", () => {
-    // The limit is 1000 since 15 Nov 2026 (it was 800).
+  it("takes out what does not belong, keeps every section, and says it is over", () => {
+    // The limit is 1000 since 15 Nov 2026 (it was 800); since 16 Nov 2026 no
+    // section is left out — the seller shortens it herself.
     expect(DESCRIPTION_LIMIT).toBe(1000);
     expect(NECKLACE.length).toBe(1381);
     const r = formatDescription(NECKLACE);
-    expect(r.length).toBeLessThanOrEqual(DESCRIPTION_LIMIT);
-    expect(r.over).toBe(false);
+    expect(r.over).toBe(true);
+    expect(r.dropped).toEqual([]);
     expect(r.text.startsWith("Gold Brown Twisted Cord")).toBe(true);
-    expect(labels(r.text).slice(0, 2)).toEqual(["Brand", "Condition"]);
-    expect(r.text).not.toContain("Keywords");
-    // Least needed first: Occasion, then the design paragraphs.
-    expect(r.dropped[0]).toBe("Occasion");
+    expect(labels(r.text)).toEqual(["Brand", "Condition", "Color", "Details"]);
+    expect(r.text).not.toMatch(/Keywords|Occasion|\nType:|\nDesign:|\nClosure:|\nThe Pendant:/);
     expect(r.text).toContain("Condition: Very good pre-owned condition.");
   });
 
@@ -61,15 +60,15 @@ describe("the description fits a phone screen, in the seller's order", () => {
       ].join("\n\n"),
     );
     // The measurements right after Condition, without the old heading (12 Nov 2026).
+    // The seller's order of 16 Nov 2026: Hallmarks before the rest; no Occasion.
     expect(labels(r.text)).toEqual([
       "Brand",
       "Condition",
       "Length",
       "Size",
       "Color",
-      "Occasion",
-      "Notes",
       "Hallmarks",
+      "Notes",
     ]);
     expect(r.text).toContain("Condition: Excellent.\n\nLength: 18 in\nWeight: 5 g\n\nSize: M Medium");
     expect(r.dropped).toEqual([]);
@@ -109,7 +108,8 @@ describe("the description fits a phone screen, in the seller's order", () => {
       `T\n\nBrand: B\n\nCondition: ${long}\n\nSize: M\n\nActual Measurements:\n• Length: 1 in\n\nMaterial: Silk\n\nHallmarks: 925\n\nDesign: Pretty.`,
     );
     expect(r.over).toBe(true);
-    expect(r.dropped).toEqual(["Design"]);
+    // Nothing is left out any more (16 Nov 2026); Design is Details.
+    expect(r.dropped).toEqual([]);
     expect(labels(r.text)).toEqual([
       "Brand",
       "Condition",
@@ -117,6 +117,7 @@ describe("the description fits a phone screen, in the seller's order", () => {
       "Size",
       "Material",
       "Hallmarks",
+      "Details",
     ]);
   });
 

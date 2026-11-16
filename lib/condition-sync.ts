@@ -142,18 +142,22 @@ function keepPoints(points: string[], max: number): string[] {
   return points.filter((l) => isFlaw(l) || others-- > 0);
 }
 
-/** The description's short Condition line for a grade, in the seller's words. */
+/**
+ * The first sentence of the description's Condition — the exact condition,
+ * in the seller's words (16 Nov 2026: "Pre-owned, still in excellent
+ * condition."; three more sentences follow it, written by the model).
+ */
 export function conditionLine(grade: string, notes?: string): string {
   const flaw = flawLines(notes)[0];
   const withFlaw = (word: string) =>
-    `Condition: Pre-owned, ${word}${flaw ? `, ${flaw.charAt(0).toLowerCase()}${flaw.slice(1).replace(/\.$/, "")}` : ""}.`;
+    `Condition: Pre-owned in ${word} condition${flaw ? `, ${flaw.charAt(0).toLowerCase()}${flaw.slice(1).replace(/\.$/, "")}` : ""}.`;
   switch (grade) {
     case "NEW_WITH_TAGS":
-      return "Condition: New with tags.";
+      return "Condition: Brand new with the original tags attached.";
     case "NEW_NO_TAGS":
       return "Condition: New without tags.";
     case "EXCELLENT":
-      return "Condition: Pre-owned, excellent, nothing is wrong with it.";
+      return "Condition: Pre-owned, still in excellent condition.";
     case "VERY_GOOD":
       return withFlaw("very good");
     case "FAIR":
@@ -171,12 +175,19 @@ export function notesForGrade(notes: string | undefined, grade: string): string 
   return oneLineNotes(leadFor(grade, lead), points);
 }
 
-/** The description with its Condition line saying the grade. */
+/**
+ * The description with its Condition saying the grade: only the FIRST
+ * sentence changes; the sentences after it stay as written (16 Nov 2026 —
+ * Condition is the exact condition, then three more sentences).
+ */
 export function descriptionForGrade(description: string, grade: string, notes?: string): string {
   const lines = String(description ?? "").split("\n");
   const at = lines.findIndex((l) => /^\s*condition\s*:/i.test(l));
   if (at < 0) return description;
-  lines[at] = conditionLine(grade, notes);
+  const body = lines[at].replace(/^\s*condition\s*:\s*/i, "");
+  const first = body.match(/^.*?[.!?](?:\s+|$)/);
+  const rest = first ? body.slice(first[0].length).trim() : "";
+  lines[at] = rest ? `${conditionLine(grade, notes)} ${rest}` : conditionLine(grade, notes);
   return lines.join("\n");
 }
 

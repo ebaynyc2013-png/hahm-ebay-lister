@@ -182,7 +182,7 @@ export function lookupFacts(r: ProductLookup): string {
     r.country && `Country of manufacture: ${r.country}`,
     ...(r.other_facts ?? []).map((f) => `Also: ${f}`),
     r.official_color &&
-      `The maker's colour name is "${r.official_color}" — mention it in the description's Color line only; never in the title or the Color item specific.`,
+      `The maker's colour name is "${r.official_color}" — mention it in the description's Color line only, after the plain colour: "Color: Pink. The maker calls it ${r.official_color}."; never in the title or the Color item specific.`,
     "Never mention the store, the website or the price in the listing.",
   ].filter(Boolean);
   return lines.join("\n");

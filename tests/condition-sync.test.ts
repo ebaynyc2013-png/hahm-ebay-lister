@@ -63,7 +63,7 @@ describe("a grade below Excellent with no flaw named is Excellent", () => {
     expect(l.condition).toBe("EXCELLENT");
     expect(l.condition_notes?.startsWith("Excellent pre-owned condition: • ")).toBe(true);
     expect(l.condition_notes).toContain("• No holes or pulls");
-    expect(l.description).toContain("Condition: Pre-owned, excellent, nothing is wrong with it.");
+    expect(l.description).toContain("Condition: Pre-owned, still in excellent condition.");
     expect(l.description).not.toContain("very good");
   });
   it("a named flaw keeps the grade", () => {
@@ -81,15 +81,28 @@ describe("changing the grade on the card", () => {
   it("menu, description line and notes' first line change together; the bullets stay", () => {
     const patch = gradeChange(top(), "EXCELLENT", apparel);
     expect(patch.ebay_condition).toBe("PRE_OWNED_EXCELLENT");
-    expect(patch.description).toContain("Condition: Pre-owned, excellent, nothing is wrong with it.");
+    expect(patch.description).toContain("Condition: Pre-owned, still in excellent condition.");
     expect(patch.condition_notes?.startsWith("Excellent pre-owned condition: • ")).toBe(true);
     expect(patch.condition_notes).not.toContain("\n");
     expect(patch.condition_notes).toContain("• Seams and stitching intact");
   });
   it("Good with a flaw in the notes names it in the description", () => {
     const l = { ...top(), condition_notes: "Excellent pre-owned condition — looks great.\n• Small spot on the left cuff" };
-    expect(gradeChange(l, "GOOD", apparel).description).toContain("Condition: Pre-owned, good, small spot on the left cuff.");
-    expect(conditionLine("GOOD")).toBe("Condition: Pre-owned, good.");
+    expect(gradeChange(l, "GOOD", apparel).description).toContain(
+      "Condition: Pre-owned in good condition, small spot on the left cuff.",
+    );
+    expect(conditionLine("GOOD")).toBe("Condition: Pre-owned in good condition.");
+  });
+  it("only the first sentence of Condition changes; the three after it stay (16 Nov 2026)", () => {
+    const l = {
+      ...top(),
+      description:
+        "GreenHouse Blue Floral Top\n\nCondition: Pre-owned, very good. The print is bright. The trim is intact. The buttons all hold.\n\nSize: M",
+    };
+    expect(gradeChange(l, "EXCELLENT", apparel).description).toContain(
+      "Condition: Pre-owned, still in excellent condition. The print is bright. The trim is intact. The buttons all hold.",
+    );
+    expect(conditionLine("NEW_WITH_TAGS")).toBe("Condition: Brand new with the original tags attached.");
   });
   it("before Prepare, eBay's menu waits", () => {
     expect(gradeChange(top(), "EXCELLENT").ebay_condition).toBe("");

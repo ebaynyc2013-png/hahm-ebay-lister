@@ -1689,6 +1689,14 @@ html {
   color: var(--amber);
   font-weight: bold;
 }
+/* The description over 1000 characters: the count and a small line right
+   under the box, in red, so the seller sees it at once (16 Nov 2026). */
+.df-label .desc-count.over {
+  color: var(--color-danger);
+}
+.draft-screen .hint.over-limit {
+  color: var(--color-danger);
+}
 .df-title {
   font-size: 1.35em !important;
   font-weight: bold;
