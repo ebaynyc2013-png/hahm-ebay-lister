@@ -5,6 +5,8 @@ import type { ListingResult } from "@/lib/types";
 import type { AiUsage } from "@/lib/ai-usage";
 import type { AspectMeta } from "@/lib/ebay/taxonomy";
 import { snapRevisionToLists } from "@/lib/revise";
+import { itemKind, rulesFor } from "@/lib/learn-diff";
+import { loadRules, rulesToSend } from "@/lib/listing-memory";
 
 export interface ReviseResult {
   patch: Partial<ListingResult>;
@@ -24,7 +26,12 @@ export async function reviseListing(
   facts: string,
   aspects?: AspectMeta[],
 ): Promise<ReviseResult> {
-  const res = await apiPost("/api/revise", { listing, facts });
+  // Her rules for this kind of item go along (18 Nov 2026); if they cannot
+  // be read the update simply runs without.
+  const rules = await loadRules()
+    .then((all) => rulesToSend(rulesFor(all, itemKind(listing.category_path, listing))))
+    .catch(() => []);
+  const res = await apiPost("/api/revise", { listing, facts, rules });
   let data: { ok?: boolean; error?: string; patch?: Partial<ListingResult>; changed?: string[]; usage?: AiUsage[] };
   try {
     data = await res.json();

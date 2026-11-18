@@ -41,6 +41,8 @@ import { excellentWithoutFlaw, tidyConditionNotes } from "@/lib/condition-sync";
 import { fixDetailPlaces } from "@/lib/detail-places";
 import { applyPriceMarkup, priceMarkupPercent } from "@/lib/pricing";
 import type { AnalyzeRequestBody, ListingResult } from "@/lib/types";
+import { sellerRulesSchema } from "@/lib/learn-diff";
+import { WRITING_RULES_INTRO, sellerRulesText } from "@/lib/learn";
 
 /**
  * Writing a listing from photos, in two halves shared by "now" (the analyze
@@ -138,6 +140,9 @@ export function readAnalyzeBody(raw: unknown): AnalyzeRequestBody {
   // What she typed in the item's Notes box: optional, never fatal.
   body.sellerNotes =
     typeof body.sellerNotes === "string" ? body.sellerNotes.trim().slice(0, 2000) : "";
+  // Rules learned from her corrections: optional, never fatal (18 Nov 2026).
+  const rules = sellerRulesSchema.safeParse(body.sellerRules ?? []);
+  body.sellerRules = rules.success ? rules.data : [];
   return body;
 }
 
@@ -178,6 +183,7 @@ export function buildAnalysisParams(
           ...lessonBlocks(body.lessons),
           ...phraseBlocks(body.phrases),
           ...sellerNotesBlocks(body.sellerNotes),
+          ...sellerRuleBlocks(body.sellerRules),
           {
             type: "text",
             text: "Analyze these photos and return the listing JSON now.",
@@ -186,6 +192,12 @@ export function buildAnalysisParams(
       },
     ],
   };
+}
+
+/** Her learned rules as a block of the request, when she has any. */
+function sellerRuleBlocks(rules: AnalyzeRequestBody["sellerRules"]): { type: "text"; text: string }[] {
+  const text = sellerRulesText(rules ?? [], WRITING_RULES_INTRO);
+  return text ? [{ type: "text", text }] : [];
 }
 
 /** What the finished listing needs to know about the request it came from. */

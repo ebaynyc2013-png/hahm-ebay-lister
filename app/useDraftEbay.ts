@@ -3,6 +3,7 @@
 // taken out of DraftControls so the new two-half draft screen (11 Nov 2026)
 // can put its pieces on the left and on the right. Same logic as before.
 import { useEffect, useRef, useState } from "react";
+import { loadRules, rulesToSend } from "@/lib/listing-memory";
 import type { CategoryOption, ItemGroup, Photo } from "@/lib/types";
 import type { AccountOptions } from "@/lib/ebay/publish";
 import { applyShippingDefaults } from "@/lib/shipping-defaults";
@@ -118,6 +119,8 @@ export function useDraftEbay(
         // Every press re-reads the photos, not just the first. The fill only
         // touches aspects that are still empty, so edits already made survive.
         enrich: true,
+        // Her rules for this kind of item (18 Nov 2026).
+        rules: rulesToSend(await loadRules().catch(() => [])),
       });
       const d = await r.json();
       if (!d.ok) throw new Error(d.error);

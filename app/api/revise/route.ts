@@ -7,6 +7,7 @@ import { AnthropicAuthError, anthropicAuthError, getClient, parseModelJson } fro
 import { collectUsage, currentUsage, measuredMessage } from "@/lib/ai-usage";
 import { REVISE_RULES, REVISE_SCHEMA, applyRevision, reviseMessage, type Revision } from "@/lib/revise";
 import { parseListing } from "@/lib/validation";
+import { sellerRulesSchema } from "@/lib/learn-diff";
 
 export const maxDuration = 120;
 
@@ -17,7 +18,7 @@ const REVISE_MODEL = "claude-sonnet-4-6";
 async function handle(req: NextRequest) {
   const denied = guardApiRequest(req);
   if (denied) return denied;
-  let body: { listing?: unknown; facts?: unknown };
+  let body: { listing?: unknown; facts?: unknown; rules?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -31,6 +32,9 @@ async function handle(req: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false, error: "This draft could not be read." }, { status: 400 });
   }
+  // Her rules for this kind of item: optional, never fatal (18 Nov 2026).
+  const parsedRules = sellerRulesSchema.safeParse(body.rules ?? []);
+  const rules = parsedRules.success ? parsedRules.data : [];
   try {
     const client: Anthropic = getClient();
     const resp = await measuredMessage(
@@ -41,7 +45,7 @@ async function handle(req: NextRequest) {
         max_tokens: 3000,
         output_config: { format: { type: "json_schema", schema: REVISE_SCHEMA } },
         system: REVISE_RULES,
-        messages: [{ role: "user", content: reviseMessage(listing, facts) }],
+        messages: [{ role: "user", content: reviseMessage(listing, facts, rules) }],
       },
       { timeout: 90_000, maxRetries: 1 },
     );

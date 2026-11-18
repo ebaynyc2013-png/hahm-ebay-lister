@@ -30,6 +30,8 @@ import {
   acceptedConditionIds,
 } from "@/lib/ebay/taxonomy";
 import { selectBestLeafCategory } from "@/lib/ebay/categorySelect";
+import { itemKind, rulesFor, sellerRulesSchema } from "@/lib/learn-diff";
+import { rememberedCategoriesSchema } from "@/lib/ebay/categorySelect";
 import {
   buildAspects,
   reconcileAspects,
@@ -74,7 +76,12 @@ export async function POST(req: NextRequest) {
             body.enrich === true ? imagesSchema.parse(body.images) : [];
           const categorySelection = listing.category_id
   ? null
-  : await selectBestLeafCategory(listing, images);
+  : await selectBestLeafCategory(
+      listing,
+      images,
+      // The categories she moved this kind of item to before (18 Nov 2026).
+      rememberedCategoriesSchema.safeParse(body.categories ?? []).data ?? [],
+    );
 
 const suggestions = categorySelection?.suggestions ?? [];
 
@@ -159,6 +166,13 @@ const categoryPath =
               meta,
               "draft",
               images,
+              [],
+              // Her rules for this kind of item's specifics (18 Nov 2026).
+              rulesFor(
+                sellerRulesSchema.safeParse(body.rules ?? []).data ?? [],
+                itemKind(categoryPath, listing),
+                "item_specifics",
+              ),
             );
             reconcileAspects(aspects, meta, listing, listing.category || "");
           }

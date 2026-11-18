@@ -733,6 +733,12 @@ div.size-warning p {
   font-size: 0.9rem;
   color: var(--color-ink-soft);
 }
+/* "What I learned": one heading per kind of item (18 Nov 2026). */
+.memory-kind {
+  margin: 14px 0 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
 .history-error {
   color: var(--color-danger);
   font-size: 0.9rem;

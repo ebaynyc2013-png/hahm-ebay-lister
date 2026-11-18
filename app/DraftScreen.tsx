@@ -29,7 +29,7 @@ interface Props {
   photoLimit: number;
   onPost: (groupId: string) => void;
   onPostAll: () => void;
-  onSaveHistory: () => Promise<boolean>;
+  onSaveHistory: (groupId: string) => Promise<boolean>;
   onBack: () => void;
 }
 
@@ -228,7 +228,7 @@ export function DraftScreen(p: Props) {
         photoLimit={p.photoLimit}
       />
 
-      <SaveToHistory key={`save-${g.id}`} onSave={p.onSaveHistory} />
+      <SaveToHistory key={`save-${g.id}`} onSave={() => p.onSaveHistory(g.id)} />
 
       <div className="draft-footer">
         <button type="button" className="btn" disabled={index === 0} onClick={() => go(index - 1)}>

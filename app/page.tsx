@@ -40,6 +40,16 @@ import { HistoryPanel } from "./HistoryPanel";
 import { BrandMemoryPanel } from "./BrandMemoryPanel";
 import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
 import { smallCopiesForRouting } from "@/lib/router-images";
+import { baselineOf, cardChanges, itemKind, needsRules, ruleLine } from "@/lib/learn-diff";
+import {
+  categoriesFor,
+  loadCategoryMemory,
+  loadRules,
+  rememberCategory,
+  rememberRules,
+  rulesToSend,
+} from "@/lib/listing-memory";
+import { ListingMemoryPanel } from "./ListingMemoryPanel";
 import {
   QUEUE_CHECK_MS,
   afterCheck,
@@ -782,6 +792,75 @@ export default function Home() {
       ];
     });
 
+  /**
+   * Learning from her corrections (18 Nov 2026): when she posts a card or
+   * saves it to History, what she changed since the program wrote it — the
+   * title, the description, the item specifics, the category — is made into
+   * short rules for similar items (the AI, a cent or two) and a category
+   * memory (free). Nothing to press; the list of what was learned is on the
+   * page, where a wrong rule can be removed.
+   */
+  const learning = useRef(new Set<string>());
+  const learnFrom = useCallback(async (groupId: string) => {
+    const g = groupsRef.current.find((x) => x.id === groupId);
+    if (!g?.listing || !g.learnBase || learning.current.has(groupId)) return;
+    const listing = g.listing;
+    const changes = cardChanges(g.learnBase, listing);
+    if (!changes) return;
+    learning.current.add(groupId);
+    try {
+      const kind = itemKind(listing.category_path, listing);
+      const item = (listing.item_type || listing.title || "item").trim().slice(0, 80);
+      // A new category is remembered for this kind of item. Its fields were
+      // filled again for the new category, so they teach nothing about her.
+      if (changes.category) {
+        if (listing.item_type && listing.category_id)
+          await rememberCategory({
+            itemType: listing.item_type,
+            kind,
+            categoryId: listing.category_id,
+            categoryPath: listing.category_path ?? "",
+          });
+        delete changes.specifics;
+      }
+      let usage: NonNullable<ItemGroup["usage"]> = [];
+      if (needsRules(changes)) {
+        const known = (await loadRules().catch(() => []))
+          .filter((r) => r.kind === kind)
+          .slice(0, 60)
+          .map(ruleLine);
+        const res = await apiPost("/api/learn", {
+          kind,
+          item,
+          notes: (g.notes || listing.seller_notes || "").slice(0, 2000),
+          changes: { title: changes.title, description: changes.description, specifics: changes.specifics },
+          known,
+        });
+        const data = (await readJson(res)) as {
+          ok?: boolean;
+          error?: string;
+          rules?: Parameters<typeof rememberRules>[0];
+          usage?: NonNullable<ItemGroup["usage"]>;
+        };
+        if (!data.ok) throw new Error(data.error || "Could not learn from this card.");
+        if (data.rules?.length) await rememberRules(data.rules, item);
+        usage = data.usage ?? [];
+      }
+      // What was learned is not learned again on the next save.
+      setGroups((prev) =>
+        prev.map((x) =>
+          x.id === groupId
+            ? { ...x, learnBase: baselineOf(listing), usage: [...(x.usage ?? []), ...usage] }
+            : x,
+        ),
+      );
+    } catch (e) {
+      console.warn("[learn]", (e as Error).message);
+    } finally {
+      learning.current.delete(groupId);
+    }
+  }, []);
+
   // ── Write listings ──────────────────────────────────────
   /**
    * What the AI gets for one item, from the latest state: its chosen photos,
@@ -816,6 +895,8 @@ export default function Home() {
         references,
         lessons,
         phrases,
+        // Rules learned from her corrections (18 Nov 2026).
+        sellerRules: rulesToSend(await loadRules().catch(() => [])),
         analysisModel: getAnalysisModel() ?? undefined,
         routerModel: getSortModel() ?? undefined,
       };
@@ -912,6 +993,9 @@ export default function Home() {
             listing: lookedUp,
             images: imgs,
             enrich: true,
+            // What she taught it (18 Nov 2026).
+            rules: rulesToSend(await loadRules().catch(() => [])),
+            categories: categoriesFor(await loadCategoryMemory().catch(() => []), lookedUp.item_type),
           });
           const pd = await readJson(pr);
           if (pd.ok) researchListing = pd.listing;
@@ -945,6 +1029,11 @@ export default function Home() {
             ),
           );
         }
+        // The version the program wrote, kept to compare her corrections
+        // with when she posts or saves the card (18 Nov 2026).
+        setGroups((prev) =>
+          prev.map((g) => (g.id === groupId && g.listing ? { ...g, learnBase: baselineOf(g.listing) } : g)),
+        );
         // Market price check — advisory and best-effort, so it runs in the
         // background and silently stays hidden if it can't answer.
         void (async () => {
@@ -1417,6 +1506,8 @@ export default function Home() {
               : g,
           ),
         );
+        // Posted: what she changed on it is learned (18 Nov 2026).
+        void learnFrom(groupId);
       } catch (e) {
         setGroups((prev) =>
           prev.map((g) =>
@@ -1713,7 +1804,9 @@ export default function Home() {
           photoLimit={ITEM_PHOTO_LIMIT}
           onPost={postGroup}
           onPostAll={postAll}
-          onSaveHistory={async () => {
+          onSaveHistory={async (groupId) => {
+            // Saved: what she changed on it is learned (18 Nov 2026).
+            void learnFrom(groupId);
             // "Save to History" (12 Nov 2026): save now, send to the cloud now,
             // and say so. It is saved on every change anyway.
             try {
@@ -1741,6 +1834,7 @@ export default function Home() {
 
       <BrandMemoryPanel />
       <TagMemoryPanel />
+      <ListingMemoryPanel />
 
       <p className="footnote">
         Your photos are sent securely to sort and write listings, and are not

@@ -1,3 +1,5 @@
+import type { SellerRule } from "@/lib/learn-diff";
+import { KIND_RULES_INTRO, sellerRulesText } from "@/lib/learn";
 import {
   PHOTO_FACT_SCHEMA,
   photoFactProblem,
@@ -308,6 +310,9 @@ export async function fillRecommendedAspects(
   // body limit), the publish request has no base64 in hand — the vision pass
   // reads the eBay-hosted URLs instead, so photo grounding survives.
   imageUrls: string[] = [],
+  // Her rules for this kind of item's specifics, learned from her
+  // corrections (18 Nov 2026).
+  sellerRules: SellerRule[] = [],
 ): Promise<FillReport> {
   const report: FillReport = {
     ran: false,
@@ -385,7 +390,9 @@ export async function fillRecommendedAspects(
 ${imageBlocks.length ? "The photos above show the actual item. Inspect every photo again — tags, labels, stamps, close-ups — for evidence." : ""}
 ITEM DATA (from earlier photo analysis):
 ${JSON.stringify(itemData, null, 1)}
-
+${sellerRules.length ? `
+${sellerRulesText(sellerRules, KIND_RULES_INTRO)}
+` : ""}
 EBAY WANTS VALUES FOR THESE ASPECTS (exact aspect names for this category):
 ${unfilled.map((a) => aspectPromptLine(a, byKey.get(a.name.toLowerCase()))).join("\n")}
 

@@ -15,6 +15,8 @@ import { isStatement, statementApplies, statementOutOfTitle, statementTagPatch, 
 import { withoutStudForClips } from "./clip-earrings";
 import type { AspectMeta } from "./ebay/taxonomy";
 import type { ListingResult } from "./types";
+import type { SellerRule } from "./learn-diff";
+import { sellerRulesText } from "./learn";
 
 export const REVISE_SCHEMA = {
   type: "object",
@@ -54,7 +56,7 @@ The rules the listing follows (keep them):
 Return the whole title, the whole description and the whole condition notes (unchanged ones as they are), and in "changed_specifics" ONLY the item specifics whose value changes or that are new; in "removed_specifics" the names of any that are now wrong and have no right value.`;
 
 /** The user turn: the listing as it stands, then her new facts. */
-export function reviseMessage(l: ListingResult, facts: string): string {
+export function reviseMessage(l: ListingResult, facts: string, rules: SellerRule[] = []): string {
   const listing = {
     title: l.title,
     description: l.description,
@@ -64,8 +66,14 @@ export function reviseMessage(l: ListingResult, facts: string): string {
     item_specifics: l.item_specifics ?? {},
     statement: statementApplies(l) ? l.statement?.answer : "not jewellery",
   };
-  return `THE LISTING AS IT STANDS:\n${JSON.stringify(listing, null, 1)}\n\nTHE SELLER'S NEW FACTS (true — correct the listing from them):\n${facts.trim().slice(0, 2000)}\n\nReturn the corrected listing JSON now.`;
+  // Her rules for this kind of item, learned from her corrections — only for
+  // what is written anew; the rest of the listing stays as it is (18 Nov 2026).
+  const learned = sellerRulesText(rules, REVISE_RULES_INTRO);
+  return `THE LISTING AS IT STANDS:\n${JSON.stringify(listing, null, 1)}\n\nTHE SELLER'S NEW FACTS (true — correct the listing from them):\n${facts.trim().slice(0, 2000)}\n\n${learned ? `${learned}\n\n` : ""}Return the corrected listing JSON now.`;
 }
+
+const REVISE_RULES_INTRO =
+  "THE SELLER'S RULES for this kind of item, learned from her own corrections of earlier listings. Follow them in every word you write or rewrite for her new facts. Do NOT change anything else in the listing to follow them — what her facts do not touch stays exactly as it is.";
 
 export interface Revision {
   title?: string;

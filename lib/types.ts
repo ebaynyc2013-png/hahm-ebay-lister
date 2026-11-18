@@ -128,6 +128,8 @@ export interface AnalyzeRequestBody {
   phrases?: { id: string; kind: string; stone?: string; scale?: "small" | "statement"; text: string }[];
   /** What she typed in the item's Notes box: facts she knows (12 Nov 2026). */
   sellerNotes?: string;
+  /** Rules learned from her corrections of earlier cards (18 Nov 2026). */
+  sellerRules?: import("./learn-diff").SellerRule[];
 }
 
 export interface AnalyzeResponse {
@@ -200,6 +202,8 @@ export interface ItemGroup {
    * disc"). The listing is written from it like from her photographed note.
    */
   notes?: string;
+  /** The listing as the program first wrote it, to learn her corrections from (18 Nov 2026). */
+  learnBase?: import("./learn-diff").LearnBase;
   /** "Now" or "By morning · half price", chosen per item on the items screen (18 Nov 2026). */
   writeMode?: import("./write-queue").WriteMode;
   /** While it waits in the cheap queue: what is needed to finish it. */

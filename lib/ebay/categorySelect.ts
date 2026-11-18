@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { measuredMessage } from "@/lib/ai-usage";
 import {
   getClient,
@@ -25,6 +26,51 @@ const MAX_ASPECTS_SHOWN = 24;
 const MAX_REQUIRED_VALUES_SHOWN = 40;
 const REQUIRED_VALUES_SAMPLE = 12;
 export const MAX_ALTERNATIVES = 3;
+
+/**
+ * A category the seller moved this kind of item to before (18 Nov 2026):
+ * offered to the choice even when eBay's search does not return it, and
+ * named as her choice.
+ */
+export const rememberedCategoriesSchema = z
+  .array(
+    z.object({
+      categoryId: z.string().regex(/^\d{1,12}$/),
+      categoryPath: z.string().max(400),
+      itemType: z.string().max(120),
+    }),
+  )
+  .max(3);
+export type RememberedCategory = z.infer<typeof rememberedCategoriesSchema>[number];
+
+/** How her earlier choice reads in the category question; empty without one. */
+export function rememberedText(remembered: readonly RememberedCategory[]): string {
+  if (!remembered.length) return "";
+  const lines = remembered.map((r) => `- "${r.itemType}" → ${r.categoryId} (${r.categoryPath})`);
+  return [
+    "THE SELLER'S EARLIER CHOICE: she moved items of this kind to these categories herself:",
+    ...lines,
+    "Choose her category when it fits this item; choose another only when this item is clearly a different kind of thing.",
+    "",
+    "",
+  ].join("\n");
+}
+
+/** Her earlier choices first among the candidates, each once. */
+export function withRemembered(
+  suggestions: CategorySuggestion[],
+  remembered: readonly RememberedCategory[],
+): CategorySuggestion[] {
+  const have = new Set(suggestions.map((s) => s.id));
+  const added = remembered
+    .filter((r) => !have.has(r.categoryId))
+    .map((r) => ({
+      id: r.categoryId,
+      name: r.categoryPath.split(">").at(-1)?.trim() || r.categoryPath,
+      path: r.categoryPath,
+    }));
+  return [...added, ...suggestions];
+}
 
 /** A category the seller can switch to, with the AI's caution if it has one. */
 export interface CategoryAlternative extends CategorySuggestion {
@@ -153,6 +199,7 @@ export function cleanAlternatives(
 export async function selectBestLeafCategory(
   listing: ListingResult,
   images: WireImage[],
+  remembered: readonly RememberedCategory[] = [],
 ): Promise<CategorySelection> {
   const queries = buildCategoryQueries(listing);
 
@@ -168,7 +215,7 @@ export async function selectBestLeafCategory(
     ),
   );
 
-  const suggestions = rankSuggestions(resultSets);
+  const suggestions = withRemembered(rankSuggestions(resultSets), remembered);
 
   if (!suggestions.length) {
     throw new Error(
@@ -226,7 +273,7 @@ ${JSON.stringify(listingContext, null, 2)}
 eBay Taxonomy has returned these REAL CURRENT LEAF CATEGORIES:
 ${JSON.stringify(candidates, null, 2)}
 
-Your job:
+${rememberedText(remembered)}Your job:
 - Choose the single most accurate category for the actual item shown.
 - You MUST choose one of the supplied category IDs.
 - NEVER invent a category or category ID.
