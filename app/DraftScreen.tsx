@@ -61,6 +61,8 @@ export function DraftScreen(p: Props) {
   const readyToPost = groups.filter((x) => x.status === "done" && x.postStatus !== "posted" && !draftIssues(x).length).length;
   const posting = groups.some((x) => x.postStatus === "posting");
   const done = groups.filter((x) => x.status === "done").length;
+  // Items waiting in the cheap queue (18 Nov 2026).
+  const queued = groups.filter((x) => x.status === "queued").length;
 
   if (!g) return null;
   const go = (i: number) => {
@@ -80,7 +82,11 @@ export function DraftScreen(p: Props) {
         <span className="hint">
           Draft {index + 1} of {groups.length}
           {posted ? ` · ${posted} posted` : ""}
-          {done < groups.length ? ` · ${groups.length - done} not written yet` : ""}
+          {queued
+            ? ` · Ready ${done} of ${groups.length} · 🌙 ${queued} in the cheap queue`
+            : done < groups.length
+              ? ` · ${groups.length - done} not written yet`
+              : ""}
         </span>
         <span className="grow" />
         <button type="button" className="btn" disabled={index === 0} onClick={() => go(index - 1)}>

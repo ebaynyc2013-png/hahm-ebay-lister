@@ -155,7 +155,8 @@ export interface Photo {
   data: string; // base64, no prefix
 }
 
-export type ItemStatus = "idle" | "writing" | "done" | "error";
+/** "queued": waiting in the cheap queue, written by morning at half price (18 Nov 2026). */
+export type ItemStatus = "idle" | "writing" | "queued" | "done" | "error";
 
 export type PostStatus = "idle" | "posting" | "posted" | "error";
 
@@ -199,6 +200,10 @@ export interface ItemGroup {
    * disc"). The listing is written from it like from her photographed note.
    */
   notes?: string;
+  /** "Now" or "By morning · half price", chosen per item on the items screen (18 Nov 2026). */
+  writeMode?: import("./write-queue").WriteMode;
+  /** While it waits in the cheap queue: what is needed to finish it. */
+  queue?: import("./write-queue").QueuedWrite;
   /** The item looked up online after writing (12 Nov 2026). */
   lookup?: import("./product-lookup").ProductLookup;
   photoIds: string[];

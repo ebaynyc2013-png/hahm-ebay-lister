@@ -34,7 +34,9 @@ describe("cost of the 1-hour rules memory (10 Nov 2026)", () => {
 
   it("the listing rules use the 5-minute memory (the seller's choice, 11 Nov 2026)", async () => {
     const fs = await import("node:fs");
-    const src = fs.readFileSync("app/api/analyze/route.ts", "utf8");
+    // The request is built in lib/analyze-core.ts since 18 Nov 2026 (shared
+    // by "now" and the "by morning" queue).
+    const src = fs.readFileSync("lib/analyze-core.ts", "utf8");
     expect(src).toContain('cache_control: { type: "ephemeral" }');
     expect(src).not.toContain('ttl: "1h"');
   });

@@ -40,6 +40,14 @@ import { HistoryPanel } from "./HistoryPanel";
 import { BrandMemoryPanel } from "./BrandMemoryPanel";
 import { loadBrandMarks, referencesForAnalysis } from "@/lib/brand-memory";
 import { smallCopiesForRouting } from "@/lib/router-images";
+import {
+  QUEUE_CHECK_MS,
+  afterCheck,
+  queueFailure,
+  splitByMode,
+  type QueueCheck,
+  type QueuedWrite,
+} from "@/lib/write-queue";
 import { lessonsForAnalysis, loadTagLessons } from "@/lib/tag-memory";
 import { loadPhraseUses, markPhraseUsed, pickPhrases } from "@/lib/style-rotation";
 import { TagMemoryPanel } from "./TagMemoryPanel";
@@ -775,68 +783,77 @@ export default function Home() {
     });
 
   // ── Write listings ──────────────────────────────────────
-  const writeGroup = useCallback(
-    async (groupId: string) => {
-      // Snapshot this group's photos from the latest state (no stale closure).
-      const group = groupsRef.current.find((g) => g.id === groupId);
-      if (!group || inFlight.current.has(groupId)) return;
-      inFlight.current.add(groupId);
+  /**
+   * What the AI gets for one item, from the latest state: its chosen photos,
+   * small copies for the first step, her confirmed marks, tag lessons and
+   * phrases. The same for "now" and for the cheap queue (18 Nov 2026).
+   */
+  const writingInputs = useCallback(
+    async (group: ItemGroup) => {
       const chosen = (group.analysisPhotoIds ?? group.photoIds)
         .map((id) => photoMap.get(id))
         .filter((p): p is Photo => Boolean(p) && p!.analysisSelected !== false);
       const imgs = chosen.map((p) => ({ mediaType: p.mediaType, data: p.data }));
-      setGroups((prev) =>
-        prev.map((g) =>
-          g.id === groupId ? { ...g, status: "writing", error: undefined } : g,
-        ),
-      );
-      try {
-        // The seller's confirmed marks go along, newest first; if the
-        // browser cannot read them the analysis simply runs without.
-        const references = await loadBrandMarks()
-          .then(referencesForAnalysis)
-          .catch(() => []);
-        // Her corrections to tags on earlier cards, newest first.
-        const lessons = await loadTagLessons()
-          .then(lessonsForAnalysis)
-          .catch(() => []);
-        // Her own phrases, the least-used of each kind first.
-        const phrases = await loadPhraseUses()
-          .catch(() => ({}))
-          .then((uses) => pickPhrases(uses));
-        const routerImages = smallCopiesForRouting(chosen, imgs, references);
-        const res = await apiPost("/api/analyze", {
-          profile: "auto",
-          images: imgs,
-          ...(group.notes?.trim() ? { sellerNotes: group.notes.trim().slice(0, 2000) } : {}),
-          ...(routerImages ? { routerImages } : {}),
-          references,
-          lessons,
-          phrases,
-          analysisModel: getAnalysisModel() ?? undefined,
-          routerModel: getSortModel() ?? undefined,
-        });
-        const data = (await readJson(res)) as AnalyzeResponse;
-        if (!data.ok || !data.listing) {
-          throw new Error(data.error || "Could not write this listing.");
-        }
+      // The seller's confirmed marks go along, newest first; if the
+      // browser cannot read them the analysis simply runs without.
+      const references = await loadBrandMarks()
+        .then(referencesForAnalysis)
+        .catch(() => []);
+      // Her corrections to tags on earlier cards, newest first.
+      const lessons = await loadTagLessons()
+        .then(lessonsForAnalysis)
+        .catch(() => []);
+      // Her own phrases, the least-used of each kind first.
+      const phrases = await loadPhraseUses()
+        .catch(() => ({}))
+        .then((uses) => pickPhrases(uses));
+      const routerImages = smallCopiesForRouting(chosen, imgs, references);
+      const body = {
+        profile: "auto",
+        images: imgs,
+        ...(group.notes?.trim() ? { sellerNotes: group.notes.trim().slice(0, 2000) } : {}),
+        ...(routerImages ? { routerImages } : {}),
+        references,
+        lessons,
+        phrases,
+        analysisModel: getAnalysisModel() ?? undefined,
+        routerModel: getSortModel() ?? undefined,
+      };
+      return { imgs, routerImages, body };
+    },
+    [photoMap],
+  );
+
+  /**
+   * Everything after the AI wrote the listing: the online search, Prepare and
+   * the price check — the same whether it was written now or came back from
+   * the cheap queue.
+   */
+  const finishWritten = useCallback(
+    async (
+      groupId: string,
+      written: ListingResult,
+      usage: NonNullable<ItemGroup["usage"]>,
+      imgs: { mediaType: string; data: string }[],
+      routerImages: ReturnType<typeof smallCopiesForRouting>,
+    ) => {
         // That phrase has had its turn; the next listings take others first.
-        if (data.listing.style_phrase_id)
-          void markPhraseUsed(data.listing.style_phrase_id).catch(() => {});
+        if (written.style_phrase_id)
+          void markPhraseUsed(written.style_phrase_id).catch(() => {});
         setGroups((prev) =>
           prev.map((g) =>
             g.id === groupId
               ? {
                   ...g,
                   status: "writing",
-                  listing: data.listing,
+                  listing: written,
                   // Kept so a later switch of category starts from these.
-                  analysisSpecifics: { ...(data.listing?.item_specifics ?? {}) },
-                  analysisEvidence: { ...(data.listing?.evidence ?? {}) },
+                  analysisSpecifics: { ...(written?.item_specifics ?? {}) },
+                  analysisEvidence: { ...(written?.evidence ?? {}) },
                   evidencePhotoIds: [
-                    ...(group.analysisPhotoIds ?? group.photoIds),
+                    ...(g.analysisPhotoIds ?? g.photoIds),
                   ],
-                  usage: (data as any).usage ?? [],
+                  usage: usage,
                   preparation: undefined,
                   comps: undefined,
                   compsStatus: "loading",
@@ -847,19 +864,19 @@ export default function Home() {
         // Find the item online first (the seller, 12 Nov 2026): its own
         // page on the brand's site or a big store; found facts go into the
         // listing at once, before the eBay fields are prepared from it.
-        let lookedUp = data.listing;
+        let lookedUp = written;
         let lookup: ProductLookup | undefined;
         // Its cost goes into the card's total too (13 Nov 2026).
         const lookupUsage: NonNullable<ItemGroup["usage"]> = [];
         // No brand, Unbranded, Handmade: not searched, nothing spent.
-        if (!needsLookup(data.listing)) lookup = { status: "skipped" };
+        if (!needsLookup(written)) lookup = { status: "skipped" };
         else {
           setGroups((prev) =>
             prev.map((g) => (g.id === groupId ? { ...g, lookup: { status: "searching" } } : g)),
           );
           try {
             const lr = await apiPost("/api/lookup", {
-              listing: data.listing,
+              listing: written,
               images: (routerImages ?? []).slice(0, 4),
             });
             const ld = (await readJson(lr)) as {
@@ -905,11 +922,12 @@ export default function Home() {
                   ? {
                       ...g,
                       status: "done",
+                      queue: undefined,
                       listing: pd.listing,
                       preparation: pd.preparation,
                       usage: [...(g.usage ?? []), ...(pd.usage ?? [])],
                     }
-                  : { ...g, status: "done", preparationError: pd.error }
+                  : { ...g, status: "done", queue: undefined, preparationError: pd.error }
                 : g,
             ),
           );
@@ -920,6 +938,7 @@ export default function Home() {
                 ? {
                     ...g,
                     status: "done",
+                    queue: undefined,
                     preparationError: (e as Error).message,
                   }
                 : g,
@@ -964,6 +983,31 @@ export default function Home() {
             );
           }
         })();
+    },
+    [],
+  );
+
+  const writeGroup = useCallback(
+    async (groupId: string) => {
+      // Snapshot this group's photos from the latest state (no stale closure).
+      const group = groupsRef.current.find((g) => g.id === groupId);
+      if (!group || inFlight.current.has(groupId)) return;
+      inFlight.current.add(groupId);
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? { ...g, status: "writing", error: undefined, queue: undefined }
+            : g,
+        ),
+      );
+      try {
+        const { imgs, routerImages, body } = await writingInputs(group);
+        const res = await apiPost("/api/analyze", body);
+        const data = (await readJson(res)) as AnalyzeResponse;
+        if (!data.ok || !data.listing) {
+          throw new Error(data.error || "Could not write this listing.");
+        }
+        await finishWritten(groupId, data.listing, (data as any).usage ?? [], imgs, routerImages);
       } catch (e) {
         setGroups((prev) =>
           prev.map((g) =>
@@ -976,26 +1020,205 @@ export default function Home() {
         inFlight.current.delete(groupId);
       }
     },
-    [photoMap],
+    [writingInputs, finishWritten],
   );
+
+  /**
+   * "By morning · half price" (18 Nov 2026): the first step runs now, the
+   * main writing waits in the cheap queue; checkQueue brings it back.
+   */
+  const queueGroup = useCallback(
+    async (groupId: string, retries = 0) => {
+      const group = groupsRef.current.find((g) => g.id === groupId);
+      if (!group || inFlight.current.has(groupId)) return;
+      inFlight.current.add(groupId);
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId
+            ? { ...g, status: "queued", error: undefined, queue: undefined }
+            : g,
+        ),
+      );
+      try {
+        const { body } = await writingInputs(group);
+        const res = await apiPost("/api/analyze/queue", body);
+        const data = (await readJson(res)) as {
+          ok?: boolean;
+          error?: string;
+          queued?: QueuedWrite;
+          usage?: NonNullable<ItemGroup["usage"]>;
+        };
+        if (!data.ok || !data.queued) {
+          throw new Error(data.error || "Could not put this listing in the cheap queue.");
+        }
+        const queued = { ...data.queued, retries };
+        setGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? {
+                  ...g,
+                  status: "queued",
+                  queue: queued,
+                  usage: retries ? [...(g.usage ?? []), ...(data.usage ?? [])] : data.usage ?? [],
+                }
+              : g,
+          ),
+        );
+      } catch (e) {
+        setGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? { ...g, status: "error", error: (e as Error).message, queue: undefined }
+              : g,
+          ),
+        );
+      } finally {
+        inFlight.current.delete(groupId);
+      }
+    },
+    [writingInputs],
+  );
+
+  /**
+   * Looks at the cheap queue for every item waiting in it — when the lister
+   * opens, every two minutes, and when its tab comes back into view. A
+   * finished listing goes on by itself to the online search and Prepare.
+   */
+  const checkingQueue = useRef(false);
+  const checkQueue = useCallback(async () => {
+    if (checkingQueue.current) return;
+    const waiting = groupsRef.current.filter(
+      (g) => g.status === "queued" && g.queue && !inFlight.current.has(g.id),
+    );
+    if (!waiting.length) return;
+    checkingQueue.current = true;
+    try {
+      for (let i = 0; i < waiting.length; i += 25) {
+        const chunk = waiting.slice(i, i + 25);
+        const res = await apiPost("/api/analyze/queue-check", {
+          items: chunk.map((g) => ({ groupId: g.id, queue: g.queue })),
+        });
+        const data = (await readJson(res)) as {
+          ok?: boolean;
+          error?: string;
+          results?: (QueueCheck & {
+            groupId: string;
+            listing?: ListingResult;
+            usage?: NonNullable<ItemGroup["usage"]>;
+          })[];
+        };
+        // A check that did not work (no credit left, say) is shown on the
+        // waiting items; they stay in the queue and are checked again.
+        const ids = new Set(chunk.map((g) => g.id));
+        const problem = data.ok ? undefined : data.error || "Could not check the cheap queue.";
+        setGroups((prev) =>
+          prev.map((x) =>
+            ids.has(x.id) && x.status === "queued" && x.error !== problem ? { ...x, error: problem } : x,
+          ),
+        );
+        if (!data.ok) return;
+        for (const r of data.results ?? []) {
+          const g = groupsRef.current.find((x) => x.id === r.groupId);
+          if (!g || g.status !== "queued" || !g.queue || inFlight.current.has(g.id)) continue;
+          const action = afterCheck(r, g.queue);
+          if (action === "wait") continue;
+          if (action === "requeue") {
+            void queueGroup(g.id, g.queue.retries + 1);
+            continue;
+          }
+          if (action === "fail") {
+            // "Try again" then writes it now.
+            setGroups((prev) =>
+              prev.map((x) =>
+                x.id === g.id
+                  ? {
+                      ...x,
+                      status: "error",
+                      error: queueFailure(r),
+                      queue: undefined,
+                      writeMode: "now",
+                      usage: [...(x.usage ?? []), ...(r.usage ?? [])],
+                    }
+                  : x,
+              ),
+            );
+            continue;
+          }
+          if (!r.listing) continue;
+          const listing = r.listing;
+          inFlight.current.add(g.id);
+          void (async () => {
+            try {
+              const { imgs, routerImages } = await writingInputs(g);
+              await finishWritten(g.id, listing, [...(g.usage ?? []), ...(r.usage ?? [])], imgs, routerImages);
+            } catch (e) {
+              setGroups((prev) =>
+                prev.map((x) =>
+                  x.id === g.id ? { ...x, status: "error", error: (e as Error).message } : x,
+                ),
+              );
+            } finally {
+              inFlight.current.delete(g.id);
+            }
+          })();
+        }
+      }
+    } catch (e) {
+      console.warn("[queue] check did not work:", (e as Error).message);
+    } finally {
+      checkingQueue.current = false;
+    }
+  }, [writingInputs, finishWritten, queueGroup]);
+
+  useEffect(() => {
+    if (!restored || readOnly) return;
+    void checkQueue();
+    const timer = setInterval(() => void checkQueue(), QUEUE_CHECK_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void checkQueue();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [restored, readOnly, checkQueue]);
+
+  /**
+   * "Try again" on an item that could not be written: into the cheap queue
+   * again if that is how the item is written. "Re-analyze" on a written
+   * item always writes it now.
+   */
+  const retryGroup = (groupId: string) => {
+    const g = groupsRef.current.find((x) => x.id === groupId);
+    if (g?.status === "error" && g.writeMode === "morning") void queueGroup(groupId);
+    else void writeGroup(groupId);
+  };
 
   const writeAll = async () => {
     // Only write listings that don't exist yet. Re-running everything after a
     // trip back to the review step re-billed the AI for unchanged listings
     // (issue #30) — groups whose photos changed are reset to "idle" by
-    // movePhoto, so they (and only they) get rewritten here.
-    const usable = groups
-      .filter((g) => g.photoIds.length > 0 && g.status !== "done")
-      .map((g) => g.id);
+    // movePhoto, so they (and only they) get rewritten here. One waiting in
+    // the cheap queue is already on its way.
+    const usable = groups.filter(
+      (g) => g.photoIds.length > 0 && g.status !== "done" && g.status !== "queued",
+    );
     setStep("listings");
     if (usable.length === 0) return;
+    const { now, morning } = splitByMode(usable);
+    // The cheap queue takes a few seconds an item, then the items wait there.
+    const queueing = runPool(morning, WRITE_CONCURRENCY, (id) => queueGroup(id));
     // The first listing goes alone: it puts the listing rules into the AI's
     // memory (cache), and only then do the rest start, three at a time, each
     // reading the rules for about a tenth of the price. Started together, the
     // first three would each pay the full price (10 Nov 2026).
-    const [first, ...rest] = usable;
-    await writeGroup(first);
-    if (rest.length) await runPool(rest, WRITE_CONCURRENCY, writeGroup);
+    if (now.length) {
+      const [first, ...rest] = now;
+      await writeGroup(first);
+      if (rest.length) await runPool(rest, WRITE_CONCURRENCY, writeGroup);
+    }
+    await queueing;
   };
 
   const editGroup = (id: string, patch: Partial<ItemGroup>) =>
@@ -1466,6 +1689,7 @@ export default function Home() {
           onRename={rename}
           onRenameSku={renameSku}
           onNotes={(id, notes) => editGroup(id, { notes })}
+          onWriteMode={(id, writeMode) => editGroup(id, { writeMode })}
           onMovePhoto={movePhoto}
           onReorderPhoto={reorderPhoto}
           onDeleteGroup={deleteGroup}
@@ -1484,7 +1708,7 @@ export default function Home() {
           onEdit={editListing}
           onGroupEdit={editGroup}
           onRenameSku={renameSku}
-          onRetry={writeGroup}
+          onRetry={retryGroup}
           onAddPhotos={addPhotosToGroup}
           photoLimit={ITEM_PHOTO_LIMIT}
           onPost={postGroup}

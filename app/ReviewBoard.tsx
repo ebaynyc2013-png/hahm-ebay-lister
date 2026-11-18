@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ItemGroup, Photo } from "@/lib/types";
+import type { WriteMode } from "@/lib/write-queue";
 
 interface ReviewBoardProps {
   groups: ItemGroup[];
@@ -11,12 +12,51 @@ interface ReviewBoardProps {
   onRenameSku: (groupId: string, sku: string) => void;
   /** The item's Notes box: what the seller knows about it (12 Nov 2026). */
   onNotes: (groupId: string, notes: string) => void;
+  /** "Now" or "By morning · half price" for one item (18 Nov 2026). */
+  onWriteMode: (groupId: string, mode: WriteMode) => void;
   onMovePhoto: (photoId: string, toGroupId: string | "orphans") => void;
   onReorderPhoto: (groupId: string, fromIndex: number, toIndex: number) => void;
   onDeleteGroup: (groupId: string) => void;
   onAddGroup: () => void;
   onWriteAll: () => void;
   onBack: () => void;
+}
+
+/**
+ * How this item is written: now, or in the cheap queue — half price, usually
+ * back within an hour, at most 24 hours (the seller, 18 Nov 2026).
+ */
+function WriteModeChoice({
+  mode,
+  onChange,
+}: {
+  mode: WriteMode;
+  onChange: (mode: WriteMode) => void;
+}) {
+  return (
+    <div className="board-mode" role="group" aria-label="When to write this listing">
+      <span>Write</span>
+      <button
+        type="button"
+        className={mode === "now" ? "picked" : ""}
+        aria-pressed={mode === "now"}
+        onClick={() => onChange("now")}
+      >
+        Now
+      </button>
+      <button
+        type="button"
+        className={mode === "morning" ? "picked" : ""}
+        aria-pressed={mode === "morning"}
+        onClick={() => onChange("morning")}
+      >
+        🌙 By morning · half price
+      </button>
+      {mode === "morning" && (
+        <small>Usually ready within an hour, at most 24 hours.</small>
+      )}
+    </div>
+  );
 }
 
 function MoveSelect({
@@ -176,11 +216,13 @@ export function ReviewBoard({
   onDeleteGroup,
   onAddGroup,
   onWriteAll,
+  onWriteMode,
   onBack,
 }: ReviewBoardProps) {
   const totalPhotos =
     groups.reduce((n, g) => n + g.photoIds.length, 0) + orphanIds.length;
   const usableGroups = groups.filter((g) => g.photoIds.length > 0);
+  const byMorning = usableGroups.filter((g) => g.writeMode === "morning").length;
 
   return (
     <section className="panel" aria-labelledby="review-heading">
@@ -233,6 +275,16 @@ export function ReviewBoard({
                 onChange={(e) => onNotes(group.id, e.target.value)}
               />
             </label>
+            {group.status === "queued" ? (
+              <p className="board-mode">
+                <span>🌙 Waiting in the cheap queue — it finishes by itself.</span>
+              </p>
+            ) : (
+              <WriteModeChoice
+                mode={group.writeMode ?? "now"}
+                onChange={(mode) => onWriteMode(group.id, mode)}
+              />
+            )}
             {group.photoIds.length === 0 ? (
               <p className="board-empty">
                 Empty — move photos here using the menu under a photo.
@@ -288,6 +340,7 @@ export function ReviewBoard({
         >
           ✍️ Write {usableGroups.length} listing
           {usableGroups.length === 1 ? "" : "s"}
+          {byMorning ? ` (${byMorning} by morning)` : ""}
         </button>
       </div>
     </section>

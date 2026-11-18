@@ -27,6 +27,17 @@ export function openRawDb(): Promise<IDBDatabase> {
 export async function openDb(): Promise<IDBDatabase> {
   return trackWrites(await openRawDb());
 }
+/**
+ * The status an item comes back with after the page was closed: work that
+ * was running is not running any more. One waiting for the cheap queue goes
+ * back to waiting — its answer is kept there for 29 days, so nothing is lost;
+ * one that was still being put into the queue is written again (18 Nov 2026).
+ */
+export function restoredStatus(g: Pick<ItemGroup, "status" | "queue">): ItemGroup["status"] {
+  if (g.status === "writing") return g.queue ? "queued" : "idle";
+  if (g.status === "queued" && !g.queue) return "idle";
+  return g.status;
+}
 export async function loadDraft(): Promise<WorkspaceDraft | null> {
   const db = await openDb();
   try {
@@ -51,7 +62,7 @@ export async function loadDraft(): Promise<WorkspaceDraft | null> {
         }
         d.groups = d.groups.map((g: ItemGroup) => ({
           ...g,
-          status: g.status === "writing" ? "idle" : g.status,
+          status: restoredStatus(g),
           postStatus: g.postStatus === "posting" ? "error" : g.postStatus,
           postError:
             g.postStatus === "posting"

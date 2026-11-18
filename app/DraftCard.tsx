@@ -8,6 +8,7 @@
 //           grouped Required / Recommended / Optional; empty required = amber,
 //           other empty = green.
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { queuedSince } from "@/lib/write-queue";
 import { applyChosenBrand, brandNeedsConfirmation, photoNumberOfMark } from "@/lib/maker-marks";
 import { imageFromDataUrl, rememberBrandMark } from "@/lib/brand-memory";
 import { makerSigns } from "@/lib/brand-signs";
@@ -71,6 +72,16 @@ export function DraftCard(props: Props) {
           </p>
         )}
         {group.status === "idle" && <p>Waiting to be written…</p>}
+        {group.status === "queued" && (
+          <p>
+            {group.queue
+              ? `🌙 Waiting in the cheap queue ${queuedSince(group.queue.submittedAt)} — half price. Usually ready within an hour, at most 24 hours. It finishes by itself while the lister is open.`
+              : "🌙 Putting it in the cheap queue…"}
+          </p>
+        )}
+        {group.status === "queued" && group.error && (
+          <p className="note-error">⚠️ Could not check the queue: {group.error} It will be checked again in two minutes.</p>
+        )}
         {group.status === "error" && (
           <>
             <p className="note-error">⚠️ {group.error || "Writing this listing failed."}</p>
