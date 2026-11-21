@@ -21,7 +21,7 @@ import {
 import { NextRequest, NextResponse } from "next/server";
 import { guardApiRequest } from "@/lib/api-guard";
 import {
-  parseListing,
+  parseDraftListing,
   imagesSchema,
   validationMessage,
 } from "@/lib/validation";
@@ -71,7 +71,9 @@ export async function POST(req: NextRequest) {
       withDeadline(150_000, async () => {
         try {
           const body = await req.json();
-          const listing = parseListing(body.listing);
+          // Her title may still be over 80 here — the check bar keeps Post
+          // shut until she shortens it (21 Nov 2026).
+          const listing = parseDraftListing(body.listing);
           const images =
             body.enrich === true ? imagesSchema.parse(body.images) : [];
           const categorySelection = listing.category_id

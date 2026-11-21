@@ -316,6 +316,12 @@ function DraftBody({ group: g, photoById, accountKey, onGroupEdit, onEdit, onRen
             value={l.title}
             onChange={(e) => onEdit(g.id, { title: e.target.value.replace(/\n/g, " ") })}
           />
+          {/* Her words stay as she wrote them; she shortens (21 Nov 2026). */}
+          {l.title.length > TITLE_LIMIT && (
+            <p className="hint over-limit">
+              Over {TITLE_LIMIT} by {l.title.length - TITLE_LIMIT} characters — shorten it to fit.
+            </p>
+          )}
         </div>
 
         <div className="df photos-df" id={a("photos")}>

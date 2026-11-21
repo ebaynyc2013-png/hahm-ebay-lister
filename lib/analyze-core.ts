@@ -20,7 +20,7 @@ import {
   withoutStatementStyle,
 } from "@/lib/statement";
 import { AI_LISTING_SCHEMA } from "@/lib/ai-schema";
-import { parseListing, imagesSchema, routerImagesSchema } from "@/lib/validation";
+import { boundModelAnswer, parseDraftListing, imagesSchema, routerImagesSchema } from "@/lib/validation";
 import { measuredMessage } from "@/lib/ai-usage";
 import type Anthropic from "@anthropic-ai/sdk";
 import { getClient, parseModelJson, anthropicAuthError } from "@/lib/anthropic";
@@ -211,7 +211,11 @@ export interface FinishContext {
 
 /** The AI's answer (its JSON text) made into the listing the card shows. */
 export function finishListing(text: string, ctx: FinishContext): ListingResult {
-  const raw = parseModelJson<Record<string, unknown>>(text);
+  // Fitted before it is checked: one search phrase or one title word too
+  // many must never fail a listing she has already paid for (21 Nov 2026).
+  // The title may be long here; it is shortened to 80 by whole words below,
+  // after the program has finished shaping it.
+  const raw = boundModelAnswer(parseModelJson<Record<string, unknown>>(text));
   const specifics = Array.isArray(raw.specifics) ? raw.specifics : [];
   // A fact from her typed notes has no photo to cite; her own words
   // are its check (12 Nov 2026).
@@ -220,7 +224,7 @@ export function finishListing(text: string, ctx: FinishContext): ListingResult {
       acceptedPhotoFact(s, ctx.imageCount) ||
       notesSupport(s as { value?: unknown; quote?: unknown }, ctx.sellerNotes),
   );
-  const listing = parseListing({
+  const listing = parseDraftListing({
     ...raw,
     vintage: vintageFromAnalysis(raw.vintage),
     statement: statementFromAnalysis(raw.statement),

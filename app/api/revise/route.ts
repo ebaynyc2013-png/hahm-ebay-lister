@@ -6,7 +6,7 @@ import { guardApiRequest, safeErrorResponse } from "@/lib/api-guard";
 import { AnthropicAuthError, anthropicAuthError, getClient, parseModelJson } from "@/lib/anthropic";
 import { collectUsage, currentUsage, measuredMessage } from "@/lib/ai-usage";
 import { REVISE_RULES, REVISE_SCHEMA, applyRevision, reviseMessage, type Revision } from "@/lib/revise";
-import { parseListing } from "@/lib/validation";
+import { parseDraftListing } from "@/lib/validation";
 import { sellerRulesSchema } from "@/lib/learn-diff";
 
 export const maxDuration = 120;
@@ -28,7 +28,7 @@ async function handle(req: NextRequest) {
   if (!facts) return NextResponse.json({ ok: false, error: "Write what to change first." }, { status: 400 });
   let listing;
   try {
-    listing = parseListing(body.listing);
+    listing = parseDraftListing(body.listing);
   } catch {
     return NextResponse.json({ ok: false, error: "This draft could not be read." }, { status: 400 });
   }

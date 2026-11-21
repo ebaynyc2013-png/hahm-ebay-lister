@@ -37,15 +37,18 @@ title: z.string().trim().min(1).max(80),
   condition_notes: z.string().max(3000).optional(),
   seller_notes: z.string().max(2000).optional(),
   web_facts: z.string().max(3000).optional(),
+  // Every doubt the writer has is shown to the seller (21 Nov 2026: "show all
+  // the questions") — a doubt dropped is a guess that goes out unasked. The
+  // limits are generous so that a long answer never fails the whole listing.
   doubts: z
     .array(
       z.object({
-        field: z.string().max(60),
-        options: z.array(z.string().max(60)).max(6),
+        field: z.string().max(100),
+        options: z.array(z.string().max(150)).max(20),
         why: z.string().max(300),
       }),
     )
-    .max(8)
+    .max(30)
     .optional(),
   doubts_resolved: z.array(z.string().max(60)).max(20).optional(),
   measurements: text.optional(),
@@ -68,12 +71,14 @@ title: z.string().trim().min(1).max(80),
       measure: z.string().max(300),
     })
     .optional(),
-  contact_seen: z.array(text).max(20).optional(),
-  maker_marks: z.array(text).max(10).optional(),
+  // What the seller has to see — contact details on a photo, maker's marks,
+  // possible brands — is never cut short; the limits only stop nonsense.
+  contact_seen: z.array(text).max(50).optional(),
+  maker_marks: z.array(text).max(30).optional(),
   brand_source: z.enum(["label", "note", "marks", "seller", "none"]).optional(),
   brand_candidates: z
     .array(z.object({ brand: z.string().max(100), why: z.string().max(300) }))
-    .max(5)
+    .max(10)
     .optional(),
   brand_confirmed: z.boolean().optional(),
   brand_remembered: z.boolean().optional(),
@@ -162,6 +167,83 @@ export const shippingSchema = z
 export type ShippingSelection = z.infer<typeof shippingSchema>;
 export function parseListing(raw: unknown): ListingResult {
   return listingSchema.parse(raw);
+}
+
+// A draft the seller is still working on may carry a title over eBay's 80:
+// she shortens it herself, warned in red under the title (21 Nov 2026), and
+// the check bar keeps Post shut until she does. Reading the draft — Prepare,
+// "Update with notes", the search online — must not fail on it meanwhile.
+// Publishing still reads the listing with parseListing, 80 at most.
+const draftListingSchema = listingSchema.extend({
+  title: z.string().trim().min(1).max(400),
+});
+export function parseDraftListing(raw: unknown): ListingResult {
+  return draftListingSchema.parse(raw) as ListingResult;
+}
+
+/**
+ * Words, not characters: a long explanation loses whole words from its end,
+ * never half a word.
+ */
+export function clipWords(value: unknown, limit: number): string {
+  const s = String(value ?? "").replace(/\s+/g, " ").trim();
+  if (s.length <= limit) return s;
+  const cut = s.slice(0, limit + 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : s.slice(0, limit)).replace(/[\s,;:&/|-]+$/, "");
+}
+
+// The program's own lists, which the AI is asked to keep short. One entry too
+// many used to fail the whole listing (21 Nov 2026, found by a check); what is
+// over goes, and none of it would reach eBay anyway — Color and Features take
+// at most 8 and 5 values there, search phrases only feed the price check.
+const MODEL_LIST_CAPS: Record<string, number> = {
+  search_terms: 4,
+  color: 10,
+  key_features: 10,
+  seo_keywords: 10,
+  aesthetics: 10,
+  hashtags: 30,
+  etsy_tags: 40,
+};
+
+/**
+ * The AI's answer made to fit before it is checked, so that writing a little
+ * too much never costs the seller a listing she has already paid for: the
+ * program's own lists keep their first entries, explanations lose whole words
+ * from the end, and a title of any length goes on to be shortened to 80 by
+ * whole words. Her doubts, the maker's marks and the possible brands are kept
+ * whole (see the schema above).
+ */
+export function boundModelAnswer(raw: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...raw };
+  for (const [key, cap] of Object.entries(MODEL_LIST_CAPS))
+    if (Array.isArray(out[key])) out[key] = (out[key] as unknown[]).slice(0, cap);
+  if (typeof out.title === "string") out.title = clipWords(out.title, 400);
+  if (Array.isArray(out.doubts))
+    out.doubts = out.doubts.map((d) =>
+      d && typeof d === "object"
+        ? {
+            ...(d as Record<string, unknown>),
+            field: clipWords((d as Record<string, unknown>).field, 100),
+            why: clipWords((d as Record<string, unknown>).why, 300),
+            options: Array.isArray((d as Record<string, unknown>).options)
+              ? ((d as Record<string, unknown>).options as unknown[]).slice(0, 20).map((o) => clipWords(o, 150))
+              : [],
+          }
+        : d,
+    );
+  if (Array.isArray(out.brand_candidates))
+    out.brand_candidates = out.brand_candidates.map((c) =>
+      c && typeof c === "object"
+        ? {
+            ...(c as Record<string, unknown>),
+            brand: clipWords((c as Record<string, unknown>).brand, 100),
+            why: clipWords((c as Record<string, unknown>).why, 300),
+          }
+        : c,
+    );
+  return out;
 }
 export function validationMessage(error: unknown): string {
   if (error instanceof z.ZodError)

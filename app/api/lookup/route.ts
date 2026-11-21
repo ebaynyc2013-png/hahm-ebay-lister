@@ -7,7 +7,7 @@ import { AnthropicAuthError, anthropicAuthError, getClient, parseModelJson } fro
 import { collectUsage, currentUsage, measuredMessage } from "@/lib/ai-usage";
 import { toImageBlock, type ImageBlock } from "@/lib/images";
 import { LOOKUP_RULES, checkLookup, lookupMessage, needsLookup, type ProductLookup } from "@/lib/product-lookup";
-import { parseListing, routerImagesSchema } from "@/lib/validation";
+import { parseDraftListing, routerImagesSchema } from "@/lib/validation";
 
 export const maxDuration = 120;
 
@@ -28,7 +28,7 @@ async function handle(req: NextRequest) {
   }
   let listing;
   try {
-    listing = parseListing(body.listing);
+    listing = parseDraftListing(body.listing);
   } catch {
     return NextResponse.json({ ok: false, error: "This draft could not be read." }, { status: 400 });
   }

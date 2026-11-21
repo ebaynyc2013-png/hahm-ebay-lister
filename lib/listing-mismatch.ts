@@ -124,7 +124,11 @@ export function allDoubts(l: ListingResult): ListingDoubt[] {
   return out;
 }
 
-/** The writer's doubts, tidied: two to four distinct choices, never the brand. */
+/**
+ * The writer's doubts, tidied: two to four distinct choices, never the brand.
+ * All of them are kept — the seller's choice of 21 Nov 2026 ("show all the
+ * questions"); it used to keep six and drop the rest unseen.
+ */
 export function cleanDoubts(ds: ListingDoubt[] | undefined): ListingDoubt[] {
   return (ds ?? [])
     .map((d) => ({
@@ -132,6 +136,5 @@ export function cleanDoubts(ds: ListingDoubt[] | undefined): ListingDoubt[] {
       why: String(d.why ?? "").trim(),
       options: [...new Set((d.options ?? []).map((o) => String(o).trim()).filter(Boolean))].slice(0, 4),
     }))
-    .filter((d) => d.field && !/^brand$/i.test(d.field) && d.options.length >= 2)
-    .slice(0, 6);
+    .filter((d) => d.field && !/^brand$/i.test(d.field) && d.options.length >= 2);
 }
