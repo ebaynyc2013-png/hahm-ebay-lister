@@ -9,7 +9,7 @@
 
 import { expectedDepartment } from "./category-selection";
 import { findShoeSizeRow, type ShoeDepartment } from "./shoe-sizes";
-import { aestheticTail, fitTitle } from "./title-fit";
+import { aestheticTail, fitAround, fitTitle } from "./title-fit";
 import type { ListingResult } from "./types";
 
 const FOOTWEAR =
@@ -138,17 +138,51 @@ export function shoeSizesInTitle(
   }
   const bareBlock = block.replace(/^Size\s+/, "");
   t = tidy(t.replace(block, bareBlock));
-  if (t.length <= limit) return t;
   // Whole words go — first from after the sizes, then from just before them.
-  const at = t.indexOf(bareBlock);
-  if (at < 0) return fitTitle(title, limit);
-  const before = t.slice(0, at).split(" ").filter(Boolean);
-  const after = t.slice(at + bareBlock.length).split(" ").filter(Boolean);
-  const join = () => [...before, bareBlock, ...after].join(" ");
-  while (join().length > limit && after.length) after.pop();
-  while (join().length > limit && before.length > 1) before.pop();
-  const fitted = join().replace(/[\s,;:&/|-]+$/, "");
-  return fitted.length <= limit ? fitted : fitTitle(title, limit);
+  return fitAround(t, bareBlock, limit) ?? fitTitle(title, limit);
+}
+
+/**
+ * The description's Size line for a grown-up's shoe, US first and the European
+ * beside it, as the title has them: "Size: 6.5 (EU 37)", "Size: 7M (EU 37.5)"
+ * (the seller, 21 Nov 2026; it was "Size: 37"). Kids' and baby shoes keep
+ * their own line, "Size: EU 28 (US 10.5)" (16 Nov 2026). Null when unknown.
+ */
+export function shoeSizeLine(l: ListingResult): string | null {
+  if (!isFootwear(l)) return null;
+  const dept = shoeDepartment(l);
+  if (dept === "Baby" || dept === "Kids") return null;
+  // The title's pair first, so the two always agree.
+  const pair = String(l.title ?? "").match(
+    new RegExp(String.raw`\b(${NUM})(${WIDTH})?\s+EU\s+(${NUM})\b`),
+  );
+  if (pair) return `Size: ${pair[1]}${pair[2] ?? ""} (EU ${pair[3]})`;
+  const eu = markedEu(l);
+  if (eu) {
+    const us = findShoeSizeRow(eu, dept, "eu")?.us;
+    return us ? `Size: ${us} (EU ${eu})` : null;
+  }
+  // An American size only with its mark or a width letter — a bare small
+  // number could be British.
+  const m = String(l.size ?? "").match(
+    new RegExp(String.raw`^\s*(?:US\s+(${NUM})(${WIDTH})?|(${NUM})\s?(${WIDTH}))\s*$`, "i"),
+  );
+  if (!m) return null;
+  const us = m[1] ?? m[3];
+  const width = (m[2] ?? m[4] ?? "").toUpperCase();
+  const euSize = findShoeSizeRow(us, dept, "us")?.eu[0];
+  return euSize ? `Size: ${us}${width} (EU ${euSize})` : null;
+}
+
+/** The description's Size line says both shoe sizes, in place of the one written. */
+export function shoeSizeInDescription(description: string, l: ListingResult): string {
+  const line = shoeSizeLine(l);
+  if (!line) return description;
+  const blocks = String(description ?? "").replace(/\r\n?/g, "\n").split(/\n[ \t]*\n/);
+  const at = blocks.findIndex((b) => /^\s*(?:size|shoe size|us shoe size|eu shoe size|marked size)\s*:/i.test(b));
+  if (at >= 0) blocks[at] = line;
+  else blocks.push(line);
+  return blocks.join("\n\n");
 }
 
 /** The European size the listing read ("EU 37" in its size, or the EU Shoe Size field). */

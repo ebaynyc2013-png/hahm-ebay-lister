@@ -159,7 +159,8 @@ export function otherSizeInDescription(description: string, l: ListingResult): s
  * The title says both sizes, the label's first (the seller, 16 Nov 2026 —
  * "we sell in America"): "EU 50 US 40", "EU 104 US 4T", a baby shoe "EU 17
  * US 1.5-2". Kids' shoes are left to the shoe rule ("Size 10.5 EU 28", like adults').
- * Tight for 80: the aesthetic tail goes first; last of all, the US size alone.
+ * Tight for 80: the aesthetic tail goes first, then whole words around the
+ * sizes — both stay (the seller, 21 Nov 2026).
  */
 export function otherSizeInTitle(title: string, l: ListingResult, limit = 80): string {
   const s = otherForeignSize(l);
@@ -172,7 +173,7 @@ export function otherSizeInTitle(title: string, l: ListingResult, limit = 80): s
       (s.kind === "kids" ? String.raw`|\bSize\s+${v}(?![\w/])` : ""),
     "i",
   );
-  return sizesInTitle(title, l, marked, `EU ${s.value} US ${s.us}`, `US ${s.us}`, limit);
+  return sizesInTitle(title, l, marked, `EU ${s.value} US ${s.us}`, `US ${s.us}`, limit, true);
 }
 
 /** For eBay's Size field at Prepare: the American size, chosen from eBay's list. */

@@ -10,6 +10,7 @@
 import { tidyConditionNotes } from "./condition-sync";
 import { formatDescription } from "./description-format";
 import { fitTitle } from "./title-fit";
+import { descriptionWithSizes, titleWithSizes } from "./size-rules";
 import { COLOR_SYNONYMS, isChoiceSet, isColorAspect, toAllowedValue } from "./ebay/aspects";
 import { isStatement, statementApplies, statementOutOfTitle, statementTagPatch, withoutStatementStyle } from "./statement";
 import { withoutStudForClips } from "./clip-earrings";
@@ -100,7 +101,10 @@ export function applyRevision(
   }
   const statementNow = { statement: patch.statement ?? l.statement };
   const rawTitle = String(r.title ?? "");
-  const title = fitTitle(jewellery ? statementOutOfTitle(rawTitle, l.brand ?? "") : rawTitle, 80);
+  const cut = fitTitle(jewellery ? statementOutOfTitle(rawTitle, l.brand ?? "") : rawTitle, 80);
+  // Both sizes, as the first writing gives them (21 Nov 2026: a ring found
+  // online lost its American size here).
+  const title = cut ? titleWithSizes(cut, l) : cut;
   if (title && title !== l.title) {
     patch.title = title;
     changed.push("Title");
@@ -111,7 +115,8 @@ export function applyRevision(
     // first writing has.
     const lines = r.description.replace(/\r\n?/g, "\n").trim().split("\n");
     const body = lines.slice(1).join("\n").trim();
-    const text = formatDescription(body ? `${finalTitle}\n\n${body}` : finalTitle, undefined, l.brand ?? "").text;
+    const sized = descriptionWithSizes(body ? `${finalTitle}\n\n${body}` : finalTitle, { ...l, title: finalTitle });
+    const text = formatDescription(sized, undefined, l.brand ?? "").text;
     if (text !== l.description) {
       patch.description = text;
       changed.push("Description");

@@ -14,7 +14,7 @@
 
 import { expectedDepartment } from "./category-selection";
 import { isFootwear } from "./title-shoe-size";
-import { aestheticTail } from "./title-fit";
+import { aestheticTail, fitAround } from "./title-fit";
 import type { ListingResult } from "./types";
 
 // pages.ebay.com/sell/sizechart.html — Women's Clothing Size, read 31 Oct 2026.
@@ -122,9 +122,11 @@ export function foreignSizeInTitle(title: string, l: ListingResult, limit = 80):
  * Both sizes in the title — the one on the label and the American one ("we
  * sell in America", the seller, 16 Nov 2026). When 80 is tight, the aesthetic
  * tail ("Office Siren") goes first, one aesthetic at a time from the end, and
- * both sizes stay; only when even that is not enough does the label's size
- * give way and the American one stay. A title without the marked size is
- * left as it is.
+ * both sizes stay. Then, with `keepBoth` (rings, men's, children's — the
+ * seller, 21 Nov 2026: "both sizes, always"), the word "Size" goes, then whole
+ * words around the sizes. Without it (women's clothing, her rule of 31 Oct),
+ * the label's size gives way and the American one stays. A title without the
+ * marked size is left as it is.
  */
 export function sizesInTitle(
   title: string,
@@ -133,6 +135,7 @@ export function sizesInTitle(
   both: string,
   usOnly: string,
   limit = 80,
+  keepBoth = false,
 ): string {
   if (!marked.test(title)) return title;
   const tidy = (s: string) => s.replace(/\s{2,}/g, " ").trim();
@@ -145,6 +148,12 @@ export function sizesInTitle(
   for (const x of trims) {
     const v = tidy(x.replace(marked, both));
     if (v.length <= limit) return v;
+  }
+  if (keepBoth) {
+    const block = both.replace(/^Size\s+/, "");
+    const v = tidy(trims[trims.length - 1].replace(marked, block));
+    const kept = fitAround(v, block, limit);
+    if (kept) return kept;
   }
   for (const x of trims) {
     const v = tidy(x.replace(marked, usOnly));

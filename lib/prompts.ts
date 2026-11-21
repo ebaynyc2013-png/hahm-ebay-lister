@@ -290,7 +290,7 @@ The description must NOT be one continuous paragraph. Use short labeled sections
 
 The FIRST line of the description must be the COMPLETE FINAL TITLE, copied exactly word-for-word and in the same order. Do not shorten it, rewrite it, summarize it, or create a different introductory sentence.
 
-Shoe sizes in the description never carry the word "EU" either: the seller writes "Size: 7M" or "Size: 37", never "EU 37".
+Shoe sizes in the description: write the size as read, with its marker — "Size: EU 37", "Size: US 6.5", "Size: 7M"; the program writes the final line with both sizes, US first, as the title has them: "Size: 6.5 (EU 37)" (the seller, 21 Nov 2026).
 
 Never write where the item was made ("Made in Vietnam", "Made in Thailand") in the description — the seller's rule. The eBay item specifics may still carry the country.
 

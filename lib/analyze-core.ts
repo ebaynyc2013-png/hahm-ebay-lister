@@ -35,6 +35,7 @@ import { optimizeTitle } from "@/lib/titleOptimizer";
 import { foreignSizeInDescription, italianSizeFix } from "@/lib/foreign-size";
 import { ringSizeInDescription, ringSizeInTitle } from "@/lib/ring-size";
 import { otherSizeInDescription, otherSizeInTitle } from "@/lib/size-conversions";
+import { shoeSizeInDescription } from "@/lib/title-shoe-size";
 import { fitTitle } from "@/lib/title-fit";
 import { vintageFromAnalysis, vintageTitle } from "@/lib/vintage";
 import { excellentWithoutFlaw, tidyConditionNotes } from "@/lib/condition-sync";
@@ -297,6 +298,8 @@ listing.description = descriptionBody ? `${listing.title}\n\n${descriptionBody}`
   // (US 7)" (the seller, 16 Nov 2026).
   listing.description = ringSizeInDescription(listing.description, listing);
   listing.description = otherSizeInDescription(listing.description, listing);
+  // A grown-up's shoe: "Size: 6.5 (EU 37)", as the title has it (21 Nov 2026).
+  listing.description = shoeSizeInDescription(listing.description, listing);
   // A letter size is one value outside the title: the card's Size,
   // eBay's Size and the description's Size line say "M", the title
   // keeps "M Medium" (the seller, 10 Nov 2026).

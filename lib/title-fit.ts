@@ -18,6 +18,25 @@ export function fitTitle(title: string, limit = 80): string {
 }
 
 /**
+ * Fit a title to `limit` keeping `block` (the two sizes) whole: whole words go
+ * first from after it, then from just before it — the sizes never go (the
+ * seller, 21 Nov 2026: "both sizes, always"). Null when it cannot be done.
+ */
+export function fitAround(title: string, block: string, limit = 80): string | null {
+  const t = String(title ?? "").replace(/\s+/g, " ").trim();
+  if (t.length <= limit) return t;
+  const at = t.indexOf(block);
+  if (at < 0) return null;
+  const before = t.slice(0, at).split(" ").filter(Boolean);
+  const after = t.slice(at + block.length).split(" ").filter(Boolean);
+  const join = () => [...before, block, ...after].join(" ");
+  while (join().length > limit && after.length) after.pop();
+  while (join().length > limit && before.length > 1) before.pop();
+  const out = join().replace(/[\s,;:&/|-]+$/, "");
+  return out.length <= limit ? out : null;
+}
+
+/**
  * The aesthetics at the end of the title, last first ("Office Siren", "Boho") —
  * what goes first when a second size needs room (the seller, 16 Nov 2026).
  * Each entry is cut from what is left after the ones before it.

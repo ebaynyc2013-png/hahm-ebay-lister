@@ -158,7 +158,8 @@ export function ringSizeInDescription(description: string, l: ListingResult): st
 /**
  * The title says both sizes, the ring's own first (16 Nov 2026): "Size EU 54",
  * "EU 54", "Size 54", "UK N" → "Size EU 54 US 7". Tight for 80: the aesthetic
- * tail goes first; last of all, "Size 7" alone.
+ * tail goes first, then the word "Size", then whole words around the sizes —
+ * both sizes stay (21 Nov 2026: a Pandora ring went out "Size 56" alone).
  */
 export function ringSizeInTitle(title: string, l: ListingResult, limit = 80): string {
   const r = ringSize(l);
@@ -168,7 +169,7 @@ export function ringSizeInTitle(title: string, l: ListingResult, limit = 80): st
     String.raw`\b(?:Size\s+)?(?:${r.system}|EUR)\s?${value}(?![\w/])(?:\s+US\s+\d{1,2}(?:\.\d+)?\b)?|\bSize\s+${value}(?![\w/])|\b${value}\s?(?:${r.system}|EUR)\b`,
     "i",
   );
-  return sizesInTitle(title, l, marked, `Size ${r.system} ${r.value} US ${r.us}`, `Size ${r.us}`, limit);
+  return sizesInTitle(title, l, marked, `Size ${r.system} ${r.value} US ${r.us}`, `Size ${r.us}`, limit, true);
 }
 
 // "7", "7.25", "7 1/4", "7½" → 7.25.
