@@ -112,7 +112,7 @@ describe("kids' and baby shoes: eBay's chart", () => {
     expect(aspects["UK Shoe Size"]).toEqual(["9.5"]);
   });
   it("a kids' shoe title gets both sizes; a baby shoe title is left as written", () => {
-    expect(shoeSizesInTitle("Nike Sneakers EU 28", item({ item_type: "Kids Sneakers" }))).toBe("Nike Sneakers 10.5 28");
+    expect(shoeSizesInTitle("Nike Sneakers EU 28", item({ item_type: "Kids Sneakers" }))).toBe("Nike Sneakers Size 10.5 EU 28");
     expect(shoeSizesInTitle("Robeez Shoes EU 17", item({ item_type: "Baby Shoes" }))).toBe("Robeez Shoes EU 17");
   });
 });
@@ -180,7 +180,7 @@ describe("the title says both sizes — we sell in America (16 Nov 2026)", () =>
   });
   it("kids' shoes are left to the shoe rule", () => {
     const shoe = item({ item_type: "Kids Sneakers", size: "EU 28" });
-    expect(otherSizeInTitle("Nike Sneakers 10.5 28", shoe)).toBe("Nike Sneakers 10.5 28");
+    expect(otherSizeInTitle("Nike Sneakers Size 10.5 EU 28", shoe)).toBe("Nike Sneakers Size 10.5 EU 28");
   });
   it("tight for 80: the aesthetic tail goes first, both sizes stay", () => {
     const l = item({

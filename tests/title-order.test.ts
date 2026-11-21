@@ -66,11 +66,13 @@ describe("the title rules in the prompt", () => {
   });
 
   it("asks for both shoe sizes and never for gender or condition", () => {
-    // The seller's form: no "EU" between the two sizes, in the title or the
-    // description; room left for the size the program adds.
-    expect(prompt).toContain('"6.5 37" or "7M 37.5"');
-    expect(prompt).not.toContain("6.5 EU 37");
-    expect(prompt).toContain("keep a shoe title to 75 characters or fewer");
+    // The seller's title form of 21 Nov 2026, "Size 6.5 EU 37" (it was
+    // "6.5 37"); the description still carries no "EU"; room left for what
+    // the program adds.
+    expect(prompt).toContain('"Size 6.5 EU 37" or "Size 7M EU 37.5"');
+    expect(prompt).not.toContain('"6.5 37"');
+    expect(prompt).toContain("never a bare \"37\"");
+    expect(prompt).toContain("keep a shoe title to 70 characters or fewer");
     expect(prompt).toContain('Shoe sizes in the description never carry the word "EU"');
     expect(prompt).toContain('"Women\'s", "Womens", "Woman", "Ladies"');
     expect(prompt).toContain('"Barbie" or "Gypsy"');

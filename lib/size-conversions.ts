@@ -158,7 +158,7 @@ export function otherSizeInDescription(description: string, l: ListingResult): s
 /**
  * The title says both sizes, the label's first (the seller, 16 Nov 2026 —
  * "we sell in America"): "EU 50 US 40", "EU 104 US 4T", a baby shoe "EU 17
- * US 1.5-2". Kids' shoes are left to the shoe rule ("10.5 28", like adults').
+ * US 1.5-2". Kids' shoes are left to the shoe rule ("Size 10.5 EU 28", like adults').
  * Tight for 80: the aesthetic tail goes first; last of all, the US size alone.
  */
 export function otherSizeInTitle(title: string, l: ListingResult, limit = 80): string {

@@ -14,6 +14,7 @@
 
 import { expectedDepartment } from "./category-selection";
 import { isFootwear } from "./title-shoe-size";
+import { aestheticTail } from "./title-fit";
 import type { ListingResult } from "./types";
 
 // pages.ebay.com/sell/sizechart.html — Women's Clothing Size, read 31 Oct 2026.
@@ -152,24 +153,6 @@ export function sizesInTitle(
   return title;
 }
 
-/** The aesthetics at the end of the title, last first ("Office Siren", "Boho"). */
-function aestheticTail(title: string, l: ListingResult): string[] {
-  const names = [...(l.aesthetics ?? [])]
-    .map((a) => String(a ?? "").trim())
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length);
-  const out: string[] = [];
-  let t = title.trim();
-  for (let guard = 0; guard < 4; guard++) {
-    const hit = names.find((n) => t.toLowerCase().endsWith(` ${n.toLowerCase()}`));
-    if (!hit) break;
-    const tail = t.slice(t.length - hit.length);
-    out.push(` ${tail}`);
-    t = t.slice(0, t.length - hit.length).trim();
-  }
-  // Each entry is cut from what is left after the ones before it.
-  return out;
-}
 
 /** "Size: EU 38 (US 8, Medium)" — in place of whatever Size line was written. */
 export function foreignSizeLine(f: ForeignSize): string {
